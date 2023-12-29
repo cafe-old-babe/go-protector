@@ -1,0 +1,23 @@
+*/node_modules/
+.idea
+.vscode
+.DS_Store
+.git
+./log/
+
+*.lock
+*.sum
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 可执行文件
+go_build_*
+go-protector
+GoProtectorServer
+
+
+

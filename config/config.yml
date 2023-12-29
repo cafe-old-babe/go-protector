@@ -1,0 +1,40 @@
+server:
+  port: 8888
+  # dev or prod
+  env: dev
+  # ssh录像回放地址
+  recordPath: ./data/record
+jwt:
+  tokenPre: "Bearer"
+  timeout: 180
+  sessionTimeout: 20
+database:
+  # 数据库驱动 预留
+  driver: mysql
+  # 用户名
+  username: root
+  # 密码
+  password: 123456
+  # 数据库ip
+  host: 127.0.0.1
+  # 数据库端口
+  port: 13306
+  # 数据名称
+  dbname: go-protector
+  # 连接的最大空闲时间。默认值为0，表示不限制 秒
+  connMaxIdleTime: 180
+  # 连接的最大生命周期。默认值为0，表示不限制 秒
+  connMaxLifeTime: 180
+  # 最大空闲连接数。默认值为10
+  maxIdleConns: 10
+  # 最大打开连接数。默认值为0，表示不限制
+  maxOpenConns: 50
+redis:
+  addr: 127.0.0.1:16379
+  password: ""
+  username: ""
+  db: 0
+logger:
+  path: ./log
+  fileName: go-protector.log
+  level: debug
