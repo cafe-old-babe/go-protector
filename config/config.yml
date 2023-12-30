@@ -1,12 +1,12 @@
 server:
   port: 8888
-  # dev or prod
+  # test or dev or prod
   env: dev
   # ssh录像回放地址
   recordPath: ./data/record
 jwt:
   tokenPre: "Bearer"
-  timeout: 180
+  tokenTimeout: 180
   sessionTimeout: 20
 database:
   # 数据库驱动 预留

@@ -1,14 +1,30 @@
 package initialize
 
-func Server(configFile string) (err error) {
-	// 加载配置
-	err = initConfig(configFile)
-	if err != nil {
-		return err
-	}
-	if err = initLogger(); err != nil {
-		return
-	}
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"go-protector/server/commons/config"
+	"go-protector/server/router"
+	"go-protector/server/router/middleware"
+	"net/http"
+)
 
+func initServer() (server *http.Server) {
+	engine := gin.New()
+	engine.Use(middleware.RecordLog)
+	engine.Use(middleware.Recovery)
+	engine.Use(middleware.SetDB)
+	//engine.Use(middleware.Jwt)
+
+	routerGroup := engine.Group("v1")
+	router.InitLogin(routerGroup)
+
+	//if err = engine.Run(fmt.Sprintf(":%d", config._config.Server.Port)); err != nil {
+	//	return err
+	//}
+	server = &http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", config.GetConfig().Server.Port),
+		Handler: engine,
+	}
 	return
 }

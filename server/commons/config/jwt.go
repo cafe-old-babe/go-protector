@@ -2,6 +2,6 @@ package config
 
 type Jwt struct {
 	TokenPre       string `yaml:"tokenPre"`
-	Timeout        int    `yaml:"timeout"`
+	TokenTimeout   int    `yaml:"tokenTimeout"`
 	SessionTimeout int    `yaml:"sessionTimeout"`
 }

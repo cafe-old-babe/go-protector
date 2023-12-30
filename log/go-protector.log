@@ -1,1 +1,9 @@
 2023-12-28 01:10:31.2349	[35mDEBUG[0m	server/server.go:18	server run
+2023-12-31 02:23:21.2936	[31mERROR[0m	gorm@v1.25.5/gorm.go:211	[35m/opt/work_space/github/go-protector/server/initialize/database.go:38
+[0m[31m[error] [0mfailed to initialize database, got error time: unknown unit "sroot" in duration "60sroot123456127.0.0.113306go-protector"
+2023-12-31 02:24:15.8524	[31mERROR[0m	gorm@v1.25.5/gorm.go:211	[35m/opt/work_space/github/go-protector/server/initialize/database.go:38
+[0m[31m[error] [0mfailed to initialize database, got error time: unknown unit "sroot" in duration "60sroot123456127.0.0.113306go-protector"
+2023-12-31 02:25:22.9714	[31mERROR[0m	gorm@v1.25.5/gorm.go:211	[35m/opt/work_space/github/go-protector/server/initialize/database.go:38
+[0m[31m[error] [0mfailed to initialize database, got error dial tcp: lookup tcp/%!d(string=13306): nodename nor servname provided, or not known
+2023-12-31 02:26:04.9418	[31mERROR[0m	gorm@v1.25.5/gorm.go:211	[35m/opt/work_space/github/go-protector/server/initialize/database.go:38
+[0m[31m[error] [0mfailed to initialize database, got error dial tcp 127.0.0.1:13306: connect: connection refused

@@ -1,10 +1,11 @@
 package server
 
 import (
-	"context"
+	"fmt"
 	"github.com/spf13/cobra"
-	"go-protector/server/commons/logger"
+	"go-protector/server/commons/local"
 	"go-protector/server/initialize"
+	"os"
 )
 
 var (
@@ -14,6 +15,24 @@ var (
 		Short:        "简短的介绍",
 		Example:      "./go-protector server -c config.yml",
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+			// 将configFilePath 写入环境变量
+			// 检查文件是否存在
+			if _, err = os.Stat(configFilePath); err == nil {
+				if err = os.Setenv(local.EnvConfig, configFilePath); err != nil {
+					fmt.Printf("set env err: %v", err)
+					return
+				}
+				return
+			}
+			if os.IsNotExist(err) {
+				fmt.Printf("文件不存在: %s\n", configFilePath)
+			} else {
+				fmt.Printf("无法访问文件: %s, err: %v \n", configFilePath, err)
+			}
+
+			return
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run()
 		},
@@ -21,10 +40,14 @@ var (
 )
 
 func run() (err error) {
-	if err = initialize.Server(configFilePath); err != nil {
+	defer func() {
+		_ = os.Unsetenv(local.EnvConfig)
+	}()
+
+	if err = initialize.Start(); err != nil {
 		return
 	}
-	logger.DebugF(context.Background(), "server run")
+
 	return nil
 }
 

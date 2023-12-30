@@ -15,7 +15,7 @@ import (
 // initLogger 初始化日志组件
 // https://www.cnblogs.com/Vikyanite/p/17210643.html
 func initLogger() (err error) {
-	loggerCfg := config.Config.Logger
+	loggerCfg := config.GetConfig().Logger
 	var zapLog *zap.Logger
 	encoderConfig := zap.NewProductionEncoderConfig()
 
