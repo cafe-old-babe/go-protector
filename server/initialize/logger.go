@@ -20,13 +20,15 @@ func initLogger() (err error) {
 	encoderConfig := zap.NewProductionEncoderConfig()
 
 	encoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05.0000")
-	// 将日志等级标识设置为大写并且有颜色
-	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	// 生成打印到日志文件中的encoder
-	fileEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+
 	// 返回完整调用路径
 	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-
+	// 将日志等级标识设置为大写并且有颜色
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	// 生成打印到日志文件中的encoder
+	fileEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+	// 将日志等级标识设置为大写并且有颜色
+	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	// 生成打印到console的encoder
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 

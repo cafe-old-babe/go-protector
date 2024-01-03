@@ -14,11 +14,11 @@ database:
   # 用户名
   username: root
   # 密码
-  password: 123456
+  password: root
   # 数据库ip
   host: 127.0.0.1
   # 数据库端口
-  port: 13306
+  port: 3306
   # 数据名称
   dbname: go-protector
   # 连接的最大空闲时间。默认值为0，表示不限制 秒

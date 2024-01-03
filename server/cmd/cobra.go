@@ -7,6 +7,7 @@ go install github.com/spf13/cobra-cli
 package cmd
 
 import (
+	"go-protector/server/cmd/migration"
 	"go-protector/server/cmd/server"
 	"os"
 
@@ -40,5 +41,6 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(server.StartCmd)
+	rootCmd.AddCommand(migration.StartCmd)
 
 }

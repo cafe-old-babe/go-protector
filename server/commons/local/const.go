@@ -13,4 +13,6 @@ const (
 
 	CtxKeyTraceId = "traceId"
 	CtxKeyDB      = "db"
+
+	LockTypeExpire = 1
 )

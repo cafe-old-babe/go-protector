@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-func Start() (err error) {
+// StartServer https://gin-gonic.com/zh-cn/docs/examples/
+func StartServer() (err error) {
 	// 加载配置
 	if err = initLogger(); err != nil {
 		return

@@ -14,9 +14,9 @@ func initServer() (server *http.Server) {
 	engine.Use(middleware.RecordLog)
 	engine.Use(middleware.Recovery)
 	engine.Use(middleware.SetDB)
-	//engine.Use(middleware.Jwt)
+	engine.Use(middleware.Cors())
 
-	routerGroup := engine.Group("v1")
+	routerGroup := engine.Group("api")
 	router.InitLogin(routerGroup)
 
 	//if err = engine.Run(fmt.Sprintf(":%d", config._config.Server.Port)); err != nil {

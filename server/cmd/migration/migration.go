@@ -1,4 +1,4 @@
-package server
+package migration
 
 import (
 	"fmt"
@@ -11,9 +11,9 @@ import (
 var (
 	configFilePath string
 	StartCmd       = &cobra.Command{
-		Use:          "server",
-		Short:        "start server",
-		Example:      "./go-protector server -c config.yml",
+		Use:          "migration",
+		Short:        "autoMigration",
+		Example:      "./go-protector migration -c config.yml",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			// 将configFilePath 写入环境变量
@@ -44,7 +44,7 @@ func run() (err error) {
 		_ = os.Unsetenv(local.EnvConfig)
 	}()
 
-	if err = initialize.StartServer(); err != nil {
+	if err = initialize.StartMigration(); err != nil {
 		return
 	}
 

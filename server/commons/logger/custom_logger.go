@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go-protector/server/commons/local"
+	"go-protector/server/commons/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"strconv"
 	"sync"
 )
 
@@ -32,21 +33,24 @@ func NewLogger(ctx *gin.Context) (log *CustomLogger) {
 	var ok bool
 	var value any
 	if value, ok = ctx.Get(local.CtxKeyLog); ok {
-		if _, ok = value.(*zap.Logger); ok {
+		if _, ok = value.(*CustomLogger); ok {
 			return
 		}
 		return
 	}
 	var traceId string
-	if value, ok = ctx.Get(local.CtxKeyTraceId); ok {
+	if value, ok = ctx.Get(local.CtxKeyTraceId); !ok {
+		traceId = strconv.FormatUint(utils.GetNextId(), 10)
+	} else {
 		if traceId, ok = value.(string); !ok {
-			traceId = uuid.New().String()
+			traceId = strconv.FormatUint(utils.GetNextId(), 10)
 		}
 	}
+	ctx.Set(local.CtxKeyTraceId, traceId)
 
 	log = NewLoggerByOpt(ctx, zap.Fields(zapcore.Field{
 		Key:    "traceId",
-		Type:   zapcore.StringerType,
+		Type:   zapcore.StringType,
 		String: traceId,
 	}))
 	ctx.Set(local.CtxKeyLog, log)
@@ -71,8 +75,16 @@ func (_self *CustomLogger) Debug(msg string, data ...any) {
 	_self.zapLog.Debug(fmt.Sprintf(msg, data...))
 }
 
+func (_self *CustomLogger) DebugZap(msg string, fields ...zap.Field) {
+	_self.zapLog.Debug(msg, fields...)
+}
+
 func (_self *CustomLogger) Info(msg string, data ...any) {
 	_self.zapLog.Info(fmt.Sprintf(msg, data...))
+}
+
+func (_self *CustomLogger) InfoZap(msg string, fields ...zap.Field) {
+	_self.zapLog.Info(msg, fields...)
 }
 
 func (_self *CustomLogger) Warn(msg string, data ...any) {

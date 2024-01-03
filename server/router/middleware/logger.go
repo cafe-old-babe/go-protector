@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// RecordLog 记录日志
 func RecordLog(ctx *gin.Context) {
 	customLogger := logger.NewLogger(ctx)
 	start := time.Now()
@@ -15,7 +16,7 @@ func RecordLog(ctx *gin.Context) {
 	ctx.Next()
 
 	cost := time.Since(start)
-	customLogger.Info(path,
+	customLogger.DebugZap(path,
 		zap.Int("status", ctx.Writer.Status()),
 		zap.String("method", ctx.Request.Method),
 		zap.String("path", path),

@@ -28,7 +28,8 @@ const METHOD = {
  * @param url 请求地址
  * @param method {METHOD} http method
  * @param params 请求参数
- * @returns {Promise<AxiosResponse<T>>}
+ * @param config
+ * @returns {Promise<AxiosResponse<any>>}
  */
 async function request(url, method, params, config) {
   switch (method) {
