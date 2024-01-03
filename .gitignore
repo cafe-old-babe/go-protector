@@ -4,7 +4,10 @@
 .DS_Store
 .git
 ./log/
-config/config.yml
+*.log
+
+./config
+config.yml
 
 *.lock
 *.sum
