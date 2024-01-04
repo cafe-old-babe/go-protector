@@ -7,6 +7,7 @@ import (
 )
 
 func SetDB(ctx *gin.Context) {
-	ctx.Set(local.CtxKeyDB, database.GetDB())
+	db := database.GetDB(ctx)
+	ctx.Set(local.CtxKeyDB, db)
 	ctx.Next()
 }

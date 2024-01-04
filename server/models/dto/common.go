@@ -29,6 +29,10 @@ func ResultFailureMsg(msg ...string) *Result {
 	return ResultCustom(http.StatusBadRequest, nil, msg...)
 }
 
+func ResultFailureErr(err error) *Result {
+	return ResultCustom(http.StatusBadRequest, nil, err.Error())
+}
+
 func ResultCustom(code int, data any, msg ...string) *Result {
 	// res := &src 和 new(Result) 的效率是相同的。
 	// 使用 res := src 的方式是可行的，但是它不如使用 res := &src 的方式高效。

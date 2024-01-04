@@ -1,6 +1,8 @@
 package database
 
 import (
+	"context"
+	"go-protector/server/commons/local"
 	"gorm.io/gorm"
 	"sync"
 )
@@ -15,6 +17,10 @@ func SetDB(db *gorm.DB) {
 	})
 }
 
-func GetDB() *gorm.DB {
-	return _db
+func GetDB(ctx context.Context) *gorm.DB {
+	if db, ok := ctx.Value(local.CtxKeyDB).(*gorm.DB); ok {
+		return db
+	}
+
+	return _db.WithContext(ctx)
 }

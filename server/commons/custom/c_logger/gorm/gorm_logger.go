@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-protector/server/commons/custom/c_logger"
 	"go-protector/server/commons/local"
-	cLog "go-protector/server/commons/logger"
-	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
 	"time"
@@ -48,23 +47,17 @@ func NewGormLogger(config logger.Config) logger.Interface {
 	}
 }
 
-func (_self *gormLogger) getLoggerByCtx(ctx context.Context) *cLog.CustomLogger {
-	traceId := ctx.Value(local.CtxKeyTraceId)
-	var fieldSlice []zapcore.Field
-	if traceId != nil {
-		fieldSlice = append(fieldSlice, zapcore.Field{
-			Key:    local.CtxKeyTraceId,
-			Type:   zapcore.StringerType,
-			String: traceId.(string),
-		})
-
+func (_self *gormLogger) getLoggerByCtx(ctx context.Context) *c_logger.SelfLogger {
+	if log, ok := ctx.Value(local.CtxKeyLog).(*c_logger.SelfLogger); ok {
+		return log
 	}
-	return cLog.NewLoggerByField(ctx, fieldSlice...)
 
+	return c_logger.NewLoggerByField(ctx)
 }
 
 // LogMode log mode
-func (_self *gormLogger) LogMode(level logger.LogLevel) logger.Interface { // *_self 表示将 _self 指针所指向的对象解构出来，然后将其赋值给 newLog。
+func (_self *gormLogger) LogMode(level logger.LogLevel) logger.Interface {
+	// *_self 表示将 _self 指针所指向的对象解构出来，然后将其赋值给 newLog。
 	// newLog 就成为了 _self 的一个副本，具有相同的结构和数据。
 	// 这种拷贝方式可以被视为一种浅拷贝。
 	// 深拷贝是指复制对象的所有属性以及这些属性所引用的所有对象，以创建一个独立的副本。

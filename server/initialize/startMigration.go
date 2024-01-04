@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"context"
 	"go-protector/server/commons/database"
 	"go-protector/server/models/entity"
 )
@@ -13,6 +14,6 @@ func StartMigration() (err error) {
 	if err = initDB(); err != nil {
 		return err
 	}
-	err = database.GetDB().AutoMigrate(&entity.SysUser{})
+	err = database.GetDB(context.Background()).AutoMigrate(&entity.SysUser{})
 	return err
 }

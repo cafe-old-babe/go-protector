@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"go-protector/server/commons/config"
-	"go-protector/server/commons/logger"
+	"go-protector/server/commons/custom/c_logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -53,7 +53,7 @@ func initLogger() (err error) {
 		}), level),
 	)
 	zapLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
-	logger.SetLogger(zapLog)
+	c_logger.SetLogger(zapLog)
 
 	return
 }

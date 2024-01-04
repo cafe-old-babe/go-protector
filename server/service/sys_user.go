@@ -1,10 +1,11 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"go-protector/server/commons/base"
+	"go-protector/server/commons/custom/c_error"
 	"go-protector/server/commons/local"
-	"go-protector/server/commons/selfErr"
 	"go-protector/server/dao"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
@@ -24,8 +25,8 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 
 	if err != nil {
 		_self.Logger.Error("FindUser: %s, err: %v", loginDTO.LoginName, err.Error())
-		if errors.Is(selfErr.ErrRecordNotFoundSysUser, err) {
-			res = dto.ResultFailureMsg(selfErr.ErrLoginNameOrPasswordIncorrect.Error())
+		if errors.Is(c_error.ErrRecordNotFoundSysUser, err) {
+			res = dto.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 		}
 		res = dto.ResultFailureMsg(err.Error())
 		return
@@ -33,7 +34,7 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 
 	if sysUser == nil {
 		_self.Logger.Error("未查询到用户: %s", loginDTO.LoginName)
-		res = dto.ResultFailureMsg(selfErr.ErrLoginNameOrPasswordIncorrect.Error())
+		res = dto.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 		return
 	}
 	now := time.Now()
@@ -42,19 +43,23 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 
 		if now.After(sysUser.ExpirationAt.Time) {
 			_self.Logger.Error("用户: %s 已过有效期", loginDTO.LoginName)
-			res = dto.ResultFailureMsg(selfErr.ErrLoginNameOrPasswordIncorrect.Error())
+			res = dto.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 			// 更新用户信息
-			if err = dao.SysUser.LockUser(_self.DB, sysUser.Id,
-				local.LockTypeExpire, "用户已过有效期"); err != nil {
+			sysUser.UserStatus = local.LockTypeExpire
+			sysUser.LockReason = sql.NullString{
+				String: "用户已过有效期",
+				Valid:  true,
+			}
+			sysUser.UpdatedBy = sysUser.ID
+			if err = dao.SysUser.LockUser(_self.DB, sysUser); err != nil {
 				_self.Logger.Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
 			}
-			res = dto.ResultFailureMsg(selfErr.ErrLoginNameOrPasswordIncorrect.Error())
 			return
 		}
 	}
 	// 校验密码
 	if sysUser.Password != loginDTO.Password {
-		res = dto.ResultFailureMsg("用户名或密码不正确")
+		res = dto.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 		return
 	}
 
@@ -66,7 +71,7 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 func (_self *SysUser) LoginSuccess(sysUser *entity.SysUser) (res *dto.Result) {
 	var err error
 	// 更新最后登录时间 最后登录IP
-	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, sysUser.Id, _self.Ctx.ClientIP()); err != nil {
+	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, sysUser.ID, _self.Ctx.ClientIP()); err != nil {
 		_self.Logger.Error("用户: %s UpdateLastLoginIp err: %v", sysUser.LoginName, err)
 	}
 	res = dto.ResultSuccess(dto.LoginSuccess{

@@ -7,7 +7,7 @@ import (
 
 // ModelId https://gorm.io/zh_CN/docs/models.html
 type ModelId struct {
-	Id uint64 `json:"id" gorm:"primaryKey"`
+	ID uint64 `json:"id" gorm:"primaryKey:"`
 }
 
 type ModelControl struct {

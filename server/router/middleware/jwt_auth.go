@@ -1,5 +1,5 @@
 package middleware
 
-func Auth() {
+func JwtAuth() {
 
 }

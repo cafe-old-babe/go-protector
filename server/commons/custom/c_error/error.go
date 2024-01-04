@@ -1,4 +1,4 @@
-package selfErr
+package c_error
 
 import "errors"
 

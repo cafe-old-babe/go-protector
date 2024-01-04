@@ -2,19 +2,19 @@ package base
 
 import (
 	"github.com/gin-gonic/gin"
+	"go-protector/server/commons/custom/c_logger"
 	"go-protector/server/commons/database"
-	"go-protector/server/commons/logger"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	Logger *logger.CustomLogger
+	Logger *c_logger.SelfLogger
 	DB     *gorm.DB
 	Ctx    *gin.Context
 }
 
 func (_self *Service) MakeService(ctx *gin.Context) {
-	_self.DB = database.GetDB()
-	_self.Logger = logger.NewLogger(ctx)
+	_self.DB = database.GetDB(ctx)
+	_self.Logger = c_logger.GetLogger(ctx)
 	_self.Ctx = ctx
 }

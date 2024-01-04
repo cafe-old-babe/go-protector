@@ -2,20 +2,20 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/logger"
-	"go-protector/server/commons/result"
+	"go-protector/server/commons/custom/c_logger"
+	"go-protector/server/commons/custom/result"
 	"go-protector/server/models/dto"
 	"go-protector/server/service"
 )
 
-var UserApi = new(User)
+var UserApi user
 
-type User struct{}
+type user struct{}
 
-func (_self User) Login(c *gin.Context) {
+func (_self user) Login(c *gin.Context) {
 	var loginDTO dto.Login
 	if err := c.BindJSON(&loginDTO); err != nil {
-		logger.NewLogger(c).Error("login Error: %v", err)
+		c_logger.GetLogger(c).Error("login Error: %v", err)
 		result.Failure(c, nil, err.Error())
 		return
 	}
@@ -25,6 +25,6 @@ func (_self User) Login(c *gin.Context) {
 	result.Result(c, res)
 }
 
-func (_self User) Logout(c *gin.Context) {
+func (_self user) Logout(c *gin.Context) {
 	result.Success(c, nil)
 }

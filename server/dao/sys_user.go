@@ -2,8 +2,8 @@ package dao
 
 import (
 	"errors"
+	"go-protector/server/commons/custom/c_error"
 	"go-protector/server/commons/local/table_name"
-	"go-protector/server/commons/selfErr"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
 	"gorm.io/gorm"
@@ -20,7 +20,7 @@ func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
 	sysUser *entity.SysUser, err error) {
 
 	if dto == nil || (len(dto.LoginName) <= 0 && dto.Id <= 0) {
-		err = selfErr.ErrParamInvalid
+		err = c_error.ErrParamInvalid
 		return
 	}
 
@@ -39,7 +39,7 @@ func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
 	if err = tx.First(sysUser).Error; err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
 			sysUser = nil
-			err = selfErr.ErrRecordNotFoundSysUser
+			err = c_error.ErrRecordNotFoundSysUser
 			return
 		}
 	}
@@ -50,33 +50,50 @@ func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
 // id
 // lockType 锁定类型
 // lockReason 锁定原因
-func (_self *sysUser) LockUser(db *gorm.DB, id uint64, lockType int, lockReason string) (err error) {
+func (_self *sysUser) LockUser(db *gorm.DB, sysUser *entity.SysUser) (err error) {
 
-	if id <= 0 || lockType <= 0 || len(lockReason) <= 0 {
-		err = selfErr.ErrParamInvalid
+	if nil == sysUser {
+		err = c_error.ErrParamInvalid
 		return
 	}
-	result := db.Table(table_name.SysUser).
-		Where("id = ?", id).
-		Updates(map[string]interface{}{
-			"lock_type":   lockType,
-			"lock_reason": lockReason,
-		})
+	result := db.Model(sysUser).Select("user_status", "lock_reason", "lock_time", "updated_by").Updates(sysUser)
+
 	if result.Error != nil {
 		err = result.Error
 		return
 	}
 	if result.RowsAffected <= 0 {
-		err = selfErr.ErrUpdateFailure
+		err = c_error.ErrUpdateFailure
 	}
 
 	return
 }
 
+// UnlockUser 解锁用户
+func (_self *sysUser) UnlockUser(db *gorm.DB, id uint64) error {
+	if id <= 0 {
+		return c_error.ErrParamInvalid
+	}
+	res := db.Table(table_name.SysUser).
+		Where("id = ? and status != 0").
+		Updates(map[string]interface{}{
+			"user_status": 0,
+			"lock_time":   nil,
+			"lock_reason": nil,
+		})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected <= 0 {
+		return c_error.ErrUpdateFailure
+	}
+	return nil
+}
+
 // UpdateLastLoginIp 更新最后登录IP
 func (_self *sysUser) UpdateLastLoginIp(db *gorm.DB, id uint64, lastLoginIp string) (err error) {
 	if id <= 0 || len(lastLoginIp) <= 0 {
-		err = selfErr.ErrParamInvalid
+		err = c_error.ErrParamInvalid
 	}
 	result := db.Table(table_name.SysUser).Where("id = ?", id).
 		Updates(map[string]interface{}{
@@ -88,7 +105,7 @@ func (_self *sysUser) UpdateLastLoginIp(db *gorm.DB, id uint64, lastLoginIp stri
 		return result.Error
 	}
 	if result.RowsAffected <= 0 {
-		err = selfErr.ErrUpdateFailure
+		err = c_error.ErrUpdateFailure
 	}
 	return
 

@@ -3,15 +3,15 @@ package middleware
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/logger"
-	"go-protector/server/commons/result"
+	"go-protector/server/commons/custom/c_logger"
+	"go-protector/server/commons/custom/result"
 )
 
 // Recovery 全局 recover
 func Recovery(ctx *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.NewLogger(ctx).Error("recover err: %v", err)
+			c_logger.GetLogger(ctx).Error("recover err: %v", err)
 			if ctx.IsAborted() {
 				ctx.Status(200)
 			}
