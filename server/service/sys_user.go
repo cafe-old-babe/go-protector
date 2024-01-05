@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"go-protector/server/commons/base"
 	"go-protector/server/commons/custom/c_error"
 	"go-protector/server/commons/local"
@@ -16,10 +17,16 @@ type SysUser struct {
 	base.Service
 }
 
+func MakeSysUser(ctx *gin.Context) *SysUser {
+	var self SysUser
+	self.MakeService(ctx)
+	return &self
+}
+
 func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 	var sysUser *entity.SysUser
 	var err error
-	sysUser, err = dao.SysUser.FindUserByDTO(_self.DB, &dto.FindUserDTO{
+	sysUser, err = dao.SysUser.FindUserByDTO(_self.DB, &dto.FindUser{
 		LoginName: loginDTO.LoginName,
 	})
 
@@ -84,5 +91,29 @@ func (_self *SysUser) LoginSuccess(sysUser *entity.SysUser) (res *dto.Result) {
 		// todo jwt token
 		Token: "",
 	})
+	return
+}
+
+func (_self *SysUser) SetStatus(dto *dto.SetStatus) (err error) {
+	if dto == nil || dto.ID <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	if dto.UserStatus <= 0 {
+		// 解锁
+		if err = dao.SysUser.UnlockUser(_self.DB, dto); err != nil {
+			_self.Logger.Error("SetStatus UnlockUser err: %v", err)
+		}
+	} else {
+		// 加锁
+		if err = dao.SysUser.LockUser(_self.DB, &entity.SysUser{
+			ModelId:    entity.ModelId{ID: dto.ID},
+			LockReason: sql.NullString{Valid: true, String: dto.LockReason},
+			UserStatus: dto.UserStatus,
+		}); err != nil {
+			_self.Logger.Error("SetStatus LockUser err: %v", err)
+		}
+	}
+
 	return
 }

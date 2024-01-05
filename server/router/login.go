@@ -11,5 +11,6 @@ func InitLogin(group *gin.RouterGroup) {
 		userApi := api.UserApi
 		user.POST("login", userApi.Login)
 		user.POST("logout", userApi.Logout)
+		user.POST("setStatus", userApi.SetStatus)
 	}
 }

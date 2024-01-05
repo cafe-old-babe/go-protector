@@ -28,3 +28,19 @@ func (_self user) Login(c *gin.Context) {
 func (_self user) Logout(c *gin.Context) {
 	result.Success(c, nil)
 }
+
+func (_self user) SetStatus(c *gin.Context) {
+	var updateDTO dto.SetStatus
+	if err := c.BindJSON(&updateDTO); err != nil {
+		c_logger.GetLogger(c).Error("SetStatus Error: %v", err)
+		result.FailureErr(c, err)
+		return
+	}
+	sysUserService := service.MakeSysUser(c)
+	if err := sysUserService.SetStatus(&updateDTO); err != nil {
+		result.FailureErr(c, err)
+		return
+	}
+	result.Success(c, nil)
+
+}

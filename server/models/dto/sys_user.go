@@ -4,8 +4,8 @@ import (
 	"database/sql"
 )
 
-type FindUserDTO struct {
-	Id          uint64
+type FindUser struct {
+	ID          uint64
 	LoginName   string
 	UserStatus  int // 如果非零 查询所有状态
 	IsUnscoped  bool
@@ -17,4 +17,11 @@ type SysUser struct {
 	UserName      string `json:"userName"`
 	LastLoginTime string `json:"lastLoginTime"`
 	LastLoginIp   string `json:"lastLoginIp"`
+}
+
+type SetStatus struct {
+	ID           uint64
+	UserStatus   int
+	LockReason   string
+	ExpirationAt string
 }

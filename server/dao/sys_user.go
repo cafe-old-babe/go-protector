@@ -1,7 +1,9 @@
 package dao
 
 import (
+	"database/sql"
 	"errors"
+	"go-protector/server/commons/current"
 	"go-protector/server/commons/custom/c_error"
 	"go-protector/server/commons/local/table_name"
 	"go-protector/server/models/dto"
@@ -16,10 +18,10 @@ type sysUser struct {
 }
 
 // FindUserByDTO 根据条件查询用户信息
-func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
+func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUser) (
 	sysUser *entity.SysUser, err error) {
 
-	if dto == nil || (len(dto.LoginName) <= 0 && dto.Id <= 0) {
+	if dto == nil || (len(dto.LoginName) <= 0 && dto.ID <= 0) {
 		err = c_error.ErrParamInvalid
 		return
 	}
@@ -47,16 +49,29 @@ func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
 }
 
 // LockUser 锁定用户
-// id
-// lockType 锁定类型
-// lockReason 锁定原因
-func (_self *sysUser) LockUser(db *gorm.DB, sysUser *entity.SysUser) (err error) {
+// entity.SysUser 锁定用户信息
+func (_self *sysUser) LockUser(db *gorm.DB, entity *entity.SysUser) (err error) {
 
-	if nil == sysUser {
+	if nil == entity || entity.ID <= 0 {
 		err = c_error.ErrParamInvalid
 		return
 	}
-	result := db.Model(sysUser).Select("user_status", "lock_reason", "lock_time", "updated_by").Updates(sysUser)
+	selectSlice := []string{"user_status", "lock_reason", "lock_time"}
+
+	if entity.UpdatedBy <= 0 {
+		if userId := current.GetUserId(db.Statement.Context); userId > 0 {
+			entity.UpdatedBy = userId
+			selectSlice = append(selectSlice, "updated_by")
+		}
+	}
+
+	entity.LockTime = sql.NullTime{
+		Time:  time.Now(),
+		Valid: true,
+	}
+	// 防止ABA的问题
+	result := db.Model(entity).Where("user_status == ?", 0).Select(selectSlice).
+		Updates(entity)
 
 	if result.Error != nil {
 		err = result.Error
@@ -70,17 +85,26 @@ func (_self *sysUser) LockUser(db *gorm.DB, sysUser *entity.SysUser) (err error)
 }
 
 // UnlockUser 解锁用户
-func (_self *sysUser) UnlockUser(db *gorm.DB, id uint64) error {
-	if id <= 0 {
+func (_self *sysUser) UnlockUser(db *gorm.DB, dto *dto.SetStatus) error {
+	if nil == dto || dto.ID <= 0 {
 		return c_error.ErrParamInvalid
 	}
+
+	updateMap := map[string]interface{}{
+		"lock_time":   nil,
+		"lock_reason": nil,
+		"user_status": 0,
+	}
+	if len(dto.ExpirationAt) > 0 {
+		parse, err := time.Parse(dto.ExpirationAt, time.DateTime)
+		if err != nil {
+			return err
+		}
+		updateMap["expiration_at"] = parse
+	}
 	res := db.Table(table_name.SysUser).
-		Where("id = ? and status != 0").
-		Updates(map[string]interface{}{
-			"user_status": 0,
-			"lock_time":   nil,
-			"lock_reason": nil,
-		})
+		Where("id = ? and user_status != 0", dto.ID). // 防止ABA的问题
+		Updates(updateMap)
 	if res.Error != nil {
 		return res.Error
 	}
