@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-protector/server/commons/custom/c_logger"
-	"go-protector/server/commons/custom/result"
+	"go-protector/server/commons/custom/c_result"
 )
 
 // Recovery 全局 recover
@@ -15,7 +15,7 @@ func Recovery(ctx *gin.Context) {
 			if ctx.IsAborted() {
 				ctx.Status(200)
 			}
-			result.Failure(ctx, nil, fmt.Sprintf("recover err: %v", err))
+			c_result.Failure(ctx, nil, fmt.Sprintf("recover err: %v", err))
 		}
 		return
 	}()

@@ -21,6 +21,10 @@ func StartServer() (err error) {
 	if err = initDB(); err != nil {
 		return
 	}
+	// 初始化redis
+	if err = initCache(); err != nil {
+		return
+	}
 
 	server := initServer()
 	go func() {

@@ -1,4 +1,4 @@
-package result
+package c_result
 
 import (
 	"github.com/gin-gonic/gin"

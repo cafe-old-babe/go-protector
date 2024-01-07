@@ -70,7 +70,7 @@ func (_self *sysUser) LockUser(db *gorm.DB, entity *entity.SysUser) (err error) 
 		Valid: true,
 	}
 	// 防止ABA的问题
-	result := db.Model(entity).Where("user_status == ?", 0).Select(selectSlice).
+	result := db.Model(entity).Where("user_status = ?", 0).Select(selectSlice).
 		Updates(entity)
 
 	if result.Error != nil {

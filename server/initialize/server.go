@@ -12,10 +12,10 @@ import (
 func initServer() (server *http.Server) {
 	engine := gin.New()
 	gin.SetMode(config.GetConfig().Server.Model)
-	engine.Use(middleware.RecordLog)
-	engine.Use(middleware.Recovery)
-	engine.Use(middleware.SetDB)
 	engine.Use(middleware.Cors())
+	engine.Use(middleware.Recovery)
+	engine.Use(middleware.RecordLog)
+	engine.Use(middleware.SetDB)
 
 	routerGroup := engine.Group("api")
 	router.InitLogin(routerGroup)
