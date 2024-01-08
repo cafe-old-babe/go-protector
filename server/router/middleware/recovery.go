@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/custom/c_logger"
-	"go-protector/server/commons/custom/c_result"
+	"go-protector/server/core/custom/c_logger"
+	"go-protector/server/core/custom/c_result"
 )
 
 // Recovery 全局 recover

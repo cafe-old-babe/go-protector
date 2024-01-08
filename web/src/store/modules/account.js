@@ -1,10 +1,12 @@
+
 export default {
   namespaced: true,
   state: {
     user: undefined,
     permissions: null,
     roles: null,
-    routesConfig: null
+    routesConfig: null,
+    token: '',
   },
   getters: {
     user: state => {
@@ -53,7 +55,11 @@ export default {
         }
       }
       return state.routesConfig
+    },
+    token: state => {
+      return state.token
     }
+
   },
   mutations: {
     setUser (state, user) {
@@ -71,6 +77,19 @@ export default {
     setRoutesConfig(state, routesConfig) {
       state.routesConfig = routesConfig
       localStorage.setItem(process.env.VUE_APP_ROUTES_KEY, JSON.stringify(routesConfig))
+    },
+    setToken(state, token) {
+      let split = token.split(' ');
+
+      if (split.size() > 1) {
+        state.token = token[1]
+      // localStorage.setItem('Access-Token',  'Bearer '+ token.replace(/Bearer /g, ''));
+      }else{
+        state.token = token
+      }
+
+      // localStorage.setItem('Access-Token', state.token);
+
     }
   }
 }

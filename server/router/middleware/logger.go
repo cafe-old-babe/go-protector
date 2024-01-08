@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/custom/c_logger"
+	"go-protector/server/core/custom/c_logger"
 	"go.uber.org/zap"
 	"time"
 )

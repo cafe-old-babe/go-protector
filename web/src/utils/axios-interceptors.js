@@ -1,4 +1,5 @@
 import Cookie from 'js-cookie'
+import store from '@/store'
 // 401拦截
 const resp401 = {
   /**
@@ -56,7 +57,13 @@ const reqCommon = {
    * @returns {*}
    */
   onFulfilled(config, options) {
-    const {message} = options
+    store.state.account.token
+    let token = store.getters["account/token"];
+    if (token) {
+      // 获取 token 加入的header中
+      config.headers['Authorization'] = token
+    }
+    const {message} = options;
     const {url, xsrfCookieName} = config
     if (url.indexOf('login') === -1 && xsrfCookieName && !Cookie.get(xsrfCookieName)) {
       message.warning('认证 token 已过期，请重新登录')

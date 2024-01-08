@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"go-protector/server/commons/local"
-	"go-protector/server/initialize"
+	"go-protector/server/core/initialize"
+	"go-protector/server/core/local"
 	"os"
 )
 

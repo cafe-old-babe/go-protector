@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/go-yaml/yaml"
-	"go-protector/server/commons/local"
+	"go-protector/server/core/local"
 	"os"
 	"sync"
 )

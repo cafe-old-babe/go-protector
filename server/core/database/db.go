@@ -3,8 +3,8 @@ package database
 import (
 	"context"
 	"fmt"
-	"go-protector/server/commons/current"
-	"go-protector/server/commons/local"
+	"go-protector/server/core/current"
+	"go-protector/server/core/local"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"

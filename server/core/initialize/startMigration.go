@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"context"
-	"go-protector/server/commons/database"
+	"go-protector/server/core/database"
 	"go-protector/server/models/entity"
 )
 

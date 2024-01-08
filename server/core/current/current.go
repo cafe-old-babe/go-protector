@@ -3,7 +3,7 @@ package current
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/local"
+	"go-protector/server/core/local"
 )
 
 func GetUserId(c context.Context) uint64 {

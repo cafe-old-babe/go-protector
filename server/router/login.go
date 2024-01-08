@@ -5,7 +5,7 @@ import (
 	"go-protector/server/api"
 )
 
-func InitLogin(group *gin.RouterGroup) {
+func initLogin(group *gin.RouterGroup) {
 	user := group.Group("user")
 	{
 		userApi := api.UserApi

@@ -1,10 +1,10 @@
 package initialize
 
 import (
-	"go-protector/server/commons/config"
-	gormLogger "go-protector/server/commons/custom/c_logger/gorm"
-	"go-protector/server/commons/database"
-	"go-protector/server/commons/local"
+	"go-protector/server/core/config"
+	gormLogger "go-protector/server/core/custom/c_logger/gorm"
+	"go-protector/server/core/database"
+	"go-protector/server/core/local"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

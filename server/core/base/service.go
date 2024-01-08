@@ -2,8 +2,8 @@ package base
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/custom/c_logger"
-	"go-protector/server/commons/database"
+	"go-protector/server/core/custom/c_logger"
+	"go-protector/server/core/database"
 	"gorm.io/gorm"
 )
 

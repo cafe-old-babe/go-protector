@@ -12,11 +12,13 @@ type FindUser struct {
 	CurrentTime sql.NullTime
 }
 
-type SysUser struct {
-	LoginName     string `json:"loginName"`
-	UserName      string `json:"userName"`
-	LastLoginTime string `json:"lastLoginTime"`
-	LastLoginIp   string `json:"lastLoginIp"`
+type CurrentUser struct {
+	ID        uint64 `json:"ID"`
+	SessionId uint64 `json:"sessionId"`
+	LoginName string `json:"loginName"`
+	UserName  string `json:"userName"`
+	LoginTime string `json:"loginTime"`
+	LoginIp   string `json:"loginIp"`
 }
 
 type SetStatus struct {

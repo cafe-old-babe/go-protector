@@ -6,6 +6,6 @@ type Login struct {
 }
 
 type LoginSuccess struct {
-	SysUser *SysUser `json:"sysUser"`
-	Token   string   `json:"token"`
+	SysUser *CurrentUser `json:"sysUser"`
+	Token   string       `json:"token"`
 }

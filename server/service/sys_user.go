@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go-protector/server/commons/base"
-	"go-protector/server/commons/custom/c_error"
-	"go-protector/server/commons/local"
+	"go-protector/server/core/base"
+	"go-protector/server/core/custom/c_error"
+	"go-protector/server/core/local"
+	"go-protector/server/core/utils"
 	"go-protector/server/dao"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
@@ -75,19 +76,26 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 }
 
 // LoginSuccess 登录成功
-func (_self *SysUser) LoginSuccess(sysUser *entity.SysUser) (res *dto.Result) {
+func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 	var err error
 	// 更新最后登录时间 最后登录IP
-	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, sysUser.ID, _self.Ctx.ClientIP()); err != nil {
-		_self.Logger.Error("用户: %s UpdateLastLoginIp err: %v", sysUser.LoginName, err)
+	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, entity.ID, _self.Ctx.ClientIP()); err != nil {
+		_self.Logger.Error("用户: %s UpdateLastLoginIp err: %v", entity.LoginName, err)
 	}
+
+	// 生成Token
+
+	userDTO := &dto.CurrentUser{
+		ID:        entity.ID,
+		SessionId: utils.GetNextId(),
+		LoginName: entity.LoginName,
+		UserName:  entity.Username,
+		LoginTime: time.Now().Format(time.DateTime),
+		LoginIp:   _self.Ctx.ClientIP(),
+	}
+
 	res = dto.ResultSuccess(dto.LoginSuccess{
-		SysUser: &dto.SysUser{
-			LoginName:     sysUser.LoginName,
-			UserName:      sysUser.Username,
-			LastLoginTime: time.Now().Format(time.DateTime),
-			LastLoginIp:   _self.Ctx.ClientIP(),
-		},
+		SysUser: userDTO,
 		// todo jwt token
 		Token: "",
 	})

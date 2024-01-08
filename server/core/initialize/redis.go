@@ -2,8 +2,8 @@ package initialize
 
 import (
 	"github.com/redis/go-redis/v9"
-	"go-protector/server/commons/cache"
-	"go-protector/server/commons/config"
+	"go-protector/server/core/cache"
+	"go-protector/server/core/config"
 )
 
 func initCache() error {

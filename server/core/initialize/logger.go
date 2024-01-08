@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"go-protector/server/commons/config"
-	"go-protector/server/commons/custom/c_logger"
+	"go-protector/server/core/config"
+	"go-protector/server/core/custom/c_logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -28,9 +28,10 @@ func initLogger() (err error) {
 	// 生成打印到日志文件中的encoder
 	fileEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 	// 将日志等级标识设置为大写并且有颜色
-	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	consoleConfig := encoderConfig
+	consoleConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	// 生成打印到console的encoder
-	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleConfig)
 
 	outputPath := path.Join(loggerCfg.Path, loggerCfg.FileName)
 	if !path.IsAbs(loggerCfg.Path) {
@@ -45,9 +46,9 @@ func initLogger() (err error) {
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level),
 		zapcore.NewCore(fileEncoder, zapcore.AddSync(&lumberjack.Logger{
 			Filename:   outputPath,
-			MaxSize:    100,
-			MaxAge:     7,
-			MaxBackups: 30,
+			MaxSize:    1,
+			MaxAge:     1,
+			MaxBackups: 10,
 			LocalTime:  true,
 			Compress:   true,
 		}), level),
