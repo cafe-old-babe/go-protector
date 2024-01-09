@@ -91,9 +91,10 @@ func (_self *sysUser) UnlockUser(db *gorm.DB, dto *dto.SetStatus) error {
 	}
 
 	updateMap := map[string]interface{}{
-		"lock_time":   nil,
-		"lock_reason": nil,
-		"user_status": 0,
+		"lock_time":     nil,
+		"lock_reason":   nil,
+		"user_status":   0,
+		"expiration_at": nil,
 	}
 	if len(dto.ExpirationAt) > 0 {
 		parse, err := time.Parse(dto.ExpirationAt, time.DateTime)

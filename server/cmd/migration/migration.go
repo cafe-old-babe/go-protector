@@ -6,6 +6,7 @@ import (
 	"go-protector/server/core/initialize"
 	"go-protector/server/core/local"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -19,7 +20,8 @@ var (
 			// 将configFilePath 写入环境变量
 			// 检查文件是否存在
 			if _, err = os.Stat(configFilePath); err == nil {
-				if err = os.Setenv(local.EnvConfig, configFilePath); err != nil {
+				abs, _ := filepath.Abs(configFilePath)
+				if err = os.Setenv(local.EnvConfig, abs); err != nil {
 					fmt.Printf("set env err: %v", err)
 					return
 				}

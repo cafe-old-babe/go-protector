@@ -10,6 +10,7 @@ import (
 	"go-protector/server/cmd/migration"
 	"go-protector/server/cmd/server"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -40,6 +41,7 @@ func Execute() {
 }
 
 func init() {
+	time.Local, _ = time.LoadLocation("Asia/Shanghai")
 	rootCmd.AddCommand(server.StartCmd)
 	rootCmd.AddCommand(migration.StartCmd)
 

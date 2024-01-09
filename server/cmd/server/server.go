@@ -34,22 +34,10 @@ var (
 			return
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run()
+			return initialize.StartServer()
 		},
 	}
 )
-
-func run() (err error) {
-	defer func() {
-		_ = os.Unsetenv(local.EnvConfig)
-	}()
-
-	if err = initialize.StartServer(); err != nil {
-		return
-	}
-
-	return
-}
 
 func init() {
 	StartCmd.PersistentFlags().StringVarP(&configFilePath, "config", "c", "config/config.yml", "Start server with provided configuration file")

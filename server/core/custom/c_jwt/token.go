@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/golang-jwt/jwt/v5"
 	"go-protector/server/core/config"
+	"go-protector/server/core/utils"
 	"go-protector/server/models/dto"
 	time "time"
 )
@@ -14,13 +15,17 @@ const secretKey = "secret-p90-23n09.32342"
 // go get -u github.com/golang-jwt/jwt/v5
 func GenerateToken(currentUser *dto.CurrentUser) (jwtString string, err error) {
 	var bytes []byte
+	sessionTimeout := config.GetConfig().Jwt.SessionTimeout
 	if bytes, err = json.Marshal(currentUser); err != nil {
 		return
 	}
-	now := time.Now()
+	if currentUser.SessionId <= 0 {
+		currentUser.SessionId = utils.GetNextId()
+	}
+	now := time.Now().Local()
 	registeredClaims := jwt.RegisteredClaims{
 		// 过期时间
-		ExpiresAt: jwt.NewNumericDate(now.Add(time.Second * time.Duration(config.GetConfig().Jwt.SessionTimeout))),
+		ExpiresAt: jwt.NewNumericDate(now.Add(time.Second * time.Duration(sessionTimeout))),
 		// 签发时间
 		IssuedAt: jwt.NewNumericDate(now),
 		// 携带的内容
@@ -53,7 +58,8 @@ func ParserToken(jwtString *string) (userPointer *dto.CurrentUser, err error) {
 	// 换token
 	iat, _ := claims.GetIssuedAt()
 	// 如果token的未过有效期, 但token时效性过期了,更换token
-	if iat.Add(time.Second * time.Duration(config.GetConfig().Jwt.TokenTimeout)).After(time.Now()) {
+	tokenTimeout := config.GetConfig().Jwt.TokenTimeout
+	if time.Now().After(iat.Add(time.Second * time.Duration(tokenTimeout))) {
 		*jwtString, err = GenerateToken(userPointer)
 	}
 	return

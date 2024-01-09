@@ -51,8 +51,7 @@ func (_self *gormLogger) getLoggerByCtx(ctx context.Context) *c_logger.SelfLogge
 	if log, ok := ctx.Value(local.CtxKeyLog).(*c_logger.SelfLogger); ok {
 		return log
 	}
-
-	return c_logger.NewLoggerByField(ctx)
+	return c_logger.GetLoggerByCtx(ctx)
 }
 
 // LogMode log mode

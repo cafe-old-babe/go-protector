@@ -59,7 +59,23 @@ func GetLogger(ctx *gin.Context) (log *SelfLogger) {
 	ctx.Set(local.CtxKeyLog, log)
 	return
 }
+func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
+	var ok bool
+	log, ok = ctx.Value(local.CtxKeyLog).(*SelfLogger)
+	if ok {
+		return
+	}
+	log = &SelfLogger{
+		zapLog: _log.zapLog.With(),
+		ctx:    ctx,
+	}
+	if traceId, ok := ctx.Value(local.CtxKeyTraceId).(string); ok {
+		log.zapLog.Named(traceId)
+	}
 
+	ctx = context.WithValue(ctx, local.CtxKeyLog, log)
+	return
+}
 func NewLoggerByField(ctx context.Context, fields ...zap.Field) *SelfLogger {
 	return &SelfLogger{
 		zapLog: _log.zapLog.With(fields...),

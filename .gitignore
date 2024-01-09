@@ -3,7 +3,7 @@
 .vscode
 .DS_Store
 .git
-./log/
+log/
 *.log
 
 ./config
@@ -22,6 +22,6 @@ config.yml
 go_build_*
 go-protector
 GoProtector*
-
+*.test
 
 

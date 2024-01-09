@@ -3,6 +3,7 @@ package initialize
 import (
 	"context"
 	"errors"
+	"go-protector/server/core/local"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -12,21 +13,11 @@ import (
 
 // StartServer https://gin-gonic.com/zh-cn/docs/examples/
 func StartServer() (err error) {
-	// 加载配置
-	if err = initLogger(); err != nil {
-		return
+	var server *http.Server
+	if server, err = GetServer(); err != nil {
+		return err
 	}
 
-	// 初始化并赋值数据库全局变量
-	if err = initDB(); err != nil {
-		return
-	}
-	// 初始化redis
-	if err = initCache(); err != nil {
-		return
-	}
-
-	server := initServer()
 	go func() {
 		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			zap.L().Error("ListenAndServe failure ", zap.Error(err))
@@ -56,5 +47,30 @@ func StartServer() (err error) {
 		zap.L().Error("server Shutdown failure ", zap.Error(err))
 	}
 
+	return
+}
+
+// GetServer 获取server
+func GetServer() (server *http.Server, err error) {
+	defer func() {
+		_ = os.Unsetenv(local.EnvConfig)
+	}()
+
+	time.Local, _ = time.LoadLocation("Asia/Shanghai")
+	// 加载配置
+	if err = initLogger(); err != nil {
+		return
+	}
+
+	// 初始化并赋值数据库全局变量
+	if err = initDB(); err != nil {
+		return
+	}
+	// 初始化redis
+	if err = initCache(); err != nil {
+		return
+	}
+
+	server = initServer()
 	return
 }
