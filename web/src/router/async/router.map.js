@@ -21,16 +21,19 @@ const routerMap = {
     authority: '*',
     name: 'exp403',
     path: '403',
+    invisible: false,
     component: () => import('@/pages/exception/403')
   },
   exp404: {
     name: 'exp404',
     path: '404',
+    invisible: false,
     component: () => import('@/pages/exception/404')
   },
   exp500: {
     name: 'exp500',
     path: '500',
+    invisible: false,
     component: () => import('@/pages/exception/500')
   },
   root: {
@@ -52,7 +55,14 @@ const routerMap = {
   exception: {
     name: '异常页',
     icon: 'warning',
+    invisible: false,
     component: view.blank
+  },
+  managerRole: {
+    name: '角色管理',
+    icon: 'form',
+    renderMenu: false,
+    component: () => import('@/pages/system/manager/role')
   }
 }
 export default routerMap

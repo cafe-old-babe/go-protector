@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/go-yaml/yaml"
-	"go-protector/server/core/local"
+	"go-protector/server/core/consts"
 	"os"
 	"sync"
 )
@@ -31,7 +31,7 @@ func GetConfig() *config {
 
 	_config = &config{}
 
-	configPath := os.Getenv(local.EnvConfig)
+	configPath := os.Getenv(consts.EnvConfig)
 	data, _ := os.ReadFile(configPath)
 
 	if err := yaml.Unmarshal(data, _config); err != nil {

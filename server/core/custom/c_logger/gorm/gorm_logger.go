@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/custom/c_logger"
-	"go-protector/server/core/local"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
 	"time"
@@ -48,7 +48,7 @@ func NewGormLogger(config logger.Config) logger.Interface {
 }
 
 func (_self *gormLogger) getLoggerByCtx(ctx context.Context) *c_logger.SelfLogger {
-	if log, ok := ctx.Value(local.CtxKeyLog).(*c_logger.SelfLogger); ok {
+	if log, ok := ctx.Value(consts.CtxKeyLog).(*c_logger.SelfLogger); ok {
 		return log
 	}
 	return c_logger.GetLoggerByCtx(ctx)

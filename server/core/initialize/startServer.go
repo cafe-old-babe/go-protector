@@ -3,7 +3,7 @@ package initialize
 import (
 	"context"
 	"errors"
-	"go-protector/server/core/local"
+	"go-protector/server/core/consts"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -53,7 +53,7 @@ func StartServer() (err error) {
 // GetServer 获取server
 func GetServer() (server *http.Server, err error) {
 	defer func() {
-		_ = os.Unsetenv(local.EnvConfig)
+		_ = os.Unsetenv(consts.EnvConfig)
 	}()
 
 	time.Local, _ = time.LoadLocation("Asia/Shanghai")

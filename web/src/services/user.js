@@ -1,5 +1,9 @@
-import {LOGIN, ROUTES} from '@/services/api'
+// import {LOGIN, ROUTES} from '@/services/api'
 import {request, METHOD, removeAuthorization} from '@/utils/request'
+const url = {
+  login: '/api/user/login',
+  routes: '/api/system/routes'
+}
 
 /**
  * 登录服务
@@ -7,15 +11,17 @@ import {request, METHOD, removeAuthorization} from '@/utils/request'
  * @param password 账户密码
  * @returns {Promise<AxiosResponse<T>>}
  */
-export async function login(name, password) {
-  return request(LOGIN, METHOD.POST, {
-    loginName: name,
-    password: password
+export async function login({loginName, password, cid, code}) {
+  return request(url.login, {
+    loginName: loginName,
+    password: password,
+    cid: cid,
+    code: code
   })
 }
 
 export async function getRoutesConfig() {
-  return request(ROUTES, METHOD.GET)
+  return request(url.routes,{}, METHOD.GET)
 }
 
 /**

@@ -5,11 +5,12 @@ import (
 	"go-protector/server/api"
 )
 
-func InitSystem(group *gin.RouterGroup) {
+func initSystem(group *gin.RouterGroup) {
 	system := group.Group("system")
 	{
 		systemApi := api.SystemApi
 		system.GET("/captcha", systemApi.GenerateCaptcha)
+		system.GET("/routes", systemApi.Routes)
 
 	}
 }

@@ -1,5 +1,6 @@
 import axios from 'axios'
-import Cookie from 'js-cookie'
+// import Cookie from 'js-cookie'
+import store from '@/store'
 
 // 跨域认证信息 header 名
 const xsrfHeaderName = 'Authorization'
@@ -31,7 +32,7 @@ const METHOD = {
  * @param config
  * @returns {Promise<AxiosResponse<any>>}
  */
-async function request(url, method, params, config) {
+async function request(url, params= {}, method = METHOD.POST, config) {
   switch (method) {
     case METHOD.GET:
       return axios.get(url, {params, ...config})
@@ -50,7 +51,8 @@ async function request(url, method, params, config) {
 function setAuthorization(auth, authType = AUTH_TYPE.BEARER) {
   switch (authType) {
     case AUTH_TYPE.BEARER:
-      Cookie.set(xsrfHeaderName, 'Bearer ' + auth.token, {expires: auth.expireAt})
+      store.commit("account/setToken", 'Bearer ' + auth.token)
+      // Cookie.set(xsrfHeaderName, 'Bearer ' + auth.token, {expires: auth.expireAt})
       break
     case AUTH_TYPE.BASIC:
     case AUTH_TYPE.AUTH1:
@@ -67,7 +69,8 @@ function setAuthorization(auth, authType = AUTH_TYPE.BEARER) {
 function removeAuthorization(authType = AUTH_TYPE.BEARER) {
   switch (authType) {
     case AUTH_TYPE.BEARER:
-      Cookie.remove(xsrfHeaderName)
+      store.commit("account/setToken", '');
+      // Cookie.remove(xsrfHeaderName)
       break
     case AUTH_TYPE.BASIC:
     case AUTH_TYPE.AUTH1:
@@ -83,10 +86,12 @@ function removeAuthorization(authType = AUTH_TYPE.BEARER) {
  * @returns {boolean}
  */
 function checkAuthorization(authType = AUTH_TYPE.BEARER) {
+  let token = store.getters["account/token"];
   switch (authType) {
     case AUTH_TYPE.BEARER:
-      if (Cookie.get(xsrfHeaderName)) {
-        return true
+      // if (Cookie.get(xsrfHeaderName)) {
+      if (token) {
+        return true;
       }
       break
     case AUTH_TYPE.BASIC:

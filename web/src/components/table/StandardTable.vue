@@ -19,12 +19,19 @@
       :columns="columns"
       :dataSource="dataSource"
       :rowKey="rowKey"
-      :pagination="pagination"
+      :pagination="{showSizeChanger: true, ...pagination}"
       :expandedRowKeys="expandedRowKeys"
       :expandedRowRender="expandedRowRender"
       @change="onChange"
       :rowSelection="selectedRows ? {selectedRowKeys, onSelect, onSelectAll} : undefined"
+      :scroll="scroll"
     >
+     <span
+         slot="serial"
+         slot-scope="text, record, index"
+     >
+        {{ index + 1 }}
+      </span>
       <template slot-scope="text, record, index" :slot="slot" v-for="slot in Object.keys($scopedSlots).filter(key => key !== 'expandedRowRender') ">
         <slot :name="slot" v-bind="{text, record, index}"></slot>
       </template>
@@ -42,6 +49,13 @@
 export default {
   name: 'StandardTable',
   props: {
+    scroll: {
+        type: Object,
+        require: false,
+        default:  () => ({
+            y: window.innerHeight-64
+        })
+    },
     bordered: Boolean,
     loading: [Boolean, Object],
     columns: Array,

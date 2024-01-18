@@ -18,6 +18,7 @@ const routesConfig = [
 ]
 
 const options = {
+  mode: 'history',
   routes: parseRoutes(routesConfig, routerMap)
 }
 

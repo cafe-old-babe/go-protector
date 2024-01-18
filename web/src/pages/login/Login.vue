@@ -17,7 +17,7 @@
                 autocomplete="autocomplete"
                 size="large"
                 placeholder="admin"
-                v-decorator="['name', {rules: [{ required: true, message: '请输入账户名', whitespace: true}]}]"
+                v-decorator="['loginName', {rules: [{ required: true, message: '请输入账户名', whitespace: true}]}]"
               >
                 <a-icon slot="prefix" type="user" />
               </a-input>
@@ -32,6 +32,18 @@
               >
                 <a-icon slot="prefix" type="lock" />
               </a-input>
+            </a-form-item>
+            <a-form-item>
+                <a-input
+                    size="large"
+                    placeholder="请输入验证码..."
+                    v-decorator="['code',{rules: [{ required: true, message: '请输入验证码!' }], validateTrigger: 'blur'}]"
+                >
+                <a-icon slot="prefix" type="safety" :style="{ color: 'rgba(0,0,0,.25)' }"/>
+                    <span slot="suffix" @click="refreshCode" title="点击刷新验证码">
+                      <img style="width: 100px;" :src="this.b64s" alt="1231231"/>
+                    </span>
+                </a-input>
             </a-form-item>
           </a-tab-pane>
           <a-tab-pane tab="手机号登录" key="2">
@@ -61,13 +73,13 @@
         <a-form-item>
           <a-button :loading="logging" style="width: 100%;margin-top: 24px" size="large" htmlType="submit" type="primary">登录</a-button>
         </a-form-item>
-        <div>
+<!--        <div>
           其他登录方式
           <a-icon class="icon" type="alipay-circle" />
           <a-icon class="icon" type="taobao-circle" />
           <a-icon class="icon" type="weibo-circle" />
           <router-link style="float: right" to="/dashboard/workplace" >注册账户</router-link>
-        </div>
+        </div>-->
       </a-form>
     </div>
   </common-layout>
@@ -76,7 +88,9 @@
 <script>
 import CommonLayout from '@/layouts/CommonLayout'
 import {login, getRoutesConfig} from '@/services/user'
-import {setAuthorization} from '@/utils/request'
+import {getCaptcha} from '@/services/system'
+
+// import { setAuthorization} from '@/utils/request'
 import {loadRoutes} from '@/utils/routerUtil'
 import {mapMutations} from 'vuex'
 
@@ -87,10 +101,15 @@ export default {
     return {
       logging: false,
       error: '',
+      b64s: '',
+      cid: '',
       form: this.$form.createForm(this)
     }
   },
-  computed: {
+	created () {
+    this.refreshCode()
+	},
+	computed: {
     systemName () {
       return this.$store.state.setting.systemName
     }
@@ -99,19 +118,19 @@ export default {
     ...mapMutations('account', ['setUser', 'setPermissions', 'setRoles','setToken']),
     onSubmit (e) {
       e.preventDefault()
-      this.form.validateFields((err) => {
+      this.form.validateFields(['loginName', 'password', 'code'],(err, values) => {
         if (!err) {
           this.logging = true
-          const name = this.form.getFieldValue('name')
-          const password = this.form.getFieldValue('password')
-          login(name, password).then(this.afterLogin)
+          // const name = this.form.getFieldValue('name')
+          // const password = this.form.getFieldValue('password')
+          login({...values, cid: this.cid}).then(this.afterLogin)
         }
       })
     },
     afterLogin(res) {
       this.logging = false
       const loginRes = res.data
-      if (loginRes.code >= 0) {
+      if (loginRes.code === 200) {
         const {user, permissions, roles} = loginRes.data
         this.setUser(user)
         this.setPermissions(permissions)
@@ -119,8 +138,8 @@ export default {
         this.setToken(loginRes.data.token)
         // setAuthorization({token: loginRes.data.token, expireAt: new Date(loginRes.data.expireAt)})
         // 获取路由配置
-        getRoutesConfig().then(result => {
-          const routesConfig = result.data.data
+        getRoutesConfig().then(res => {
+          const routesConfig = res.data.data ?? []
           loadRoutes(routesConfig)
           this.$router.push('/demo')
           this.$message.success(loginRes.message, 3)
@@ -131,7 +150,18 @@ export default {
     },
     onClose() {
       this.error = false
-    }
+    },
+    refreshCode() {
+      getCaptcha().then(res => {
+        let data = res.data;
+        if (!data.code || data.code !== 200) {
+          this.$message.error("请求服务器异常,请联系管理员")
+          return
+        }
+        this.b64s = data.data.b64s
+        this.cid = data.data.cid
+      })
+    },
   }
 }
 </script>

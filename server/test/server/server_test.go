@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/go-playground/assert/v2"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/initialize"
-	"go-protector/server/core/local"
 	"go-protector/server/models/dto"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +18,7 @@ var configPath string
 
 func init() {
 	configPath, _ = filepath.Abs("/opt/work_space/github/go-protector/config/config.yml")
-	_ = os.Setenv(local.EnvConfig, configPath)
+	_ = os.Setenv(consts.EnvConfig, configPath)
 }
 
 func TestServer(t *testing.T) {

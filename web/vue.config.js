@@ -7,7 +7,7 @@ const CompressionWebpackPlugin = require('compression-webpack-plugin')
 
 const productionGzipExtensions = ['js', 'css']
 const isProd = process.env.NODE_ENV === 'production'
-
+const port = process.env.port || 8020 // dev port
 const assetsCDN = {
   // webpack build externals
   externals: {
@@ -36,6 +36,7 @@ const assetsCDN = {
 
 module.exports = {
   devServer: {
+    port: port,
     proxy: {
       '/api/': { //此处要与 /services/api.js 中的 API_PROXY_PREFIX 值保持一致
         target: process.env.VUE_APP_API_BASE_URL,

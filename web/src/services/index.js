@@ -1,5 +1,7 @@
 import userService from './user'
+import systemService from './system'
 
 export {
-  userService
+  userService,
+  systemService
 }

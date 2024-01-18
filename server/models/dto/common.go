@@ -66,11 +66,11 @@ type Page struct {
 	PageIndex  int   `json:"pageNo"`
 	PageSize   int   `json:"pageSize"`
 	TotalPages int   `json:"totalPage"`
-	Data       any   `json:"data"`
+	List       any   `json:"list"`
 }
 
 type Pagination struct {
-	PageIndex int `json:"pageNo" form:"pageNo"`
+	PageIndex int `json:"current" form:"current"`
 	PageSize  int `json:"pageSize" form:"pageSize"`
 }
 

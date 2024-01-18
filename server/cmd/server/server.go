@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/initialize"
-	"go-protector/server/core/local"
 	"os"
 )
 
@@ -19,7 +19,7 @@ var (
 			// 将configFilePath 写入环境变量
 			// 检查文件是否存在
 			if _, err = os.Stat(configFilePath); err == nil {
-				if err = os.Setenv(local.EnvConfig, configFilePath); err != nil {
+				if err = os.Setenv(consts.EnvConfig, configFilePath); err != nil {
 					fmt.Printf("set env err: %v", err)
 					return
 				}

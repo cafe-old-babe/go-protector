@@ -3,8 +3,8 @@ package migration
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/initialize"
-	"go-protector/server/core/local"
 	"os"
 	"path/filepath"
 )
@@ -21,7 +21,7 @@ var (
 			// 检查文件是否存在
 			if _, err = os.Stat(configFilePath); err == nil {
 				abs, _ := filepath.Abs(configFilePath)
-				if err = os.Setenv(local.EnvConfig, abs); err != nil {
+				if err = os.Setenv(consts.EnvConfig, abs); err != nil {
 					fmt.Printf("set env err: %v", err)
 					return
 				}
@@ -43,7 +43,7 @@ var (
 
 func run() (err error) {
 	defer func() {
-		_ = os.Unsetenv(local.EnvConfig)
+		_ = os.Unsetenv(consts.EnvConfig)
 	}()
 
 	if err = initialize.StartMigration(); err != nil {

@@ -57,7 +57,10 @@ export default {
       return state.routesConfig
     },
     token: state => {
-      return state.token
+      if (!state.token) {
+        state.token = localStorage.getItem(process.env.VUE_APP_TOKEN_KEY);
+      }
+      return state.token;
     }
 
   },
@@ -81,15 +84,13 @@ export default {
     setToken(state, token) {
       let split = token.split(' ');
 
-      if (split.size() > 1) {
+      if (split.length > 1) {
         state.token = token[1]
       // localStorage.setItem('Access-Token',  'Bearer '+ token.replace(/Bearer /g, ''));
       }else{
         state.token = token
       }
-
-      // localStorage.setItem('Access-Token', state.token);
-
+      localStorage.setItem(process.env.VUE_APP_TOKEN_KEY, state.token);
     }
   }
 }

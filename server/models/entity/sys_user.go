@@ -2,7 +2,7 @@ package entity
 
 import (
 	"database/sql"
-	"go-protector/server/core/local/table_name"
+	"go-protector/server/core/consts/table_name"
 )
 
 type SysUser struct {

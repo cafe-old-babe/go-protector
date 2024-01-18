@@ -2,9 +2,9 @@ package initialize
 
 import (
 	"go-protector/server/core/config"
+	"go-protector/server/core/consts"
 	gormLogger "go-protector/server/core/custom/c_logger/gorm"
 	"go-protector/server/core/database"
-	"go-protector/server/core/local"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -27,7 +27,7 @@ func initDB() error {
 
 	var logLevel logger.LogLevel
 	var colorful bool
-	if serverCfg.Env == local.CfgEnvDebug {
+	if serverCfg.Env == consts.CfgEnvDebug {
 		logLevel = logger.Info
 		colorful = true
 	} else {

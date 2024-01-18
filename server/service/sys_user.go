@@ -5,8 +5,10 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go-protector/server/core/base"
+	"go-protector/server/core/consts"
+	"go-protector/server/core/custom/c_captcha"
 	"go-protector/server/core/custom/c_error"
-	"go-protector/server/core/local"
+	"go-protector/server/core/custom/c_jwt"
 	"go-protector/server/core/utils"
 	"go-protector/server/dao"
 	"go-protector/server/models/dto"
@@ -24,7 +26,13 @@ func MakeSysUser(ctx *gin.Context) *SysUser {
 	return &self
 }
 
+// DoLogin 登录验证
 func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
+
+	if !c_captcha.Verify(loginDTO.Cid, loginDTO.Code, true) {
+		return dto.ResultFailureMsg("验证码错误或已失效")
+	}
+
 	var sysUser *entity.SysUser
 	var err error
 	sysUser, err = dao.SysUser.FindUserByDTO(_self.DB, &dto.FindUser{
@@ -53,7 +61,7 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 			_self.Logger.Error("用户: %s 已过有效期", loginDTO.LoginName)
 			res = dto.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 			// 更新用户信息
-			sysUser.UserStatus = local.LockTypeExpire
+			sysUser.UserStatus = consts.LockTypeExpire
 			sysUser.LockReason = sql.NullString{
 				String: "用户已过有效期",
 				Valid:  true,
@@ -84,7 +92,6 @@ func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 	}
 
 	// 生成Token
-
 	userDTO := &dto.CurrentUser{
 		ID:        entity.ID,
 		SessionId: utils.GetNextId(),
@@ -92,12 +99,19 @@ func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 		UserName:  entity.Username,
 		LoginTime: time.Now().Format(time.DateTime),
 		LoginIp:   _self.Ctx.ClientIP(),
+		Avatar:    "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
+	}
+	jwtString, expireAt, err := c_jwt.GenerateToken(userDTO)
+	tempMap := map[string]any{
+		"id": "admin",
 	}
 
 	res = dto.ResultSuccess(dto.LoginSuccess{
-		SysUser: userDTO,
-		// todo jwt token
-		Token: "",
+		SysUser:     userDTO,
+		Token:       jwtString,
+		ExpireAt:    expireAt,
+		Permissions: tempMap,
+		Roles:       tempMap,
 	})
 	return
 }

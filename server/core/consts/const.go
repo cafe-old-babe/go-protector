@@ -1,4 +1,4 @@
-package local
+package consts
 
 const (
 	// EnvConfig 环境变量
@@ -19,4 +19,7 @@ const (
 	CtxKeyUserName  = "userName"
 
 	LockTypeExpire = 1
+
+	// CachePrefix 缓存前缀
+	CachePrefix = "go-protector"
 )

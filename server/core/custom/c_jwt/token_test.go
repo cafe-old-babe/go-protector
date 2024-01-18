@@ -1,7 +1,6 @@
 package c_jwt
 
 import (
-	"go-protector/server/core/local"
 	"go-protector/server/models/dto"
 	"path/filepath"
 	"testing"
@@ -15,7 +14,7 @@ func init() {
 func TestGenerateToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		abs, _ := filepath.Abs("/opt/work_space/github/go-protector/config/config.yml")
-		t.Setenv(local.EnvConfig, abs)
+		t.Setenv(consts.EnvConfig, abs)
 		jwtString, err := GenerateToken(&dto.CurrentUser{
 			ID:        0,
 			SessionId: 0,
@@ -34,7 +33,7 @@ func TestGenerateToken(t *testing.T) {
 func TestParserToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		abs, _ := filepath.Abs("/opt/work_space/github/go-protector/config/config.yml")
-		t.Setenv(local.EnvConfig, abs)
+		t.Setenv(consts.EnvConfig, abs)
 		JwtStr := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ7XCJJRFwiOjAsXCJzZXNzaW9uSWRcIjowLFwibG9naW5OYW1lXCI6XCJcIixcInVzZXJOYW1lXCI6XCJcIixcImxvZ2luVGltZVwiOlwiXCIsXCJsb2dpbklwXCI6XCJcIn0iLCJleHAiOjE3MDQ4MTU1ODIsImlhdCI6MTcwNDgxNDk4Mn0.8zZdWDrzqdEWq6fAS9zBusvDI03m4HjvDEUrvF4vvIc"
 		targetJwtStr := JwtStr
 

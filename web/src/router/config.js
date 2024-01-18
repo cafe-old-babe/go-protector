@@ -4,6 +4,7 @@ import PageView from '@/layouts/PageView'
 
 // 路由配置
 const options = {
+  mode: 'history',
   routes: [
     {
       path: '/login',
@@ -33,6 +34,26 @@ const options = {
             icon: 'file-ppt'
           },
           component: () => import('@/pages/demo')
+        },
+        {
+          path: 'system',
+          name: '系统管理',
+          meta: {
+            icon: 'form',
+          },
+          component: PageView,
+          children: [
+            {
+              path: 'manager/dict',
+              name: '字典管理',
+              component: () => import('@/pages/system/manager/dict'),
+            },
+            {
+              path: 'manager/role',
+              name: '角色管理',
+              component: () => import('@/pages/system/manager/role'),
+            },
+          ]
         },
         {
           path: 'parent1',
@@ -89,18 +110,6 @@ const options = {
             }
           ]
         },
-        {
-          name: '验权页面',
-          path: 'auth/demo',
-          meta: {
-            icon: 'file-ppt',
-            authority: {
-              permission: 'form',
-              role: 'manager'
-            },
-            component: () => import('@/pages/demo')
-          }
-        }
       ]
     }
   ]

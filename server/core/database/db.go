@@ -3,8 +3,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/current"
-	"go-protector/server/core/local"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"
@@ -77,7 +77,7 @@ func SetDB(db *gorm.DB) {
 }
 
 func GetDB(ctx context.Context) *gorm.DB {
-	if db, ok := ctx.Value(local.CtxKeyDB).(*gorm.DB); ok {
+	if db, ok := ctx.Value(consts.CtxKeyDB).(*gorm.DB); ok {
 		return db
 	}
 

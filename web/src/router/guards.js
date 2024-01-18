@@ -1,4 +1,4 @@
-import {hasAuthority} from '@/utils/authority-utils'
+// import {hasAuthority} from '@/utils/authority-utils'
 import {loginIgnore} from '@/router/index'
 import {checkAuthorization} from '@/utils/request'
 import NProgress from 'nprogress'
@@ -43,6 +43,7 @@ const loginGuard = (to, from, next, options) => {
  * @param next
  * @param options
  */
+/*
 const authorityGuard = (to, from, next, options) => {
   const {store, message} = options
   const permissions = store.getters['account/permissions']
@@ -54,7 +55,7 @@ const authorityGuard = (to, from, next, options) => {
   } else {
     next()
   }
-}
+}*/
 
 /**
  * 混合导航模式下一级菜单跳转重定向
@@ -99,6 +100,7 @@ const progressDone = () => {
 }
 
 export default {
-  beforeEach: [progressStart, loginGuard, authorityGuard, redirectGuard],
+  // beforeEach: [progressStart, loginGuard, authorityGuard, redirectGuard],
+  beforeEach: [progressStart, loginGuard, redirectGuard],
   afterEach: [progressDone]
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go-protector/server/core/local"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/utils"
 	"go.uber.org/zap"
 	"strconv"
@@ -31,21 +31,21 @@ func SetLogger(logger *zap.Logger) {
 func GetLogger(ctx *gin.Context) (log *SelfLogger) {
 	var ok bool
 	var value any
-	if value, ok = ctx.Get(local.CtxKeyLog); ok {
+	if value, ok = ctx.Get(consts.CtxKeyLog); ok {
 		if log, ok = value.(*SelfLogger); ok {
 			return
 		}
 		return
 	}
 	var traceId string
-	if value, ok = ctx.Get(local.CtxKeyTraceId); !ok {
+	if value, ok = ctx.Get(consts.CtxKeyTraceId); !ok {
 		traceId = strconv.FormatUint(utils.GetNextId(), 10)
 	} else {
 		if traceId, ok = value.(string); !ok {
 			traceId = strconv.FormatUint(utils.GetNextId(), 10)
 		}
 	}
-	ctx.Set(local.CtxKeyTraceId, traceId)
+	ctx.Set(consts.CtxKeyTraceId, traceId)
 	log = &SelfLogger{
 		zapLog: _log.zapLog.Named("traceId: " + traceId),
 		ctx:    ctx,
@@ -56,12 +56,12 @@ func GetLogger(ctx *gin.Context) (log *SelfLogger) {
 	//	Type:   zapcore.StringType,
 	//	String: traceId,
 	//}))
-	ctx.Set(local.CtxKeyLog, log)
+	ctx.Set(consts.CtxKeyLog, log)
 	return
 }
 func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
 	var ok bool
-	log, ok = ctx.Value(local.CtxKeyLog).(*SelfLogger)
+	log, ok = ctx.Value(consts.CtxKeyLog).(*SelfLogger)
 	if ok {
 		return
 	}
@@ -69,11 +69,11 @@ func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
 		zapLog: _log.zapLog.With(),
 		ctx:    ctx,
 	}
-	if traceId, ok := ctx.Value(local.CtxKeyTraceId).(string); ok {
+	if traceId, ok := ctx.Value(consts.CtxKeyTraceId).(string); ok {
 		log.zapLog.Named(traceId)
 	}
 
-	ctx = context.WithValue(ctx, local.CtxKeyLog, log)
+	ctx = context.WithValue(ctx, consts.CtxKeyLog, log)
 	return
 }
 func NewLoggerByField(ctx context.Context, fields ...zap.Field) *SelfLogger {

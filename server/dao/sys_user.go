@@ -3,9 +3,9 @@ package dao
 import (
 	"database/sql"
 	"errors"
+	"go-protector/server/core/consts/table_name"
 	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_error"
-	"go-protector/server/core/local/table_name"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
 	"gorm.io/gorm"
