@@ -22,6 +22,11 @@ func ResultSuccess(data any, msg ...string) *Result {
 	return ResultCustom(http.StatusOK, data, msg...)
 }
 
+func ResultSuccessMsg(msg ...string) *Result {
+
+	return ResultCustom(http.StatusOK, nil, msg...)
+}
+
 func ResultFailure(data any, msg ...string) *Result {
 	return ResultCustom(http.StatusBadRequest, data, msg...)
 }
@@ -61,29 +66,19 @@ func ResultCustom(code int, data any, msg ...string) *Result {
 	return res
 }
 
-type Page struct {
-	Count      int64 `json:"totalCount"`
-	PageIndex  int   `json:"pageNo"`
-	PageSize   int   `json:"pageSize"`
-	TotalPages int   `json:"totalPage"`
-	List       any   `json:"list"`
-}
-
-type Pagination struct {
-	PageIndex int `json:"current" form:"current"`
-	PageSize  int `json:"pageSize" form:"pageSize"`
-}
-
-func (_self *Pagination) GetPageIndex() int {
-	if _self.PageIndex <= 0 {
-		_self.PageIndex = 1
+func ResultPage(data any, pagination IPagination, count int64) *Result {
+	page := Page{
+		Count:     int(count),
+		PageIndex: pagination.GetPageIndex(),
+		PageSize:  pagination.GetPageSize(),
+		List:      data,
 	}
-	return _self.PageIndex
-}
-
-func (_self *Pagination) GetPageSize() int {
-	if _self.PageSize <= 0 {
-		_self.PageSize = 10
+	if count > 0 {
+		page.TotalPages = page.Count / page.PageSize
+		remainder := page.Count % page.PageSize
+		if remainder != 0 {
+			page.TotalPages += 1
+		}
 	}
-	return _self.PageSize
+	return ResultSuccess(page, "查询成功")
 }

@@ -146,6 +146,7 @@ export default {
         })
       } else {
         this.error = loginRes.message
+        this.refreshCode();
       }
     },
     onClose() {

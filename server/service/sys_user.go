@@ -3,7 +3,6 @@ package service
 import (
 	"database/sql"
 	"errors"
-	"github.com/gin-gonic/gin"
 	"go-protector/server/core/base"
 	"go-protector/server/core/consts"
 	"go-protector/server/core/custom/c_captcha"
@@ -18,12 +17,6 @@ import (
 
 type SysUser struct {
 	base.Service
-}
-
-func MakeSysUser(ctx *gin.Context) *SysUser {
-	var self SysUser
-	self.MakeService(ctx)
-	return &self
 }
 
 // DoLogin 登录验证

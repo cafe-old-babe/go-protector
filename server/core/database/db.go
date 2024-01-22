@@ -21,8 +21,17 @@ func SetDB(db *gorm.DB) {
 	once.Do(func() {
 		databaseName := db.Migrator().CurrentDatabase()
 		_ = db.Callback().Create().Before("gorm:create").Register("update_created_by", func(db *gorm.DB) {
-			for _, field := range db.Statement.Schema.Fields {
-				_ = field
+			if db.Error != nil {
+				return
+			}
+			if db.Statement.Schema == nil {
+				// todo 留着
+			} else {
+				if field, ok := db.Statement.Schema.FieldsByName["CreatedBy"]; ok {
+					value, zero := field.ValueOf(db.Statement.Context, db.Statement.ReflectValue)
+					fmt.Printf("field: %v, value: %v, zero: %v\n", field.Name, value, zero)
+					_ = db.Statement.AddError(field.Set(db.Statement.Context, db.Statement.ReflectValue, 2))
+				}
 			}
 		})
 		_ = db.Callback().Update().Before("gorm:update").Register("update_updated_by", func(db *gorm.DB) {
@@ -30,15 +39,20 @@ func SetDB(db *gorm.DB) {
 			if db.Error != nil {
 				return
 			}
+
 			var (
-			//selectColumns, restricted = db.Statement.SelectAndOmitColumns(false, true)
+				userId = current.GetUserId(db.Statement.Context)
+				//selectColumns, restricted = db.Statement.SelectAndOmitColumns(false, true)
 			)
+			if userId <= 0 {
+				return
+			}
 			//db.Statement.SetColumn()
 			if db.Statement.Schema == nil {
 
 				set := callbacks.ConvertToAssignments(db.Statement)
 				for _, assignment := range set {
-					if strings.ToLower(assignment.Column.Name) == "update_by" {
+					if strings.ToLower(assignment.Column.Name) == "updated_by" {
 						return
 					}
 				}
@@ -57,7 +71,7 @@ func SetDB(db *gorm.DB) {
 					Column: clause.Column{
 						Name: "updated_by",
 					},
-					Value: current.GetUserId(db.Statement.Context),
+					Value: userId,
 					//Value: 2,
 				}))
 
@@ -65,7 +79,7 @@ func SetDB(db *gorm.DB) {
 				if field, ok := db.Statement.Schema.FieldsByName["UpdatedBy"]; ok {
 					value, zero := field.ValueOf(db.Statement.Context, db.Statement.ReflectValue)
 					fmt.Printf("field: %v, value: %v, zero: %v\n", field.Name, value, zero)
-					_ = db.Statement.AddError(field.Set(db.Statement.Context, db.Statement.ReflectValue, 2))
+					_ = db.Statement.AddError(field.Set(db.Statement.Context, db.Statement.ReflectValue, userId))
 
 				}
 			}

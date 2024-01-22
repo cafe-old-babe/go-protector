@@ -7,14 +7,28 @@ import (
 	"gorm.io/gorm"
 )
 
+type IService interface {
+	Make(ctx *gin.Context)
+	MakeService(service ...IService)
+}
+
 type Service struct {
 	Logger *c_logger.SelfLogger
 	DB     *gorm.DB
 	Ctx    *gin.Context
 }
 
-func (_self *Service) MakeService(ctx *gin.Context) {
-	_self.DB = database.GetDB(ctx)
-	_self.Logger = c_logger.GetLogger(ctx)
-	_self.Ctx = ctx
+func (_self *Service) Make(c *gin.Context) {
+	_self.DB = database.GetDB(c)
+	_self.Logger = c_logger.GetLogger(c)
+	_self.Ctx = c
+}
+
+func (_self *Service) MakeService(service ...IService) {
+	if len(service) <= 0 {
+		return
+	}
+	for i := range service {
+		service[i].Make(_self.Ctx)
+	}
 }

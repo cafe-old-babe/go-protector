@@ -9,4 +9,5 @@ var (
 	ErrLoginNameOrPasswordIncorrect = errors.New("用户名或密码不正确")
 	ErrUpdateFailure                = errors.New("更新失败")
 	ErrDeleteFailure                = errors.New("删除失败")
+	ErrAuthFailure                  = errors.New("认证失败，请重新登录")
 )

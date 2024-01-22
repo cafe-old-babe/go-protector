@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"go-protector/server/core/base"
 	"go-protector/server/core/custom/c_logger"
 	"go-protector/server/core/custom/c_result"
 	"go-protector/server/models/dto"
@@ -10,7 +11,9 @@ import (
 
 var UserApi user
 
-type user struct{}
+type user struct {
+	base.Api
+}
 
 func (_self user) Login(c *gin.Context) {
 	var loginDTO dto.Login
@@ -20,7 +23,7 @@ func (_self user) Login(c *gin.Context) {
 		return
 	}
 	var userService service.SysUser
-	userService.MakeService(c)
+	_self.MakeService(c, &userService)
 	res := userService.DoLogin(loginDTO)
 	c_result.Result(c, res)
 }
@@ -33,14 +36,14 @@ func (_self user) SetStatus(c *gin.Context) {
 	var updateDTO dto.SetStatus
 	if err := c.BindJSON(&updateDTO); err != nil {
 		c_logger.GetLogger(c).Error("SetStatus Error: %v", err)
-		c_result.FailureErr(c, err)
+		c_result.Err(c, err)
 		return
 	}
-	sysUserService := service.MakeSysUser(c)
+	var sysUserService service.SysUser
+	_self.MakeService(c, &sysUserService)
 	if err := sysUserService.SetStatus(&updateDTO); err != nil {
-		c_result.FailureErr(c, err)
+		c_result.Err(c, err)
 		return
 	}
 	c_result.Success(c, nil)
-
 }

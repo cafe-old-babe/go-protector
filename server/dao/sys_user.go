@@ -89,7 +89,7 @@ func (_self *sysUser) UnlockUser(db *gorm.DB, dto *dto.SetStatus) error {
 	if nil == dto || dto.ID <= 0 {
 		return c_error.ErrParamInvalid
 	}
-
+	// 使用 struct 更新时, GORM 将只更新非零值字段。 你可能想用 map 来更新属性，或者使用 Select 声明字段来更新
 	updateMap := map[string]interface{}{
 		"lock_time":     nil,
 		"lock_reason":   nil,
