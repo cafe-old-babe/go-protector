@@ -11,16 +11,16 @@ func Success(c *gin.Context, data any, msg ...string) {
 	c.AbortWithStatusJSON(http.StatusOK, dto.ResultSuccess(data, msg...))
 }
 
-// Failure 返回400
+// Failure 返回200
 func Failure(c *gin.Context, data any, msg ...string) {
 	c.AbortWithStatusJSON(http.StatusOK, dto.ResultFailure(data, msg...))
 }
 
-func FailureErr(c *gin.Context, err error) {
+func Err(c *gin.Context, err error) {
 	c.AbortWithStatusJSON(http.StatusOK, dto.ResultFailureErr(err))
 }
 
-// Custom 返回400
+// Custom 自定义返回
 func Custom(c *gin.Context, code int, data any, msg ...string) {
 	c.AbortWithStatusJSON(http.StatusOK, dto.ResultCustom(code, data, msg...))
 }

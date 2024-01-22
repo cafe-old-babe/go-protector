@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-protector/server/core/config"
+	"go-protector/server/core/consts"
 	"go-protector/server/router"
 	"go-protector/server/router/middleware"
 	"net/http"
@@ -18,7 +19,7 @@ func initServer() (server *http.Server) {
 	engine.Use(middleware.RecordLog)
 	engine.Use(middleware.SetDB)
 
-	routerGroup := engine.Group("api")
+	routerGroup := engine.Group(consts.ServerUrlPrefix)
 	router.Init(routerGroup)
 
 	//if err = engine.Run(fmt.Sprintf(":%d", config._config.Server.Port)); err != nil {

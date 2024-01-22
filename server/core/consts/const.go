@@ -14,12 +14,21 @@ const (
 	CtxKeyTraceId = "traceId"
 	CtxKeyDB      = "db"
 
-	CtxKeyUserId    = "userId"
-	CtxKeyLoginName = "loginName"
-	CtxKeyUserName  = "userName"
+	CtxKeyCurrentUser = "currentUser"
+	CtxKeyUserId      = "userId"
+	CtxKeyLoginName   = "loginName"
+	CtxKeyUserName    = "userName"
 
 	LockTypeExpire = 1
 
 	// CachePrefix 缓存前缀
 	CachePrefix = "go-protector"
+
+	// ServerUrlPrefix 服务前缀
+	ServerUrlPrefix = "api"
+
+	AuthHeaderKey = "Authorization"
+	AuthUrlKey    = "token"
 )
+
+var EmptyVal any
