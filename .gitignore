@@ -6,7 +6,6 @@
 log/
 *.log
 
-./config
 config.yml
 
 *.lock
@@ -21,6 +20,7 @@ config.yml
 # 可执行文件
 go_build_*
 go-protector
+go_protector
 GoProtector*
 *.test
 
