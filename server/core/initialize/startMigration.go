@@ -14,6 +14,10 @@ func StartMigration() (err error) {
 	if err = initDB(); err != nil {
 		return err
 	}
-	err = database.GetDB(context.Background()).AutoMigrate(&entity.SysUser{})
+	err = database.GetDB(context.Background()).AutoMigrate(
+		&entity.SysUser{},
+		&entity.SysDictData{},
+		&entity.SysDictType{},
+	)
 	return err
 }

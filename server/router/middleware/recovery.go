@@ -16,6 +16,7 @@ func Recovery(ctx *gin.Context) {
 				ctx.Status(200)
 			}
 			c_result.Failure(ctx, nil, fmt.Sprintf("recover err: %v", err))
+			panic(err)
 		}
 		return
 	}()

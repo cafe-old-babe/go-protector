@@ -40,17 +40,19 @@
                 <a-row :gutter="[8,8]">
                     <a-col :span="12" :style="{ textAlign: 'left' }">
                         <a-space :size="8">
-                            <a-button @click="addNew" type="primary">新建</a-button>
-                            <a-button >批量操作</a-button>
+                          <a-button @click="addNew" type="primary">新建</a-button>
+                          <a-button type="danger">批量删除</a-button>
+
+<!--                            <a-button >批量操作</a-button>
                             <a-dropdown>
-                                <!--                    <a-menu @click="handleMenuClick" slot="overlay">-->
-                                <!--                        <a-menu-item key="delete">删除</a-menu-item>-->
-                                <!--                        <a-menu-item key="audit">审批</a-menu-item>-->
-                                <!--                    </a-menu>-->
+                                &lt;!&ndash;                    <a-menu @click="handleMenuClick" slot="overlay">&ndash;&gt;
+                                &lt;!&ndash;                        <a-menu-item key="delete">删除</a-menu-item>&ndash;&gt;
+                                &lt;!&ndash;                        <a-menu-item key="audit">审批</a-menu-item>&ndash;&gt;
+                                &lt;!&ndash;                    </a-menu>&ndash;&gt;
                                 <a-button>
                                     更多操作 <a-icon type="down" />
                                 </a-button>
-                            </a-dropdown>
+                            </a-dropdown>-->
                         </a-space>
                     </a-col>
                     <a-col :span="12" :style="{ textAlign: 'right' }">
@@ -77,22 +79,55 @@
                 :selectedRows.sync="selectedRows"
                 @selectedRowChange="onSelectChange"
                 :pagination="{...pagination, onChange: onPageChange}"
-            />
+            >
 
+            <div slot="status" slot-scope="{text,record}">
+              <a >
+                <a-tooltip placement="left" :title="record.dataStatus==='0'?'点击停用':'点击锁定'"
+                           :get-popup-container="getPopupContainer">
+                  <a-tag :color="record.dataStatus==='0'?'green':'red'"
+                         @click="changeStatus(record)"
+                  >
+                    {{ record.dataStatusText }}
+                  </a-tag>
+                </a-tooltip>
+              </a>
+            </div>
+
+
+<!--          <div slot="action" slot-scope="{text, record}">
+            <a style="margin-right: 8px"
+               @click="eyeRecord(record.typeCode)"
+            >
+              <a-icon type="eye"/>查看
+            </a>
+            <a style="margin-right: 8px"
+               @click="editRecord(record)"
+            >
+              <a-icon type="edit"/>编辑
+            </a>
+            <a @click="deleteRecord(record.key)">
+              <a-icon type="delete" />删除
+            </a>
+          </div>-->
+            </StandardTable>
         </a-card>
     </div>
 </template>
 
 <script>
 import StandardTable from '@/components/table/StandardTable'
-// import {request} from '@/utils/request'
+import {request} from '@/utils/request'
 import column from "./column";
 
 export default {
     name: 'DataList',
     components: {StandardTable},
     props: {
-        typeCode: String
+        typeCode: {
+          type: String,
+          default: ''
+        }
     },
     data() {
         return {
@@ -112,90 +147,86 @@ export default {
         }
     },
     watch: {
-        typeCode(typeCode) {
-            alert(typeCode)
-            console.log(typeCode)
+        typeCode() {
+          this.getData();
         }
     },
     mounted() {
         this.getData()
     },
     computed: {
-
     },
     methods: {
-        onPageChange(page, pageSize) {
-            this.pagination.current = page
-            this.pagination.pageSize = pageSize
-            this.getData()
-        },
+      changeStatus(record) {
+        console.log(record,"changeStatus")
+      },
+      getPopupContainer(trigger) {
+        return trigger.parentElement;
+      },
+      onPageChange(page, pageSize) {
+          this.pagination.current = page
+          this.pagination.pageSize = pageSize
+          this.getData()
+      },
 
-        handleSearch(e) {
-            e.preventDefault();
-            this.searchForm.validateFields((error, values) => {
-                if (error) {
-                    console.log('error', error)
-                    return
-                }
-                console.log('Received values of form: ', values);
-                this.getData()
-            });
-        },
-        getData() {
-            this.loading = true
-            setTimeout(() => {
-                this.dataSource = [
-                ];
-              // this.dataSource = [
-              //   {"id":'1',"d1": "data1"},
-              //   {"id":'2',"d1": "data1"},
-              //   {"id":'3',"d1": "data2"},
-              //   {"id":'4',"d1": "data2"},
-              //   {"id":'5',"d1": "data2"},
-              //   {"id":'6',"d1": "data2"},
-              //   {"id":'7',"d1": "data2"},
-              //   {"id":'8',"d1": "data2"},
-              //   {"id":'9',"d1": "data2"},
-              //   {"id":'0',"d1": "data2"},
-              // ];
-                this.pagination.current = 1
-                this.pagination.pageSize = 10
-                this.pagination.total = 0
-                this.loading = false
-            }, 500)
+      handleSearch(e) {
+          e.preventDefault();
+          this.searchForm.validateFields((error, values) => {
+              if (error) {
+                  console.log('error', error)
+                  return
+              }
+            this.searchFormParam = values;
+            this.getData();
+          });
+      },
+      getData() {
+        if (this.typeCode === '') {
+          return;
+        }
 
-            // request(process.env.VUE_APP_API_BASE_URL + '/list', 'get', {page: this.pagination.current,
-            //     pageSize: this.pagination.pageSize}).then(res => {
-            //     const {list, page, pageSize, total} = res?.data?.data ?? {}
-            //     this.dataSource = list
-            //     this.pagination.current = page
-            //     this.pagination.pageSize = pageSize
-            //     this.pagination.total = total
-            // })
-        },
-        handleReset() {
-            this.searchForm.resetFields()
-        },
-        deleteRecord(key) {
-            this.dataSource = this.dataSource.filter(item => item.key !== key)
-            this.selectedRows = this.selectedRows.filter(item => item.key !== key)
-        },
-        remove () {
-            this.dataSource = this.dataSource.filter(item => this.selectedRows.findIndex(row => row.key === item.key) === -1)
-            this.selectedRows = []
-        },
-        onClear() {
-            this.$message.info('您清空了勾选的所有行')
-        },
+        this.loading = true;
+        // setTimeout(() => {
+        //     this.dataSource = [
+        //     ];
+        //     this.pagination.current = 1
+        //     this.pagination.pageSize = 10
+        //     this.pagination.total = 0
+        //     this.loading = false
+        // }, 500)
+
+        request('/api/dict/data',
+          {...this.pagination,...this.searchFormParam,typeCode: this.typeCode}).then(res => {
+          const {list, current, pageSize, total} = res?.data?.data ?? {}
+          this.dataSource = list
+          this.pagination.current = current
+          this.pagination.pageSize = pageSize
+          this.pagination.total = total
+        }).finally(() => this.loading = false)
+      },
+      handleReset() {
+          this.searchForm.resetFields()
+      },
+      deleteRecord(key) {
+          this.dataSource = this.dataSource.filter(item => item.key !== key)
+          this.selectedRows = this.selectedRows.filter(item => item.key !== key)
+      },
+      remove () {
+          this.dataSource = this.dataSource.filter(item => this.selectedRows.findIndex(row => row.key === item.key) === -1)
+          this.selectedRows = []
+      },
+      onClear() {
+          this.$message.info('您清空了勾选的所有行')
+      },
 
 
-        onSelectChange() {
-            console.log(this.selectedRows)
-            this.$message.info('选中行改变了')
-        },
-        addNew () {
-           this.$message.info("addNew")
-        },
+      onSelectChange() {
+          console.log(this.selectedRows)
+          this.$message.info('选中行改变了')
+      },
+      addNew () {
+        this.$message.info("addNew");
+      },
     }
 }
 </script>

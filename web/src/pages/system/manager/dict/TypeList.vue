@@ -5,9 +5,9 @@
         <a-row :gutter="[8,1]">
           <a-col :span="12">
 
-            <a-form-item label="数据名称">
+            <a-form-item label="类型名称">
               <a-input
-                v-decorator="[ 'dataName', {
+                v-decorator="[ 'typeName', {
                                   rules: [
                                     {
                                       required: false,
@@ -21,9 +21,9 @@
 
           </a-col>
           <a-col :span="12">
-            <a-form-item label="数据编码">
+            <a-form-item label="类型编码">
               <a-input
-                v-decorator="[ 'dataCode', {
+                v-decorator="[ 'typeCode', {
                                   rules: [
                                     {
                                       required: false,
@@ -41,16 +41,17 @@
           <a-col :span="12" :style="{ textAlign: 'left' }">
             <a-space :size="8">
               <a-button @click="addNew" type="primary">新建</a-button>
-              <a-button type="delete">批量删除</a-button>
+              <a-button type="danger">批量删除</a-button>
+<!--              <a-button type="delete">批量删除</a-button>
               <a-dropdown>
-                <!--                    <a-menu @click="handleMenuClick" slot="overlay">-->
-                <!--                        <a-menu-item key="delete">删除</a-menu-item>-->
-                <!--                        <a-menu-item key="audit">审批</a-menu-item>-->
-                <!--                    </a-menu>-->
+                &lt;!&ndash;                    <a-menu @click="handleMenuClick" slot="overlay">&ndash;&gt;
+                &lt;!&ndash;                        <a-menu-item key="delete">删除</a-menu-item>&ndash;&gt;
+                &lt;!&ndash;                        <a-menu-item key="audit">审批</a-menu-item>&ndash;&gt;
+                &lt;!&ndash;                    </a-menu>&ndash;&gt;
                 <a-button>
                   更多操作 <a-icon type="down" />
                 </a-button>
-              </a-dropdown>
+              </a-dropdown>-->
             </a-space>
           </a-col>
           <a-col :span="12" :style="{ textAlign: 'right' }">
@@ -77,7 +78,24 @@
         :selectedRows.sync="selectedRows"
         @selectedRowChange="onSelectChange"
         :pagination="{...pagination, onChange: onPageChange}"
-      />
+      >
+        <div slot="action" slot-scope="{text, record}">
+          <a style="margin-right: 8px"
+             @click="eyeRecord(record.typeCode)"
+          >
+            <a-icon type="eye"/>查看
+          </a>
+          <a style="margin-right: 8px"
+             @click="editRecord(record)"
+          >
+            <a-icon type="edit"/>编辑
+          </a>
+          <a @click="deleteRecord(record.key)">
+            <a-icon type="delete" />删除
+          </a>
+        </div>
+
+      </StandardTable>
 
     </a-card>
   </div>
@@ -85,15 +103,12 @@
 
 <script>
 import StandardTable from '@/components/table/StandardTable'
-// import {request} from '@/utils/request'
+import {request} from '@/utils/request'
 import column from "./column";
 
 export default {
   name: 'DataList',
   components: {StandardTable},
-  props: {
-    typeCode: String
-  },
   data() {
     return {
       targetCount: 12,
@@ -101,7 +116,7 @@ export default {
       searchTypeForm: this.$form.createForm(this),
       searchFormParam: {},
       loading: false,
-      columns: column.dataColumn,
+      columns: column.typeColumn,
       dataSource: [],
       selectedRows: [],
       pagination: {
@@ -109,12 +124,6 @@ export default {
         pageSize: 10,
         total: 0
       }
-    }
-  },
-  watch: {
-    typeCode(typeCode) {
-      alert(typeCode)
-      console.log(typeCode)
     }
   },
   mounted() {
@@ -137,20 +146,20 @@ export default {
           console.log('error', error)
           return
         }
-        console.log('Received values of form: ', values);
+        this.searchFormParam = values
         this.getData()
       });
     },
     getData() {
-      // this.loading = true
-      // request(process.env.VUE_APP_API_BASE_URL + '/list', 'get', {page: this.pagination.current,
-      //     pageSize: this.pagination.pageSize}).then(res => {
-      //     const {list, page, pageSize, total} = res?.data?.data ?? {}
-      //     this.dataSource = list
-      //     this.pagination.current = page
-      //     this.pagination.pageSize = pageSize
-      //     this.pagination.total = total
-      // })
+      this.loading = true
+
+      request('/api/dict/type',  {...this.pagination,... this.searchFormParam }).then(res => {
+          const {list, current, pageSize, total} = res?.data?.data ?? {}
+          this.dataSource = list
+          this.pagination.current = current
+          this.pagination.pageSize = pageSize
+          this.pagination.total = total
+      }).finally(() => this.loading = false)
     },
     handleReset() {
       this.searchTypeForm.resetFields()
@@ -166,8 +175,6 @@ export default {
     onClear() {
       this.$message.info('您清空了勾选的所有行')
     },
-
-
     onSelectChange() {
       console.log(this.selectedRows)
       this.$message.info('选中行改变了')
@@ -175,6 +182,12 @@ export default {
     addNew () {
       this.$message.info("addNew")
     },
+    eyeRecord(typeCode) {
+      this.$emit('updateTypeCode',typeCode)
+    },
+    editRecord(record) {
+      console.log(record,"edit")
+    }
   }
 }
 </script>

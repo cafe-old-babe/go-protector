@@ -101,7 +101,7 @@ func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 
 	res = dto.ResultSuccess(dto.LoginSuccess{
 		SysUser:     userDTO,
-		Token:       jwtString,
+		Token:       *jwtString,
 		ExpireAt:    expireAt,
 		Permissions: tempMap,
 		Roles:       tempMap,

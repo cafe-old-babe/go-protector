@@ -27,9 +27,9 @@ func (_self *SysDictData) Page(req *dto.DictDataPageReq) *dto.Result {
 			table_name.SysDictType + ".type_code",
 			table_name.SysDictData + ".data_name",
 			table_name.SysDictData + ".data_code",
-			table_name.SysDictData + ".type_status",
-			`case  when ` + table_name.SysDictData + `.type_status  = 0 then '正常' when ` +
-				table_name.SysDictData + `.type_status  = 1 then '停用' end as type_status_text`,
+			table_name.SysDictData + ".data_status",
+			`case  when ` + table_name.SysDictData + `.data_status  = 0 then '正常' when ` +
+				table_name.SysDictData + `.data_status  = 1 then '停用' end as data_status_text`,
 		}).Scopes(
 		scope.Paginate(req),
 		scope.Like("data_code", req.DataCode),
@@ -38,9 +38,9 @@ func (_self *SysDictData) Page(req *dto.DictDataPageReq) *dto.Result {
 			if len(req.TypeCode) <= 0 {
 				return db
 			}
-			return db.Where("type_code = ?", req.TypeCode)
+			return db.Where(table_name.SysDictData+".type_code = ?", req.TypeCode)
 		}).Order("sort").
-		Joins(`left join ` + table_name.SysDictType + `on ` +
+		Joins(`left join ` + table_name.SysDictType + ` on ` +
 							table_name.SysDictType + `.type_code = ` + table_name.SysDictData + `.type_code`).
 		Find(&list).                        // 查询数据
 		Limit(-1).Offset(-1).Count(&count). // 查询总数

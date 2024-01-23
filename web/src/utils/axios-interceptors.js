@@ -56,9 +56,11 @@ const resp200 = {
       message.error('请求失败')
       return response
     }
-    if (response.data.code === 403) {
-      this.$router.push('/login').then(() => {
-        this.$message.warn("登录信息已失效,请重新登录", 3)
+
+    if (response.data.code === 403 || response.data.code === 401) {
+      let {router,message} = options;
+      router.push('/login').then(() => {
+        message.warn("登录信息已失效,请重新登录", 3)
       })
       return
     }

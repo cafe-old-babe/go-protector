@@ -14,7 +14,7 @@ const secretKey = "secret-p90-23n09.32342"
 
 // GenerateToken 生成token https://pkg.go.dev/github.com/golang-jwt/jwt/v5#Token
 // go get -u github.com/golang-jwt/jwt/v5
-func GenerateToken(currentUser *dto.CurrentUser) (jwtString string, expireAt time.Time, err error) {
+func GenerateToken(currentUser *dto.CurrentUser) (jwtStringPointer *string, expireAt time.Time, err error) {
 	var bytes []byte
 	sessionTimeout := config.GetConfig().Jwt.SessionTimeout
 	if bytes, err = json.Marshal(currentUser); err != nil {
@@ -24,7 +24,7 @@ func GenerateToken(currentUser *dto.CurrentUser) (jwtString string, expireAt tim
 		currentUser.SessionId = utils.GetNextId()
 	}
 	now := time.Now().Local()
-	expireAt = now.Add(time.Second * time.Duration(sessionTimeout))
+	expireAt = now.Add(time.Minute * time.Duration(sessionTimeout))
 	registeredClaims := jwt.RegisteredClaims{
 		// 过期时间
 		ExpiresAt: jwt.NewNumericDate(expireAt),
@@ -35,7 +35,10 @@ func GenerateToken(currentUser *dto.CurrentUser) (jwtString string, expireAt tim
 	}
 
 	tokenPointer := jwt.NewWithClaims(jwt.SigningMethodHS256, registeredClaims)
-	jwtString, err = tokenPointer.SignedString([]byte(secretKey))
+	var jwtString string
+	if jwtString, err = tokenPointer.SignedString([]byte(secretKey)); err == nil {
+		jwtStringPointer = &jwtString
+	}
 	return
 }
 
@@ -61,7 +64,7 @@ func ParserToken(jwtString *string) (userPointer *dto.CurrentUser, err error) {
 	iat, _ := claims.GetIssuedAt()
 	// 如果token的未过有效期, 但token时效性过期了,更换token
 	tokenTimeout := config.GetConfig().Jwt.TokenTimeout
-	if time.Now().After(iat.Add(time.Second * time.Duration(tokenTimeout))) {
+	if !iat.Add(time.Minute * time.Duration(tokenTimeout)).After(time.Now()) {
 		jwtString, err = ReGenerateToken(jwtString, userPointer)
 	}
 	return
@@ -75,6 +78,6 @@ func ReGenerateToken(jwtString *string, currentUser *dto.CurrentUser) (newJwtTSt
 	}
 	//redis := cache.GetRedis()
 	// todo 并发换token
-	*newJwtTString, _, err = GenerateToken(currentUser)
+	newJwtTString, _, err = GenerateToken(currentUser)
 	return
 }

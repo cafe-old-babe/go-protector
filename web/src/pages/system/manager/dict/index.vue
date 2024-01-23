@@ -2,31 +2,31 @@
 <template>
   <a-row :gutter="[8,8]" type="flex" :style="{ margin: 0 }">
     <a-col :span="12" >
-      <TypeList/>
+      <TypeList @updateTypeCode="updateTypeCode"/>
     </a-col>
     <a-col :span="12">
-      <DataList/>
+      <DataList :type-code="typeCode"/>
     </a-col>
   </a-row>
 </template>
 
-<script setup>
+<script>
 
 import DataList from "@/pages/system/manager/dict/DataList";
 import TypeList from "@/pages/system/manager/dict/TypeList";
-import column from './column'
 export default {
-    name: "typeList",
-    components: { TypeList,DataList},
-    data () {
-        return {
-            column: {
-                typeColumn : column.typeColumn,
-                dataColumn : column.dataColumn,
-            },
-
-        }
+  name: "typeList",
+  components: {TypeList, DataList},
+  data() {
+    return {
+      typeCode: '',
     }
+  },
+  methods: {
+    updateTypeCode: function (typeCode) {
+      this.typeCode = typeCode;
+    }
+  }
 }
 </script>
 <style scoped lang="less">

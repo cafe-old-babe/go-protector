@@ -2,9 +2,9 @@ package dto
 
 type Page struct {
 	Count      int `json:"totalCount"`
-	PageIndex  int `json:"pageNo"`
+	PageIndex  int `json:"current"`
 	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPage"`
+	TotalPages int `json:"total"`
 	List       any `json:"list"`
 }
 

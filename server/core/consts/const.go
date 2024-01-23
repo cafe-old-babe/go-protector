@@ -25,7 +25,7 @@ const (
 	CachePrefix = "go-protector"
 
 	// ServerUrlPrefix 服务前缀
-	ServerUrlPrefix = "api"
+	ServerUrlPrefix = "/api"
 
 	AuthHeaderKey = "Authorization"
 	AuthUrlKey    = "token"
