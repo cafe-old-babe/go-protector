@@ -47,10 +47,11 @@ func SetDB(db *gorm.DB) {
 			if userId <= 0 {
 				return
 			}
+			set := callbacks.ConvertToAssignments(db.Statement)
+
 			//db.Statement.SetColumn()
 			if db.Statement.Schema == nil {
 
-				set := callbacks.ConvertToAssignments(db.Statement)
 				for _, assignment := range set {
 					if strings.ToLower(assignment.Column.Name) == "updated_by" {
 						return
@@ -79,7 +80,16 @@ func SetDB(db *gorm.DB) {
 				if field, ok := db.Statement.Schema.FieldsByName["UpdatedBy"]; ok {
 					value, zero := field.ValueOf(db.Statement.Context, db.Statement.ReflectValue)
 					fmt.Printf("field: %v, value: %v, zero: %v\n", field.Name, value, zero)
-					_ = db.Statement.AddError(field.Set(db.Statement.Context, db.Statement.ReflectValue, userId))
+					if !zero {
+						return
+					}
+					db.Statement.AddClause(append(set, clause.Assignment{
+						Column: clause.Column{
+							Name: field.DBName,
+						},
+						Value: userId,
+					}))
+					//_ = db.Statement.AddError(field.Set(db.Statement.Context, db.Statement.ReflectValue, userId))
 
 				}
 			}

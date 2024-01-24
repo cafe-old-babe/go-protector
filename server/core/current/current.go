@@ -2,7 +2,6 @@ package current
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"go-protector/server/core/consts"
 	"go-protector/server/models/dto"
 )
@@ -14,11 +13,11 @@ func GetUserId(c context.Context) uint64 {
 	return 0
 }
 
-func SetUserId(ctx *gin.Context, data uint64) {
+func SetUserId(c context.Context, data uint64) context.Context {
 	if data <= 0 {
-		return
+		return c
 	}
-	ctx.Set(consts.CtxKeyUserId, data)
+	return context.WithValue(c, consts.CtxKeyUserId, data)
 }
 
 // SetUser 设置当前用户
@@ -26,8 +25,7 @@ func SetUser(c context.Context, user *dto.CurrentUser) (nc context.Context) {
 	if c == nil || user == nil {
 		return
 	}
-	nc = context.WithValue(c, consts.CtxKeyCurrentUser, user)
-
+	nc = context.WithValue(SetUserId(c, user.ID), consts.CtxKeyCurrentUser, user)
 	return
 }
 

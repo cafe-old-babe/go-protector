@@ -12,8 +12,8 @@
 
 <script>
 
-import DataList from "@/pages/system/manager/dict/DataList";
-import TypeList from "@/pages/system/manager/dict/TypeList";
+import DataList from "@/pages/system/manager/dict/data/DataList";
+import TypeList from "@/pages/system/manager/dict/type/TypeList";
 export default {
   name: "typeList",
   components: {TypeList, DataList},

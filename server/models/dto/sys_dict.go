@@ -13,6 +13,6 @@ type DictDataPageReq struct {
 }
 
 type DictDataUpdateStatusReq struct {
-	ID     string `uri:"id"`
+	ID     uint64 `uri:"id"`
 	Status int    `uri:"status"`
 }

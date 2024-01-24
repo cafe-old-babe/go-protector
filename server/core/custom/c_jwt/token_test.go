@@ -1,6 +1,7 @@
 package c_jwt
 
 import (
+	"go-protector/server/core/consts"
 	"go-protector/server/models/dto"
 	"path/filepath"
 	"testing"
@@ -15,7 +16,7 @@ func TestGenerateToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		abs, _ := filepath.Abs("/opt/work_space/github/go-protector/config/config.yml")
 		t.Setenv(consts.EnvConfig, abs)
-		jwtString, err := GenerateToken(&dto.CurrentUser{
+		jwtString, _, err := GenerateToken(&dto.CurrentUser{
 			ID:        0,
 			SessionId: 0,
 			LoginName: "",

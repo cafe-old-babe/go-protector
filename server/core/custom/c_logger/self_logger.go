@@ -28,35 +28,29 @@ func SetLogger(logger *zap.Logger) {
 
 }
 
-func GetLogger(ctx *gin.Context) (log *SelfLogger) {
+func GetLogger(c *gin.Context) (log *SelfLogger) {
 	var ok bool
 	var value any
-	if value, ok = ctx.Get(consts.CtxKeyLog); ok {
+	if value, ok = c.Get(consts.CtxKeyLog); ok {
 		if log, ok = value.(*SelfLogger); ok {
 			return
 		}
 		return
 	}
 	var traceId string
-	if value, ok = ctx.Get(consts.CtxKeyTraceId); !ok {
+	if value, ok = c.Get(consts.CtxKeyTraceId); !ok {
 		traceId = strconv.FormatUint(utils.GetNextId(), 10)
 	} else {
 		if traceId, ok = value.(string); !ok {
 			traceId = strconv.FormatUint(utils.GetNextId(), 10)
 		}
 	}
-	ctx.Set(consts.CtxKeyTraceId, traceId)
+	c.Set(consts.CtxKeyTraceId, traceId)
 	log = &SelfLogger{
 		zapLog: _log.zapLog.Named("traceId: " + traceId),
-		ctx:    ctx,
+		ctx:    c,
 	}
-
-	//log = NewLoggerByOpt(ctx, zap.Fields(zapcore.Field{
-	//	Key:    "traceId",
-	//	Type:   zapcore.StringType,
-	//	String: traceId,
-	//}))
-	ctx.Set(consts.CtxKeyLog, log)
+	c.Set(consts.CtxKeyLog, log)
 	return
 }
 func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
@@ -73,7 +67,7 @@ func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
 		log.zapLog.Named(traceId)
 	}
 
-	ctx = context.WithValue(ctx, consts.CtxKeyLog, log)
+	log.ctx = context.WithValue(ctx, consts.CtxKeyLog, log)
 	return
 }
 func NewLoggerByField(ctx context.Context, fields ...zap.Field) *SelfLogger {

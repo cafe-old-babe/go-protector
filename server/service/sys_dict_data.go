@@ -50,28 +50,22 @@ func (_self *SysDictData) Page(req *dto.DictDataPageReq) *dto.Result {
 	return dto.ResultPage(list, req, count)
 }
 
-// Insert 字典数据新增
-func (_self *SysDictData) Insert(model *entity.SysDictData) *dto.Result {
-	if err := _self.DB.Create(model).Error; err != nil {
+// Save 字典数据新增
+func (_self *SysDictData) Save(model *entity.SysDictData) *dto.Result {
+	// todo 校验
+	if err := _self.DB.Save(model).Error; err != nil {
 		return dto.ResultFailureErr(err)
 	}
 
 	return dto.ResultSuccess(model, "创建成功")
 }
 
-// Update 字典数据更新
-func (_self *SysDictData) Update(model *entity.SysDictData) *dto.Result {
-	if err := _self.DB.Save(model).Error; err != nil {
-		return dto.ResultFailureErr(err)
-	}
-	return dto.ResultSuccess(model, "更新成功")
-}
-
 // UpdateStatus 更新状态
 func (_self *SysDictData) UpdateStatus(req *dto.DictDataUpdateStatusReq) *dto.Result {
 
-	result := _self.DB.Table(table_name.SysDictData, req.ID).
-		Update("type_status", req.Status)
+	result := _self.DB.Model(&entity.SysDictData{}).
+		Where("id = ?", req.ID).
+		Update("data_status", req.Status)
 
 	if result.Error != nil {
 		return dto.ResultFailureErr(result.Error)
@@ -86,10 +80,10 @@ func (_self *SysDictData) UpdateStatus(req *dto.DictDataUpdateStatusReq) *dto.Re
 
 // Delete 字典数据删除
 func (_self *SysDictData) Delete(req *dto.IdsReq) *dto.Result {
-	if req == nil || len(req.Ids) <= 0 {
+	if req == nil || len(req.GetIds()) <= 0 {
 		return dto.ResultFailureErr(c_error.ErrParamInvalid)
 	}
-	result := _self.DB.Delete(&entity.SysDictData{}, req.Ids)
+	result := _self.DB.Delete(&entity.SysDictData{}, req.GetIds())
 	if result.Error != nil {
 		return dto.ResultFailureErr(result.Error)
 	}

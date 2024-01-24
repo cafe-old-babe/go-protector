@@ -104,7 +104,7 @@
 <script>
 import StandardTable from '@/components/table/StandardTable'
 import {request} from '@/utils/request'
-import column from "./column";
+import column from "../column";
 
 export default {
   name: 'DataList',

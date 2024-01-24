@@ -66,6 +66,7 @@ func ParserToken(jwtString *string) (userPointer *dto.CurrentUser, err error) {
 	tokenTimeout := config.GetConfig().Jwt.TokenTimeout
 	if !iat.Add(time.Minute * time.Duration(tokenTimeout)).After(time.Now()) {
 		jwtString, err = ReGenerateToken(jwtString, userPointer)
+
 	}
 	return
 }

@@ -47,12 +47,20 @@ func JwtAuth() gin.HandlerFunc {
 		if split := strings.Split(tokenStr, " "); len(split) >= 1 {
 			tokenStr = split[1]
 		}
+		oldTokenStr := tokenStr
 		currentUser, err := c_jwt.ParserToken(&tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, dto.ResultCustom(http.StatusUnauthorized, nil, err.Error()))
 			return
 		}
+		if oldTokenStr != tokenStr {
+			c.Writer.Header().Set(consts.AuthHeaderKey, tokenStr)
+			c_logger.GetLogger(c).Info("-------------------")
+			c_logger.GetLogger(c).Info("old: %s", oldTokenStr)
+			c_logger.GetLogger(c).Info("new: %s", tokenStr)
+			c_logger.GetLogger(c).Info("-------------------")
+		}
 
-		c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))
+		c.Request = c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))
 	}
 }

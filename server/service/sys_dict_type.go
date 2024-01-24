@@ -30,17 +30,18 @@ func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *dto.Result) {
 	return dto.ResultPage(list, req, count)
 }
 
-// Insert 字典类型新增
-func (_self *SysDictType) Insert(model *entity.SysDictType) *dto.Result {
-	if err := _self.DB.Create(model).Error; err != nil {
+// Save 字典类型保存
+func (_self *SysDictType) Save(model *entity.SysDictType) *dto.Result {
+	// todo 校验
+	if err := _self.DB.Save(model).Error; err != nil {
 		return dto.ResultFailureErr(err)
 	}
-
 	return dto.ResultSuccess(model, "创建成功")
 }
 
 // Update 字典类型更新
 func (_self *SysDictType) Update(model *entity.SysDictType) *dto.Result {
+	// todo 校验
 	if err := _self.DB.Save(model).Error; err != nil {
 		return dto.ResultFailureErr(err)
 	}
@@ -49,10 +50,11 @@ func (_self *SysDictType) Update(model *entity.SysDictType) *dto.Result {
 
 // Delete 字典类型删除
 func (_self *SysDictType) Delete(req *dto.IdsReq) *dto.Result {
-	if req == nil || len(req.Ids) <= 0 {
+	if req == nil || len(req.GetIds()) <= 0 {
 		return dto.ResultFailureErr(c_error.ErrParamInvalid)
 	}
-	result := _self.DB.Delete(&entity.SysDictType{}, req.Ids)
+	//todo 同时删除data
+	result := _self.DB.Delete(&entity.SysDictType{}, req.GetIds())
 	if result.Error != nil {
 		return dto.ResultFailureErr(result.Error)
 	}

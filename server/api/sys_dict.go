@@ -32,8 +32,8 @@ func (_self sysDict) DictTypePage(c *gin.Context) {
 	c_result.Result(c, res)
 }
 
-// DictTypeInsert 类型新增
-func (_self sysDict) DictTypeInsert(c *gin.Context) {
+// DictTypeSave 类型保存
+func (_self sysDict) DictTypeSave(c *gin.Context) {
 	var typeService service.SysDictType
 	_self.MakeService(c, &typeService)
 	var model entity.SysDictType
@@ -43,20 +43,7 @@ func (_self sysDict) DictTypeInsert(c *gin.Context) {
 		return
 	}
 
-	c_result.Result(c, typeService.Insert(&model))
-}
-
-// DictTypeUpdate 类型更新
-func (_self sysDict) DictTypeUpdate(c *gin.Context) {
-	var typeService service.SysDictType
-	_self.MakeService(c, &typeService)
-	var model entity.SysDictType
-	if err := c.BindJSON(&model); err != nil {
-		typeService.Logger.Error("dictType DictTypeUpdate Error: %v", err)
-		c_result.Err(c, err)
-		return
-	}
-	c_result.Result(c, typeService.Update(&model))
+	c_result.Result(c, typeService.Save(&model))
 }
 
 // DictTypeDelete 删除类型
@@ -67,6 +54,7 @@ func (_self sysDict) DictTypeDelete(c *gin.Context) {
 	if err := c.BindJSON(&req); err != nil {
 		typeService.Logger.Error("dictType DictTypeDelete Error: %v", err)
 		c_result.Err(c, err)
+		return
 	}
 	c_result.Result(c, typeService.Delete(&req))
 }
@@ -91,8 +79,8 @@ func (_self sysDict) DictDataPage(c *gin.Context) {
 
 }
 
-// DictDataInsert 数据新增
-func (_self sysDict) DictDataInsert(c *gin.Context) {
+// DictDataSave 数据保存
+func (_self sysDict) DictDataSave(c *gin.Context) {
 	var dataService service.SysDictData
 	_self.MakeService(c, &dataService)
 	var model entity.SysDictData
@@ -101,8 +89,7 @@ func (_self sysDict) DictDataInsert(c *gin.Context) {
 		c_result.Err(c, err)
 		return
 	}
-
-	c_result.Result(c, dataService.Insert(&model))
+	c_result.Result(c, dataService.Save(&model))
 }
 
 // DictDataUpdateStatus 更新数据状态
@@ -113,19 +100,9 @@ func (_self sysDict) DictDataUpdateStatus(c *gin.Context) {
 	if err := c.BindUri(&updateReq); err != nil {
 		dataService.Logger.Error("dictData dictDataUpdateStatus Error: %v", err)
 		c_result.Err(c, err)
+		return
 	}
 	c_result.Result(c, dataService.UpdateStatus(&updateReq))
-}
-
-func (_self sysDict) DictDataUpdate(c *gin.Context) {
-	var dataService service.SysDictData
-	_self.MakeService(c, &dataService)
-	var model entity.SysDictData
-	if err := c.BindJSON(&model); err != nil {
-		dataService.Logger.Error("dictData DictDataUpdate Error: %v", err)
-		c_result.Err(c, err)
-	}
-	c_result.Result(c, dataService.Update(&model))
 }
 
 func (_self sysDict) DictDataDelete(c *gin.Context) {
@@ -135,6 +112,7 @@ func (_self sysDict) DictDataDelete(c *gin.Context) {
 	if err := c.BindJSON(&req); err != nil {
 		dataService.Logger.Error("dictData DictDataDelete Error: %v", err)
 		c_result.Err(c, err)
+		return
 	}
 	c_result.Result(c, dataService.Delete(&req))
 }

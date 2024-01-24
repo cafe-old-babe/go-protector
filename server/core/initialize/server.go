@@ -12,6 +12,8 @@ import (
 
 func initServer() (server *http.Server) {
 	engine := gin.New()
+	engine.ContextWithFallback = true
+
 	gin.SetMode(config.GetConfig().Server.Model)
 	engine.Use(middleware.Cors())
 	engine.Use(middleware.Recovery)

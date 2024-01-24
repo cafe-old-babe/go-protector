@@ -10,13 +10,11 @@ func initSysDict(group *gin.RouterGroup) {
 	{
 		sysDictApi := api.SysDictApi
 		sysDict.POST("/type", sysDictApi.DictTypePage)
-		sysDict.POST("/type/insert", sysDictApi.DictTypeInsert)
-		sysDict.POST("/type/update", sysDictApi.DictTypeUpdate)
+		sysDict.POST("/type/save", sysDictApi.DictTypeSave)
 		sysDict.POST("/type/delete", sysDictApi.DictTypeDelete)
 
 		sysDict.POST("/data", sysDictApi.DictDataPage)
-		sysDict.POST("/data/insert", sysDictApi.DictDataInsert)
-		sysDict.POST("/data/update", sysDictApi.DictDataUpdate)
+		sysDict.POST("/data/save", sysDictApi.DictDataSave)
 		sysDict.POST("/data/delete", sysDictApi.DictDataDelete)
 		sysDict.POST("/data/:id/:status", sysDictApi.DictDataUpdateStatus)
 

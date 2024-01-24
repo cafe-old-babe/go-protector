@@ -7,6 +7,6 @@ type DictDataPage struct {
 	DataCode       string `json:"dataCode"`
 	DataName       string `json:"dataName"`
 	Sort           int    `json:"sort"`
-	DataStatus     string `json:"dataStatus"`
+	DataStatus     int    `json:"dataStatus"`
 	DataStatusText string `json:"dataStatusText"`
 }
