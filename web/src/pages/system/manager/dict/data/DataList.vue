@@ -41,7 +41,7 @@
               <a-col :span="12" :style="{ textAlign: 'left' }">
                   <a-space :size="8">
                     <a-button @click="addNew" type="primary">新建</a-button>
-                    <a-button type="danger">批量删除</a-button>
+                    <a-button type="danger" @click="deleteBatch">批量删除</a-button>
 
 <!--                            <a-button >批量操作</a-button>
                       <a-dropdown>
@@ -56,12 +56,12 @@
                   </a-space>
               </a-col>
               <a-col :span="12" :style="{ textAlign: 'right' }">
-                  <a-space :size="8">
+                  <a-space >
                       <a-button type="primary" html-type="submit">
                           查询
                       </a-button>
                       <a-button @click="handleReset">
-                          Clear
+                          清除
                       </a-button>
 
                   </a-space>
@@ -74,7 +74,6 @@
         <StandardTable
             :columns="columns"
             :loading="loading"
-            rowKey="id"
             :data-source=dataSource
             :selectedRows.sync="selectedRows"
             @selectedRowChange="onSelectChange"
@@ -199,7 +198,6 @@ export default {
       e.preventDefault();
       this.searchForm.validateFields((error, values) => {
         if (error) {
-          console.log('error', error)
           return
         }
         this.searchFormParam = values;
@@ -211,7 +209,6 @@ export default {
         return;
       }
       this.loading = true;
-
       request('/api/dict/data',
         {...this.pagination, ...this.searchFormParam, typeCode: this.typeCode}).then(res => {
         const {code, message, data: {list, current, pageSize, total}} = res?.data ?? {}
@@ -228,26 +225,61 @@ export default {
     handleReset() {
       this.searchForm.resetFields()
     },
-    deleteRecord(ids) {
-      console.log(ids, "delete")
+    deleteRecord(id) {
+      console.log(id, "delete")
+      this.doDelete({"ids": [id]})
+    },
+    deleteBatch() {
+      // 将 this.selectRows的id提取出来
+      this.doDelete({ids: this.selectedRows.map(item => item.id)});
+    },
+    doDelete: function (idsParam, confirm = true) {
+      if (idsParam.ids.length <= 0) {
+        this.$message.warning("请选择要删除的数据");
+        return;
+      }
+
+      if (!confirm) {
+        this.loading = true;
+        request("/api/dict/data/delete", idsParam).then(res => {
+          const {code, message} = res?.data ?? {};
+          if (code === 200) {
+            this.$message.success(message ?? "删除成功");
+            this.getData();
+          } else {
+            this.$message.error(message);
+            this.loading = false;
+          }
+        })
+        return;
+      }
+
+      this.$confirm({
+        title: '确认删除',
+        content: '是否删除选择数据?',
+        okText: '确认',
+        okType: 'danger',
+        cancelText: '取消',
+        confirmLoading: this.loading,
+        onOk: () => this.doDelete(idsParam, false),
+      })
+
 
     },
     remove() {
       this.dataSource = this.dataSource.filter(item => this.selectedRows.findIndex(row => row.key === item.key) === -1)
       this.selectedRows = []
     },
-    onClear() {
-      this.$message.info('您清空了勾选的所有行')
-    },
-
-
     onSelectChange() {
       console.log(this.selectedRows)
-      this.$message.info('选中行改变了')
     },
     addNew() {
-      this.$message.info("addNew");
+      this.record = {'typeCode': this.typeCode}
+      this.editVisible = true
     },
+    handlerDelete(){
+
+    }
   }
 };
 </script>

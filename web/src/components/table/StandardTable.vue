@@ -1,6 +1,6 @@
 <template>
   <div class="standard-table">
-    <div class="alert">
+<!--    <div class="alert">
       <a-alert type="info" :show-icon="true" v-if="selectedRows">
         <div class="message" slot="message">
           已选择&nbsp;<a>{{selectedRows.length}}</a>&nbsp;项 <a class="clear" @click="onClear">清空</a>
@@ -12,7 +12,7 @@
           </template>
         </div>
       </a-alert>
-    </div>
+    </div>-->
     <a-table
       :bordered="bordered"
       :loading="loading"
@@ -62,7 +62,7 @@ export default {
     dataSource: Array,
     rowKey: {
       type: [String, Function],
-      default: 'key'
+      default: 'id'
     },
     pagination: {
       type: [Object, Boolean],

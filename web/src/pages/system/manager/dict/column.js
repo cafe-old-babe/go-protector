@@ -2,6 +2,7 @@
 const typeColumn = [
     {
         title: '编号',
+        width: 60,
         scopedSlots: { customRender: 'serial' }
     },
     {
@@ -14,12 +15,14 @@ const typeColumn = [
     },
     {
         title: '操作',
+        width: 200,
         scopedSlots: { customRender: 'action' }
     }
 ]
 const dataColumn= [
     {
         title: '序号',
+        width: 60,
         scopedSlots: { customRender: 'serial' }
     },{
         title: '数据名称',
@@ -35,6 +38,7 @@ const dataColumn= [
     },
     {
         title: '操作',
+        width: 200,
         scopedSlots: { customRender: 'action' }
     }
 ]

@@ -54,12 +54,12 @@ func LikeLeft(column, arg string) func(db *gorm.DB) *gorm.DB {
 }
 
 func formatLike(arg string) string {
-	return fmt.Sprintf("'%%%s%%'", arg)
+	return fmt.Sprintf("%%%s%%", arg)
 }
 
 func formatLikeRight(arg string) string {
-	return fmt.Sprintf("'%%%s'", arg)
+	return fmt.Sprintf("%%%s", arg)
 }
 func formatLikeLeft(arg string) string {
-	return fmt.Sprintf("'%s%%'", arg)
+	return fmt.Sprintf("%s%%", arg)
 }
