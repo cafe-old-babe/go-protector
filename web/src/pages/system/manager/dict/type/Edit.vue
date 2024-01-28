@@ -1,140 +1,40 @@
 <template>
   <div>
-    <a-button type="primary" @click="showDrawer"> <a-icon type="plus" /> New account </a-button>
     <a-drawer
-      title="Create a new account"
-      :width="720"
+      :title="localRecord.id?'编辑':'新增'"
+      :width="500"
       :visible="visible"
       :body-style="{ paddingBottom: '80px' }"
       @close="onClose"
     >
-      <a-form :form="form" layout="vertical" hide-required-mark>
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="Name">
-              <a-input
-                v-decorator="[
-                  'name',
-                  {
-                    rules: [{ required: true, message: 'Please enter user name' }],
-                  },
-                ]"
-                placeholder="Please enter user name"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="Url">
-              <a-input
-                v-decorator="[
-                  'url',
-                  {
-                    rules: [{ required: true, message: 'please enter url' }],
-                  },
-                ]"
-                style="width: 100%"
-                addon-before="http://"
-                addon-after=".com"
-                placeholder="please enter url"
-              />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="Owner">
-              <a-select
-                v-decorator="[
-                  'owner',
-                  {
-                    rules: [{ required: true, message: 'Please select an owner' }],
-                  },
-                ]"
-                placeholder="Please a-s an owner"
-              >
-                <a-select-option value="xiao">
-                  Xiaoxiao Fu
-                </a-select-option>
-                <a-select-option value="mao">
-                  Maomao Zhou
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="Type">
-              <a-select
-                v-decorator="[
-                  'type',
-                  {
-                    rules: [{ required: true, message: 'Please choose the type' }],
-                  },
-                ]"
-                placeholder="Please choose the type"
-              >
-                <a-select-option value="private">
-                  Private
-                </a-select-option>
-                <a-select-option value="public">
-                  Public
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="Approver">
-              <a-select
-                v-decorator="[
-                  'approver',
-                  {
-                    rules: [{ required: true, message: 'Please choose the approver' }],
-                  },
-                ]"
-                placeholder="Please choose the approver"
-              >
-                <a-select-option value="jack">
-                  Jack Ma
-                </a-select-option>
-                <a-select-option value="tom">
-                  Tom Liu
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="DateTime">
-              <a-date-picker
-                v-decorator="[
-                  'dateTime',
-                  {
-                    rules: [{ required: true, message: 'Please choose the dateTime' }],
-                  },
-                ]"
-                style="width: 100%"
-                :get-popup-container="trigger => trigger.parentNode"
-              />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="16">
-          <a-col :span="24">
-            <a-form-item label="Description">
-              <a-textarea
-                v-decorator="[
-                  'description',
-                  {
-                    rules: [{ required: true, message: 'Please enter url description' }],
-                  },
-                ]"
-                :rows="4"
-                placeholder="please enter url description"
-              />
-            </a-form-item>
-          </a-col>
-        </a-row>
-      </a-form>
+      <a-spin :spinning="loading">
+        <a-form-model ref="refForm"
+                      :model="localRecord"
+                      :rules="rules"
+                      :label-col="{ span: 6 }"
+                      :wrapper-col="{ span: 14 }"
+                      layout="horizontal">
+          <a-input v-model="localRecord.id" v-show='false'/>
+          <a-form-model-item
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="类型名称"
+            prop="typeName"
+          >
+            <a-input  v-model="localRecord.typeName" placeholder="请输入类型名称"/>
+          </a-form-model-item>
+          <a-form-model-item
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="类型编码"
+            prop="typeCode"
+          >
+            <a-input v-model="localRecord.typeCode"
+                     placeholder="请输入类型编码"
+            />
+          </a-form-model-item>
+        </a-form-model>
+      </a-spin>
       <div
         :style="{
           position: 'absolute',
@@ -149,30 +49,89 @@
         }"
       >
         <a-button :style="{ marginRight: '8px' }" @click="onClose">
-          Cancel
+          取消
         </a-button>
-        <a-button type="primary" @click="onClose">
-          Submit
+        <a-button type="primary" :loading="loading" @click="handleSave">
+          保存
         </a-button>
       </div>
     </a-drawer>
   </div>
 </template>
 <script>
+import {request} from "@/utils/request";
+
 export default {
+  props: {
+    visible: {
+      type: Boolean,
+      required: false
+    },
+    record: {
+      type: Object,
+      default: () => null
+    },
+  },
   data() {
     return {
-      form: this.$form.createForm(this),
-      visible: false,
+      loading: true,
+      localRecord: {},
+      rules: {
+        typeCode: [
+          {required: true, message: '请输入类型编码',}
+        ],
+        typeName: [
+          {required: true, message: '请输入类型名称',}
+        ]
+      }
     };
   },
+  watch:{
+    record(val) {
+      this.localRecord = val
+      this.loading = false
+    }
+  },
+  computed: {
+    formItemLayout() {
+      const { formLayout } = this;
+      return formLayout === 'horizontal'
+        ? {
+          labelCol: { span: 2 },
+          wrapperCol: { span: 14 },
+        }
+        : {};
+    },
+  },
   methods: {
-    showDrawer() {
-      this.visible = true;
-    },
     onClose() {
-      this.visible = false;
+      this.$emit('close');
     },
+    handleSave() {
+      this.loading = true
+      this.$refs.refForm.validate(valid => {
+
+        if (!valid) {
+          this.loading = false
+          return false;
+        }
+
+        request("/api/dict/type/save",this.localRecord).then(res => {
+
+
+          const {code, message} = res?.data ?? {}
+          if (code === 200) {
+            this.$emit('ok');
+            this.$message.success(message);
+            return
+
+          }
+          this.$message.error(message);
+
+        }).finally(() => this.loading = false)
+      });
+
+    }
   },
 };
 </script>

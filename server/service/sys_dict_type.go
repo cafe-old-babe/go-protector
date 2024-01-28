@@ -4,8 +4,10 @@ import (
 	"go-protector/server/core/base"
 	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/scope"
+	"go-protector/server/dao"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
+	"gorm.io/gorm"
 )
 
 type SysDictType struct {
@@ -50,17 +52,34 @@ func (_self *SysDictType) Update(model *entity.SysDictType) *dto.Result {
 
 // Delete 字典类型删除
 func (_self *SysDictType) Delete(req *dto.IdsReq) *dto.Result {
+
 	if req == nil || len(req.GetIds()) <= 0 {
 		return dto.ResultFailureErr(c_error.ErrParamInvalid)
 	}
+	ids := req.GetIds()
 	//todo 同时删除data
-	result := _self.DB.Delete(&entity.SysDictType{}, req.GetIds())
-	if result.Error != nil {
-		return dto.ResultFailureErr(result.Error)
-	}
-	if result.RowsAffected <= 0 {
-		_self.Logger.Error("删除失败,无删除记录")
-		return dto.ResultFailureMsg("删除失败")
+	err := _self.DB.Transaction(func(tx *gorm.DB) error {
+		var dictTypeSlice []entity.SysDictType
+		if err := tx.Find(&dictTypeSlice, ids).Error; err != nil {
+			return err
+		}
+		if len(dictTypeSlice) <= 0 || len(dictTypeSlice) != len(ids) {
+			return c_error.ErrDeleteFailure
+		}
+		var idSlice []uint64
+		var typeCodeSlice []string
+		for _, elem := range dictTypeSlice {
+			idSlice = append(idSlice, elem.ID)
+			typeCodeSlice = append(typeCodeSlice, elem.TypeCode)
+		}
+		if err := dao.SysDict.DeleteTypeByIds(tx, ids); err != nil {
+			return err
+		}
+		return dao.SysDict.DeleteDataByTypeCode(tx, typeCodeSlice)
+	})
+
+	if err != nil {
+		return dto.ResultFailureErr(err)
 	}
 	return dto.ResultSuccessMsg("删除成功")
 }

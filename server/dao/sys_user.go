@@ -3,7 +3,6 @@ package dao
 import (
 	"database/sql"
 	"errors"
-	"go-protector/server/core/base"
 	"go-protector/server/core/consts/table_name"
 	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_error"
@@ -16,7 +15,6 @@ import (
 var SysUser sysUser
 
 type sysUser struct {
-	base.Service
 }
 
 // FindUserByDTO 根据条件查询用户信息

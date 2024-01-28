@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-card :bordered="false" style="margin-bottom: 24px" size="small"  title="字典数据列表">
+    <a-card :bordered="false" style="margin-bottom: 24px" size="small"  :title="{typeCode}? `[${typeCode}]字典数据列表`:'字典数据列表'">
       <a-form :label-col="{ span: 8 }" :wrapper-col="{ span: 14 }" :form="searchForm" @submit="handleSearch">
           <a-row :gutter="[8,1]">
               <a-col :span="12">
@@ -233,15 +233,15 @@ export default {
       // 将 this.selectRows的id提取出来
       this.doDelete({ids: this.selectedRows.map(item => item.id)});
     },
-    doDelete: function (idsParam, confirm = true) {
-      if (idsParam.ids.length <= 0) {
+    doDelete: function (param, confirm = true) {
+      if (param?.ids??[].length <= 0) {
         this.$message.warning("请选择要删除的数据");
         return;
       }
 
       if (!confirm) {
         this.loading = true;
-        request("/api/dict/data/delete", idsParam).then(res => {
+        request("/api/dict/data/delete", param).then(res => {
           const {code, message} = res?.data ?? {};
           if (code === 200) {
             this.$message.success(message ?? "删除成功");
@@ -261,14 +261,8 @@ export default {
         okType: 'danger',
         cancelText: '取消',
         confirmLoading: this.loading,
-        onOk: () => this.doDelete(idsParam, false),
+        onOk: () => this.doDelete(param, false),
       })
-
-
-    },
-    remove() {
-      this.dataSource = this.dataSource.filter(item => this.selectedRows.findIndex(row => row.key === item.key) === -1)
-      this.selectedRows = []
     },
     onSelectChange() {
       console.log(this.selectedRows)

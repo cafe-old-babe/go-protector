@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-card :bordered="false" style="margin-bottom: 24px" size="small"  title="字典类型列表">
-      <a-form :label-col="{ span: 8 }" :wrapper-col="{ span: 14 }" ref="typeForm" :form="searchTypeForm" @submit="handleSearch">
+      <a-form :label-col="{ span: 8 }" :wrapper-col="{ span: 14 }" ref="typeForm" :form="searchForm" @submit="handleSearch">
         <a-row :gutter="[8,1]">
           <a-col :span="12">
 
@@ -15,7 +15,7 @@
                                     },
                                   ],
                                 },
-                              ]" placeholder="请输入数据名称"
+                              ]" placeholder="请输类型名称"
               />
             </a-form-item>
 
@@ -31,7 +31,7 @@
                                     },
                                   ],
                                 },
-                              ]" placeholder="请输入数据编码"
+                              ]" placeholder="请输入类型编码"
               />
             </a-form-item>
           </a-col>
@@ -41,7 +41,7 @@
           <a-col :span="12" :style="{ textAlign: 'left' }">
             <a-space :size="8">
               <a-button @click="addNew" type="primary">新建</a-button>
-              <a-button type="danger">批量删除</a-button>
+              <a-button type="danger" @click="deleteBatch">批量删除</a-button>
 <!--              <a-button type="delete">批量删除</a-button>
               <a-dropdown>
                 &lt;!&ndash;                    <a-menu @click="handleMenuClick" slot="overlay">&ndash;&gt;
@@ -90,7 +90,7 @@
           >
             <a-icon type="edit"/>编辑
           </a>
-          <a @click="deleteRecord(record.key)">
+          <a @click="deleteRecord(record.id)">
             <a-icon type="delete" />删除
           </a>
         </div>
@@ -98,6 +98,12 @@
       </StandardTable>
 
     </a-card>
+    <Edit
+      :visible="editVisible"
+      :record="record"
+      @close="editClose"
+      @ok="editOk"
+    />
   </div>
 </template>
 
@@ -105,15 +111,16 @@
 import StandardTable from '@/components/table/StandardTable'
 import {request} from '@/utils/request'
 import column from "../column";
+import Edit from "@/pages/system/manager/dict/type/Edit.vue";
 
 export default {
-  name: 'DataList',
-  components: {StandardTable},
+  name: 'TypeList',
+  components: {Edit, StandardTable},
   data() {
     return {
-      targetCount: 12,
-      expand: false,
-      searchTypeForm: this.$form.createForm(this),
+      editVisible: false,
+      record: {},
+      searchForm: this.$form.createForm(this),
       searchFormParam: {},
       loading: false,
       columns: column.typeColumn,
@@ -133,15 +140,26 @@ export default {
 
   },
   methods: {
+    editOk() {
+      this.editClose()
+      this.getData()
+    },
+    editClose() {
+      this.editVisible = false
+      this.record = {}
+    },
+    editRecord(record) {
+      this.record = record;
+      this.editVisible = true
+    },
     onPageChange(page, pageSize) {
       this.pagination.current = page
       this.pagination.pageSize = pageSize
       this.getData()
     },
-
     handleSearch(e) {
       e.preventDefault();
-      this.searchTypeForm.validateFields((error, values) => {
+      this.searchForm.validateFields((error, values) => {
         if (error) {
           console.log('error', error)
           return
@@ -162,32 +180,58 @@ export default {
       }).finally(() => this.loading = false)
     },
     handleReset() {
-      this.searchTypeForm.resetFields()
+      this.searchForm.resetFields()
     },
-    deleteRecord(key) {
-      this.dataSource = this.dataSource.filter(item => item.key !== key)
-      this.selectedRows = this.selectedRows.filter(item => item.key !== key)
+    deleteBatch() {
+      this.doDelete({ids: this.selectedRows.map(item => item.id)});
     },
-    remove () {
-      this.dataSource = this.dataSource.filter(item => this.selectedRows.findIndex(row => row.key === item.key) === -1)
-      this.selectedRows = []
+    deleteRecord(id) {
+      console.log(id, "delete")
+      this.doDelete({"ids": [id]})
     },
-    onClear() {
-      this.$message.info('您清空了勾选的所有行')
+    doDelete: function (param, confirm = true) {
+      console.log((param?.ids ?? [] ).length);
+      if ((param?.ids??[]).length <= 0) {
+        this.$message.warning("请选择要删除的数据");
+        return;
+      }
+
+      if (!confirm) {
+        this.loading = true;
+        request("/api/dict/type/delete", param).then(res => {
+          const {code, message} = res?.data ?? {};
+          if (code === 200) {
+            this.$message.success(message ?? "删除成功");
+            this.getData();
+          } else {
+            this.$message.error(message);
+            this.loading = false;
+          }
+        })
+        return;
+      }
+
+      this.$confirm({
+        title: '确认删除',
+        content: '是否删除选择数据?',
+        okText: '确认',
+        okType: 'danger',
+        cancelText: '取消',
+        confirmLoading: this.loading,
+        onOk: () => this.doDelete(param, false),
+      })
     },
     onSelectChange() {
       console.log(this.selectedRows)
       this.$message.info('选中行改变了')
     },
     addNew () {
-      this.$message.info("addNew")
+      this.record = {}
+      this.editVisible = true
     },
     eyeRecord(typeCode) {
       this.$emit('updateTypeCode',typeCode)
     },
-    editRecord(record) {
-      console.log(record,"edit")
-    }
   }
 }
 </script>
