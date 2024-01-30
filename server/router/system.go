@@ -6,11 +6,11 @@ import (
 )
 
 func initSystem(group *gin.RouterGroup) {
-	system := group.Group("system")
+	routerGroup := group.Group("system")
 	{
 		systemApi := api.SystemApi
-		system.GET("/captcha", systemApi.GenerateCaptcha)
-		system.GET("/routes", systemApi.Routes)
+		routerGroup.GET("/captcha", systemApi.GenerateCaptcha)
+		routerGroup.GET("/routes", systemApi.Routes)
 
 	}
 }

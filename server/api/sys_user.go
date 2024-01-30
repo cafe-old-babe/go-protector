@@ -9,13 +9,13 @@ import (
 	"go-protector/server/service"
 )
 
-var UserApi user
+var SysUserApi sysUser
 
-type user struct {
+type sysUser struct {
 	base.Api
 }
 
-func (_self user) Login(c *gin.Context) {
+func (_self sysUser) Login(c *gin.Context) {
 	var loginDTO dto.Login
 	if err := c.BindJSON(&loginDTO); err != nil {
 		c_logger.GetLogger(c).Error("login Error: %v", err)
@@ -28,11 +28,11 @@ func (_self user) Login(c *gin.Context) {
 	c_result.Result(c, res)
 }
 
-func (_self user) Logout(c *gin.Context) {
+func (_self sysUser) Logout(c *gin.Context) {
 	c_result.Success(c, nil)
 }
 
-func (_self user) SetStatus(c *gin.Context) {
+func (_self sysUser) SetStatus(c *gin.Context) {
 	var updateDTO dto.SetStatus
 	if err := c.BindJSON(&updateDTO); err != nil {
 		c_logger.GetLogger(c).Error("SetStatus Error: %v", err)

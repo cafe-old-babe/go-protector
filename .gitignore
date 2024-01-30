@@ -21,6 +21,7 @@ config.yml
 go_build_*
 go-protector
 go_protector
+go_protector_*
 GoProtector*
 *.test
 

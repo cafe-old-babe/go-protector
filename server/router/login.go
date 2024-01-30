@@ -6,12 +6,12 @@ import (
 )
 
 func initLogin(group *gin.RouterGroup) {
-	user := group.Group("user")
+	routerGroup := group.Group("user")
 	{
-		userApi := api.UserApi
-		user.POST("login", userApi.Login)
-		user.POST("logout", userApi.Logout)
-		user.POST("setStatus", userApi.SetStatus)
+		userApi := api.SysUserApi
+		routerGroup.POST("login", userApi.Login)
+		routerGroup.POST("logout", userApi.Logout)
+		routerGroup.POST("setStatus", userApi.SetStatus)
 
 	}
 }

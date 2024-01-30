@@ -95,16 +95,19 @@ func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 		Avatar:    "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
 	}
 	jwtString, expireAt, err := c_jwt.GenerateToken(userDTO)
-	tempMap := map[string]any{
-		"id": "admin",
-	}
-
+	//tempMap := map[string]any{
+	//	"id": "admin",
+	//}
+	//[{"id":"admin","operation":["add","edit","delete"]}]
 	res = dto.ResultSuccess(dto.LoginSuccess{
 		SysUser:     userDTO,
 		Token:       *jwtString,
 		ExpireAt:    expireAt,
-		Permissions: tempMap,
-		Roles:       tempMap,
+		Permissions: map[string]any{},
+		Roles: map[string]any{
+			"id":        "admin",
+			"operation": []string{"add", "edit", "delete"},
+		},
 	})
 	return
 }

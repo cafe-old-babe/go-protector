@@ -1,5 +1,7 @@
 package consts
 
+import "go-protector/server/core/custom/c_type"
+
 const (
 	// EnvConfig 环境变量
 	EnvConfig = "config"
@@ -32,3 +34,9 @@ const (
 )
 
 var EmptyVal any
+
+const (
+	User c_type.RoleRelationType = "user"
+	Menu c_type.RoleRelationType = "menu"
+	Dept c_type.RoleRelationType = "dept"
+)

@@ -18,6 +18,10 @@ func StartMigration() (err error) {
 		&entity.SysUser{},
 		&entity.SysDictData{},
 		&entity.SysDictType{},
+		&entity.SysDept{},
+		&entity.SysMenu{},
+		&entity.SysRole{},
+		&entity.SysRoleRelation{},
 	)
 	return err
 }
