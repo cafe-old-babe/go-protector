@@ -9,7 +9,7 @@ type SysRole struct {
 	Status   int8   `json:"status" gorm:"comment:角色状态,0-正常,1-停用"`
 	Sort     int32  `json:"sort" gorm:"comment:排序"`
 	Remark   string `json:"remark" gorm:"size:1024;comment:备注"`
-	Inner    int8   `json:"inner" gorm:"comment:是否内置角色,1-是"`
+	IsInner  int8   `json:"isInner" gorm:"comment:是否内置角色,1-是,其他-不是"`
 	ModelControl
 	ModelDelete
 }
