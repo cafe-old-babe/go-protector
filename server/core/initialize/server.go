@@ -12,6 +12,12 @@ import (
 
 func initServer() (server *http.Server) {
 	engine := gin.New()
+	// https://github.com/gin-gonic/gin/pull/3367
+	// https://qiita.com/hum_op/items/901093b8bc3078b8077b 小日子
+	// https://github.com/gin-gonic/gin/blob/v1.9.1/context.go#L1229-L1232
+	// https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
+	// https://pkg.go.dev/github.com/rumorshub/gin#section-readme
+	// https://before80.github.io/go_docs/thirdPkg/gin/gin/
 	engine.ContextWithFallback = true
 
 	gin.SetMode(config.GetConfig().Server.Model)
