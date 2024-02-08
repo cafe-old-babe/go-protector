@@ -47,3 +47,17 @@ func (_self sysUser) SetStatus(c *gin.Context) {
 	}
 	c_result.Success(c, nil)
 }
+
+func (_self sysUser) UserInfo(c *gin.Context) {
+	var sysUserService service.SysUser
+	_self.MakeService(c, &sysUserService)
+	res := sysUserService.UserInfo()
+	c_result.Result(c, res)
+}
+
+func (_self sysUser) Nav(c *gin.Context) {
+	var sysUserService service.SysUser
+	_self.MakeService(c, &sysUserService)
+	res := sysUserService.Nav()
+	c_result.Result(c, res)
+}

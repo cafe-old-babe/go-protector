@@ -10,6 +10,8 @@ func initLogin(group *gin.RouterGroup) {
 	{
 		userApi := api.SysUserApi
 		routerGroup.POST("login", userApi.Login)
+		routerGroup.GET("info", userApi.UserInfo)
+		routerGroup.GET("nav", userApi.Nav)
 		routerGroup.POST("logout", userApi.Logout)
 		routerGroup.POST("setStatus", userApi.SetStatus)
 

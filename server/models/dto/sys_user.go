@@ -13,13 +13,16 @@ type FindUser struct {
 }
 
 type CurrentUser struct {
-	ID        uint64 `json:"id"`
-	SessionId uint64 `json:"sessionId"`
-	LoginName string `json:"loginName"`
-	UserName  string `json:"userName"`
-	LoginTime string `json:"loginTime"`
-	LoginIp   string `json:"loginIp"`
-	Avatar    string `json:"avatar"`
+	ID        uint64   `json:"id"`
+	SessionId uint64   `json:"sessionId"`
+	LoginName string   `json:"loginName"`
+	UserName  string   `json:"userName"`
+	LoginTime string   `json:"loginTime"`
+	LoginIp   string   `json:"loginIp"`
+	Avatar    string   `json:"avatar"`
+	RoleIds   []uint64 `json:"roleIds"`
+	DeptId    uint64   `json:"deptId"`
+	IsAdmin   bool     `json:"is"`
 }
 
 type SetStatus struct {

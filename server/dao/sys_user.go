@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	"errors"
+	"go-protector/server/core/consts"
 	"go-protector/server/core/consts/table_name"
 	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_error"
@@ -38,13 +39,30 @@ func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUser) (
 	if dto.IsUnscoped {
 		tx = tx.Unscoped()
 	}
-	if err = tx.First(sysUser).Error; err != nil {
+	if err = tx.Preload("SysDept").First(sysUser).Error; err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
 			sysUser = nil
 			err = c_error.ErrRecordNotFoundSysUser
 			return
 		}
 	}
+
+	var roleIdSlice []uint64
+	if roleIdSlice, err = SysRole.GetRoleIdByRelationId(db, sysUser.ID, consts.User); err != nil {
+		return
+	}
+	if len(roleIdSlice) <= 0 {
+		err = c_error.ErrNotFoundRoleOfSysUser
+	}
+	var sysRoles []entity.SysRole
+	if err = db.Find(&sysRoles, roleIdSlice).Error; err == nil {
+		sysUser.SysRoles = sysRoles
+		sysUser.SysRoleIds = roleIdSlice
+	}
+	if len(sysRoles) <= 0 {
+		err = c_error.ErrNotFoundRoleOfSysUser
+	}
+
 	return
 }
 

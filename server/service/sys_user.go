@@ -2,9 +2,11 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"go-protector/server/core/base"
 	"go-protector/server/core/consts"
+	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_captcha"
 	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/custom/c_jwt"
@@ -80,7 +82,7 @@ func (_self *SysUser) DoLogin(loginDTO dto.Login) (res *dto.Result) {
 func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 	var err error
 	// 更新最后登录时间 最后登录IP
-	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, entity.ID, _self.Ctx.ClientIP()); err != nil {
+	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, entity.ID, _self.Context.ClientIP()); err != nil {
 		_self.Logger.Error("用户: %s UpdateLastLoginIp err: %v", entity.LoginName, err)
 	}
 
@@ -91,23 +93,24 @@ func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *dto.Result) {
 		LoginName: entity.LoginName,
 		UserName:  entity.Username,
 		LoginTime: time.Now().Format(time.DateTime),
-		LoginIp:   _self.Ctx.ClientIP(),
+		LoginIp:   _self.Context.ClientIP(),
 		Avatar:    "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
+		DeptId:    entity.DeptId,
+		RoleIds:   entity.SysRoleIds,
 	}
+	for _, role := range entity.SysRoles {
+		if role.RoleType == 0 {
+			userDTO.IsAdmin = true
+			break
+		}
+	}
+
 	jwtString, expireAt, err := c_jwt.GenerateToken(userDTO)
-	//tempMap := map[string]any{
-	//	"id": "admin",
-	//}
-	//[{"id":"admin","operation":["add","edit","delete"]}]
+
 	res = dto.ResultSuccess(dto.LoginSuccess{
-		SysUser:     userDTO,
-		Token:       *jwtString,
-		ExpireAt:    expireAt,
-		Permissions: map[string]any{},
-		Roles: map[string]any{
-			"id":        "admin",
-			"operation": []string{"add", "edit", "delete"},
-		},
+		SysUser:  userDTO,
+		Token:    *jwtString,
+		ExpireAt: expireAt,
 	})
 	return
 }
@@ -134,4 +137,107 @@ func (_self *SysUser) SetStatus(dto *dto.SetStatus) (err error) {
 	}
 
 	return
+}
+
+// UserInfo https://pro.antdv.com/docs/authority-management
+func (_self *SysUser) UserInfo() (res *dto.Result) {
+	// 查询用户角色
+	user, ok := current.GetUser(_self.Context)
+	if !ok {
+		res = dto.ResultFailureMsg("获取当前用户失败")
+		return
+	}
+	// 查询角色关联菜单
+	roleIds := user.RoleIds
+	if len(roleIds) <= 0 {
+		res = dto.ResultFailureMsg("当前用户未绑定角色")
+		return
+	}
+	var roleService SysRole
+	_self.MakeService(&roleService)
+	menuSlice, buttonSlice, err := roleService.GetMenuByRoleIds(roleIds, user.IsAdmin)
+	if err != nil {
+		return dto.ResultFailureErr(err)
+	}
+	buttonMap := map[uint64][]entity.SysMenu{}
+	for _, button := range buttonSlice {
+		buttonMap[button.PID] = append(buttonMap[button.PID], button)
+	}
+
+	// 封装
+	permissionSlice := make([]dto.Permission, 0)
+
+	for _, menu := range menuSlice {
+
+		permission := dto.Permission{
+			PermissionId:    menu.Permission,
+			PermissionName:  menu.Name,
+			ActionEntitySet: make([]dto.ActionEntity, 0),
+		}
+		buttonSlice = buttonMap[menu.ID]
+		for _, button := range buttonSlice {
+			permission.ActionEntitySet =
+				append(permission.ActionEntitySet,
+					dto.ActionEntity{
+						Action:       button.Permission,
+						Describe:     button.Name,
+						DefaultCheck: false,
+					})
+		}
+		if actByte, err := json.Marshal(permission.ActionEntitySet); err == nil {
+			permission.Actions = string(actByte)
+		}
+
+		permissionSlice = append(permissionSlice, permission)
+
+	}
+	// 对接antdPro
+	roleInfo := dto.RoleInfo{
+		Role: dto.Role{
+			Permissions: permissionSlice,
+		},
+	}
+	return dto.ResultSuccess(roleInfo)
+
+}
+
+// Nav 获取菜单
+func (_self *SysUser) Nav() (res *dto.Result) {
+	// 查询用户角色
+	user, ok := current.GetUser(_self.Context)
+	if !ok {
+		res = dto.ResultFailureMsg("获取当前用户失败")
+		return
+	}
+	// 查询角色关联菜单
+	roleIds := user.RoleIds
+	if len(roleIds) <= 0 {
+		res = dto.ResultFailureMsg("当前用户未绑定角色")
+		return
+	}
+
+	menuSlice, err := dao.SysRole.GetPermissionSliceByIds(_self.DB, roleIds, []int8{0, 1}, user.IsAdmin)
+	if err != nil {
+		res = dto.ResultFailureErr(err)
+		return
+	}
+	var menuInfoSlice []dto.MenuInfo
+	for _, menu := range menuSlice {
+
+		menuInfoSlice = append(menuInfoSlice, dto.MenuInfo{
+			Id:        menu.ID,
+			ParentId:  menu.PID,
+			Name:      menu.Permission,
+			Path:      menu.Redirect,
+			Component: menu.Component,
+			Redirect:  nil,
+			Meta: dto.MetaInfo{
+				Title: menu.Name,
+				Show:  menu.Hidden != 1,
+			},
+		})
+
+	}
+
+	return dto.ResultSuccess(menuInfoSlice)
 }
