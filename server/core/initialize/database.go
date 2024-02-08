@@ -36,6 +36,7 @@ func initDB() error {
 	}
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true, //禁用 自动创建数据库外键约束
 		Logger: gormLogger.NewGormLogger(logger.Config{
 			SlowThreshold: time.Second,
 			Colorful:      colorful,

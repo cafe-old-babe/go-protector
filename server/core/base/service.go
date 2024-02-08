@@ -13,15 +13,15 @@ type IService interface {
 }
 
 type Service struct {
-	Logger *c_logger.SelfLogger
-	DB     *gorm.DB
-	Ctx    *gin.Context
+	Logger  *c_logger.SelfLogger
+	DB      *gorm.DB
+	Context *gin.Context
 }
 
 func (_self *Service) Make(c *gin.Context) {
 	_self.DB = database.GetDB(c)
 	_self.Logger = c_logger.GetLogger(c)
-	_self.Ctx = c
+	_self.Context = c
 }
 
 func (_self *Service) MakeService(service ...IService) {
@@ -29,6 +29,6 @@ func (_self *Service) MakeService(service ...IService) {
 		return
 	}
 	for i := range service {
-		service[i].Make(_self.Ctx)
+		service[i].Make(_self.Context)
 	}
 }

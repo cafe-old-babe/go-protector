@@ -31,6 +31,6 @@ func SetUser(c context.Context, user *dto.CurrentUser) (nc context.Context) {
 
 // GetUser 获取当前用户
 func GetUser(c context.Context) (user *dto.CurrentUser, ok bool) {
-	user, ok = c.Value(c).(*dto.CurrentUser)
+	user, ok = c.Value(consts.CtxKeyCurrentUser).(*dto.CurrentUser)
 	return
 }

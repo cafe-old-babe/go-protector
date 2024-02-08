@@ -63,3 +63,13 @@ func formatLikeRight(arg string) string {
 func formatLikeLeft(arg string) string {
 	return fmt.Sprintf("%s%%", arg)
 }
+
+func EqStr(column, arg string) func(db *gorm.DB) *gorm.DB {
+
+	return func(db *gorm.DB) *gorm.DB {
+		if len(column) <= 0 || len(arg) <= 0 {
+			return db
+		}
+		return db.Where(column+" = ?", arg)
+	}
+}

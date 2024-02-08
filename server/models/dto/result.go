@@ -68,17 +68,23 @@ func ResultCustom(code int, data any, msg ...string) *Result {
 
 func ResultPage(data any, pagination IPagination, count int64) *Result {
 	page := Page{
-		Count:     int(count),
-		PageIndex: pagination.GetPageIndex(),
-		PageSize:  pagination.GetPageSize(),
-		List:      data,
+		TotalCount: int(count),
+		PageNo:     pagination.GetPageIndex(),
+		PageSize:   pagination.GetPageSize(),
+		Data:       data,
 	}
 	if count > 0 {
-		page.TotalPages = page.Count / page.PageSize
-		remainder := page.Count % page.PageSize
+		page.TotalPages = page.TotalCount / page.PageSize
+		remainder := page.TotalCount % page.PageSize
 		if remainder != 0 {
 			page.TotalPages += 1
 		}
 	}
 	return ResultSuccess(page, "查询成功")
+}
+
+// IsSuccess 判断是否成功
+func (_self *Result) IsSuccess() bool {
+	return _self.Code == http.StatusOK
+
 }

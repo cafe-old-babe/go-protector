@@ -17,6 +17,10 @@ type SysDictData struct {
 
 // Page 字典数据分页查询
 func (_self *SysDictData) Page(req *dto.DictDataPageReq) *dto.Result {
+	if len(req.TypeCode) <= 0 {
+		return dto.ResultFailureMsg("请选择字典类型")
+	}
+
 	var dictData entity.SysDictData
 	var list []vo.DictDataPage
 	var count int64
@@ -27,9 +31,9 @@ func (_self *SysDictData) Page(req *dto.DictDataPageReq) *dto.Result {
 			table_name.SysDictType + ".type_code",
 			table_name.SysDictData + ".data_name",
 			table_name.SysDictData + ".data_code",
-			table_name.SysDictData + ".data_status",
-			`case  when ` + table_name.SysDictData + `.data_status  = 0 then '正常' when ` +
-				table_name.SysDictData + `.data_status  = 1 then '停用' end as data_status_text`,
+			table_name.SysDictData + ".status",
+			`case  when ` + table_name.SysDictData + `.status  = 0 then '正常' when ` +
+				table_name.SysDictData + `.status  = 1 then '停用' end as status_text`,
 		}).Scopes(
 		scope.Paginate(req),
 		scope.Like("data_code", req.DataCode),
@@ -65,7 +69,7 @@ func (_self *SysDictData) UpdateStatus(req *dto.DictDataUpdateStatusReq) *dto.Re
 
 	result := _self.DB.Model(&entity.SysDictData{}).
 		Where("id = ?", req.ID).
-		Update("data_status", req.Status)
+		Update("status", req.Status)
 
 	if result.Error != nil {
 		return dto.ResultFailureErr(result.Error)

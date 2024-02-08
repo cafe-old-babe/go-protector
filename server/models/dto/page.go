@@ -1,11 +1,11 @@
 package dto
 
 type Page struct {
-	Count      int `json:"totalCount"`
-	PageIndex  int `json:"current"`
+	TotalCount int `json:"totalCount"`
+	PageNo     int `json:"pageNo"`
 	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"total"`
-	List       any `json:"list"`
+	TotalPages int `json:"totalPage"`
+	Data       any `json:"data"`
 }
 
 type IPagination interface {
@@ -15,15 +15,15 @@ type IPagination interface {
 }
 
 type Pagination struct {
-	PageIndex int `json:"current" form:"current"`
-	PageSize  int `json:"pageSize" form:"pageSize"`
+	PageNo   int `json:"pageNo" form:"pageNo"`
+	PageSize int `json:"pageSize" form:"pageSize"`
 }
 
 func (_self *Pagination) GetPageIndex() int {
-	if _self.PageIndex <= 0 {
-		_self.PageIndex = 1
+	if _self.PageNo <= 0 {
+		_self.PageNo = 1
 	}
-	return _self.PageIndex
+	return _self.PageNo
 }
 
 func (_self *Pagination) GetPageSize() int {
