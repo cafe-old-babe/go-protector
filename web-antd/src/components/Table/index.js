@@ -78,6 +78,10 @@ export default {
     pageURI: {
       type: Boolean,
       default: false
+    },
+    autoLoad: {
+      type: Boolean,
+      default: true
     }
   }),
   watch: {
@@ -119,7 +123,9 @@ export default {
       showSizeChanger: this.showSizeChanger
     }) || false
     this.needTotalList = this.initTotalList(this.columns)
-    this.loadData()
+    if (this.autoLoad) {
+      this.loadData()
+    }
   },
   methods: {
     /**
@@ -182,7 +188,7 @@ export default {
           // 当情况满足时，表示数据不满足分页大小，关闭 table 分页功能
           try {
             if ((['auto', true].includes(this.showPagination) && r.totalCount <= (r.pageNo * this.localPagination.pageSize))) {
-              this.localPagination.hideOnSinglePage = true
+              this.localPagination.hideOnSinglePage = false
             }
           } catch (e) {
             this.localPagination = false

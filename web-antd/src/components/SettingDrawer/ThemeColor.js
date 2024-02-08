@@ -27,7 +27,8 @@ var Tag = {
         var check = _content$props.check
         var data = content.data
         var rest = _objectWithoutProperties(content, _excluded)
-    console.log(rest)
+    Object.keys(rest)
+    // console.log(rest)
     return h('div', _mergeJSXProps([data, {
       style: {
         backgroundColor: color
