@@ -14,7 +14,9 @@ func StartMigration() (err error) {
 	if err = initDB(); err != nil {
 		return err
 	}
-	err = database.GetDB(context.Background()).AutoMigrate(
+	// https://gorm.io/zh_CN/docs/migration.html#AutoMigrate
+	err = database.GetDB(context.Background()).
+		Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(
 		&entity.SysUser{},
 		&entity.SysDictData{},
 		&entity.SysDictType{},
