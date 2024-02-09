@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-card :bordered="false">
+    <a-card :bordered="false" title="字典类型列表">
       <div class="table-page-search-wrapper">
         <a-form layout="inline">
           <a-row :gutter="48">
