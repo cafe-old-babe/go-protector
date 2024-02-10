@@ -13,7 +13,7 @@
       广告代码 真实项目中请移除
       production remove this Ads
     -->
-    <ads v-if="isProPreviewSite && !collapsed"/>
+    <!--    <ads v-if="isProPreviewSite && !collapsed"/>-->
     <!-- Ads end -->
 
     <!-- 1.0.0+ 版本 pro-layout 提供 API，
@@ -82,7 +82,7 @@ export default {
       // preview.pro.antdv.com only use.
       isProPreviewSite: process.env.VUE_APP_PREVIEW === 'true' && process.env.NODE_ENV !== 'development',
       // end
-      isDev: process.env.NODE_ENV === 'development' || process.env.VUE_APP_PREVIEW === 'true',
+      isDev: false, // process.env.NODE_ENV === 'development' || process.env.VUE_APP_PREVIEW === 'true',
 
       // base
       menus: [],
