@@ -248,7 +248,7 @@ export default {
         if (!err) {
           const loginParams = { ...values, cid: cid }
           delete loginParams.username
-          console.log('login form', loginParams)
+          // console.log('login form', loginParams)
           loginParams.loginName = values.username
           // loginParams[!state.loginType ? 'email' : 'username'] = values.username
           // loginParams.password = md5(values.password)
@@ -314,7 +314,8 @@ export default {
       })
     },
     loginSuccess (res) {
-      console.log(res)
+      // console.log(res)
+      const { data } = res
       // check res.homePage define, set $router.push name res.homePage
       // Why not enter onComplete
       /*
@@ -330,7 +331,7 @@ export default {
       // 延迟 1 秒显示欢迎信息
       setTimeout(() => {
         this.$notification.success({
-          message: '欢迎',
+          message: '欢迎 ' + data.user.userName,
           description: `${timeFix()}，欢迎回来`
         })
       }, 1000)

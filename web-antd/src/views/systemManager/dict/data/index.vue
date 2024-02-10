@@ -200,8 +200,8 @@ export default {
     changeStatus: function(record) {
       const url = '/dict/data/' + record.id + '/' + (record.status ^ 1)
       this.loading = true
-      request(url).then(res => {
-        console.log(res)
+      request.post(url).then(res => {
+        // console.log(res)
         const resData = res?.data ?? {}
         if (resData.code === 200) {
           this.getData()
@@ -211,7 +211,7 @@ export default {
       }).finally(() => {
         this.loading = false
       })
-      console.log(record, 'changeStatus')
+      // console.log(record, 'changeStatus')
     },
     getPopupContainer(trigger) {
       return trigger.parentElement
