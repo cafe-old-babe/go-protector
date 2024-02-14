@@ -22,7 +22,7 @@ type CurrentUser struct {
 	Avatar    string   `json:"avatar"`
 	RoleIds   []uint64 `json:"roleIds"`
 	DeptId    uint64   `json:"deptId"`
-	IsAdmin   bool     `json:"is"`
+	IsAdmin   bool     `json:"isAdmin"`
 }
 
 type SetStatus struct {

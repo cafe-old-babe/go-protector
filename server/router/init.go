@@ -6,4 +6,5 @@ func Init(routerGroup *gin.RouterGroup) {
 	initSysUser(routerGroup)
 	initSystem(routerGroup)
 	initSysDict(routerGroup)
+	initSysMenu(routerGroup)
 }

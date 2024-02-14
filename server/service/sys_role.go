@@ -14,7 +14,7 @@ type SysRole struct {
 func (_self *SysRole) GetMenuByRoleIds(roleIds []uint64, isAdminParam ...bool) (
 	menuSlice, buttonSlice []entity.SysMenu, err error) {
 	var isAdmin bool
-	if len(isAdminParam) > 1 && isAdminParam[0] {
+	if len(isAdminParam) > 0 && isAdminParam[0] {
 		isAdmin = isAdminParam[0]
 	}
 

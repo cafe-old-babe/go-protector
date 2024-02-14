@@ -232,7 +232,7 @@ func (_self *SysUser) Nav() (res *dto.Result) {
 			Id:        menu.ID,
 			ParentId:  menu.PID,
 			Name:      menu.Permission,
-			Path:      menu.Redirect,
+			Path:      menu.Path,
 			Component: menu.Component,
 			Redirect:  nil,
 			Meta: dto.MetaInfo{
