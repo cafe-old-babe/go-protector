@@ -31,3 +31,11 @@ type SetStatus struct {
 	LockReason   string
 	ExpirationAt string
 }
+
+// UserPageReq 人员管理分页查询
+type UserPageReq struct {
+	Pagination
+	DeptIds   []uint64 `json:"deptIds"`
+	LoginName string   `json:"loginName"`
+	Username  string   `json:"username"`
+}

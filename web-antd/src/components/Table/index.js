@@ -194,6 +194,8 @@ export default {
             this.localPagination = false
           }
           this.localDataSource = r.data // 返回结果中的数组数据
+        }).catch(e => {
+          this.$message.warn(e.message)
         })
         .finally(() => {
           this.localLoading = false

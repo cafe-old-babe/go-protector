@@ -6,14 +6,18 @@ import (
 	"errors"
 	"go-protector/server/core/base"
 	"go-protector/server/core/consts"
+	"go-protector/server/core/consts/table_name"
 	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_captcha"
 	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/custom/c_jwt"
+	"go-protector/server/core/scope"
 	"go-protector/server/core/utils"
 	"go-protector/server/dao"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
+	"go-protector/server/models/vo"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -129,7 +133,7 @@ func (_self *SysUser) SetStatus(dto *dto.SetStatus) (err error) {
 		// 加锁
 		if err = dao.SysUser.LockUser(_self.DB, &entity.SysUser{
 			ModelId:    entity.ModelId{ID: dto.ID},
-			LockReason: sql.NullString{Valid: true, String: dto.LockReason},
+			LockReason: sql.NullString{Valid: len(dto.LockReason) > 0, String: dto.LockReason},
 			UserStatus: dto.UserStatus,
 		}); err != nil {
 			_self.Logger.Error("SetStatus LockUser err: %v", err)
@@ -236,8 +240,44 @@ func (_self *SysUser) Nav() (res *dto.Result) {
 				Show:  menu.Hidden != 1,
 			},
 		})
-
 	}
-
 	return dto.ResultSuccess(menuInfoSlice)
+}
+
+// Page 人员分页查询
+func (_self *SysUser) Page(req *dto.UserPageReq) (result *dto.Result) {
+	if req == nil {
+		result = dto.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	var count int64
+	var voSlice []vo.UserPage
+	err := _self.DB.Table(table_name.SysUser).
+		Select([]string{
+			table_name.SysUser + ".id",
+			table_name.SysUser + ".login_name",
+			table_name.SysUser + ".username",
+			table_name.SysUser + ".user_status as status",
+			table_name.SysDept + ".id as dept_id",
+			table_name.SysDept + ".dept_name",
+			table_name.SysUser + ".sex"}).
+		Scopes(
+			scope.Paginate(req.GetPagination()),
+			scope.Like(table_name.SysUser+".login_name", req.LoginName),
+			scope.Like(table_name.SysUser+".username", req.Username),
+			func(db *gorm.DB) *gorm.DB {
+				if len(req.DeptIds) > 0 {
+					db = db.Where(table_name.SysDept+".id", req.DeptIds)
+				}
+				return db
+			},
+		).Joins(`left join ` + table_name.SysDept + ` on ` +
+		table_name.SysDept + `.id = ` + table_name.SysUser + `.dept_id`).
+		Find(&voSlice).Limit(-1).Offset(-1).Count(&count).Error
+	if err != nil {
+		result = dto.ResultFailureErr(err)
+	} else {
+		result = dto.ResultPage(voSlice, req.GetPagination(), count)
+	}
+	return
 }

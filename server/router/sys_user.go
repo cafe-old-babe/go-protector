@@ -5,7 +5,7 @@ import (
 	"go-protector/server/api"
 )
 
-func initLogin(group *gin.RouterGroup) {
+func initSysUser(group *gin.RouterGroup) {
 	routerGroup := group.Group("user")
 	{
 		userApi := api.SysUserApi
@@ -14,6 +14,12 @@ func initLogin(group *gin.RouterGroup) {
 		routerGroup.GET("nav", userApi.Nav)
 		routerGroup.POST("logout", userApi.Logout)
 		routerGroup.POST("setStatus", userApi.SetStatus)
-
+		routerGroup.POST("page", userApi.Page)
+		deptGroup := routerGroup.Group("dept")
+		{
+			deptGroup.POST("tree", userApi.DeptTree)
+			deptGroup.POST("save", userApi.DeptSave)
+			deptGroup.POST("delete", userApi.DeptDelete)
+		}
 	}
 }

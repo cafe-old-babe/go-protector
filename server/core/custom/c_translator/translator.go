@@ -1,7 +1,6 @@
 package c_translator
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/zh"
@@ -9,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 	"reflect"
+	"strings"
 )
 
 // ConvertValidateErr 转换校验错误
@@ -17,8 +17,13 @@ func ConvertValidateErr(err error) error {
 	var errs validator.ValidationErrors
 	ok := errors.As(err, &errs)
 	if ok {
-		marshal, _ := json.Marshal(errs.Translate(trans))
-		err = errors.New(string(marshal))
+
+		var messageSlice []string
+		for _, v := range errs.Translate(trans) {
+			messageSlice = append(messageSlice, v)
+		}
+
+		err = errors.New(strings.Join(messageSlice, ","))
 	}
 	return err
 

@@ -10,6 +10,7 @@ type ModelId struct {
 	ID uint64 `json:"id" gorm:"primaryKey"`
 }
 
+// ModelControl https://gorm.io/zh_CN/docs/conventions.html
 type ModelControl struct {
 	CreatedAt    sql.NullTime `json:"createdAt" gorm:"autoCreateTime;comment:创建时间"`
 	CreatedBy    uint64       `json:"createdBy" gorm:"comment:创建人"`

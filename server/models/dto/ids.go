@@ -1,8 +1,10 @@
 package dto
 
 type IdsReq struct {
-	Ids []uint64 `json:"ids"`
-	ID  uint64   `json:"id"`
+	Ids      []uint64 `json:"ids"`
+	ID       uint64   `json:"id"`
+	Value    any      `json:"-"`
+	Unscoped bool     `json:"-"`
 }
 
 // GetIds 获取ids
