@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+	"go-protector/server/core/custom/c_translator"
 	"net/http"
 )
 
@@ -35,6 +36,7 @@ func ResultFailureMsg(msg ...string) *Result {
 }
 
 func ResultFailureErr(err error) *Result {
+	err = c_translator.ConvertValidateErr(err)
 	return ResultCustom(http.StatusBadRequest, nil, err.Error())
 }
 
