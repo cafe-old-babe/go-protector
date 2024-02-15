@@ -82,7 +82,7 @@
             prop="hidden"
             v-if="localRecord.menuType!==2"
           >
-            <a-radio-group v-model="localRecord.hidden" :default-value="localRecord.hidden??0" button-style="solid">
+            <a-radio-group v-model="localRecord.hidden" :default-value="localRecord.hidden" button-style="solid">
               <a-radio :value="0">
                 显示
               </a-radio>
@@ -188,6 +188,7 @@ export default {
   watch: {
     record(val) {
       this.localRecord = val
+      this.localRecord.hidden = val.hidden ?? 0
       this.loading = false
     }
   },
