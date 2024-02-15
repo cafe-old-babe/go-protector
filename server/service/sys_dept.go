@@ -17,7 +17,7 @@ func (_self *SysDept) DeptTree() *dto.Result {
 	if err := _self.DB.Find(&deptSlice).Error; err != nil {
 		return dto.ResultFailureErr(err)
 	}
-	node := dto.GenerateTree(deptSlice, 0, "ID", "PID", "DeptName")
+	node := dto.GenerateTree(deptSlice, 0, "ID", "PID", "DeptName", nil)
 	return dto.ResultSuccess(node)
 }
 
@@ -29,7 +29,7 @@ func (_self *SysDept) SaveCheck(entity *entity.SysDept) error {
 		}
 
 		return db.Where("dept_name = ? ", entity.DeptName)
-	}).Count(&count).Error
+	}).Where("p_id = ?", entity.PID).Count(&count).Error
 	if err != nil {
 		return err
 	}

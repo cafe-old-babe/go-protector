@@ -6,12 +6,15 @@ type TreeNode struct {
 	ID       uint64     `json:"id"`
 	PID      uint64     `json:"pid"`
 	Name     string     `json:"name"`
+	Selected bool       `json:"selected"`
 	Children []TreeNode `json:"children"`
 }
 
-func GenerateTree(slice any, rootId uint64, idField, pidField, nameField string) (node *TreeNode) {
+func GenerateTree(slice any, rootId uint64, idField, pidField, nameField string, selectedSet map[uint64]any) (node *TreeNode) {
 	// 判断 slice 是否为 slice 类型
-
+	if selectedSet == nil {
+		selectedSet = make(map[uint64]any)
+	}
 	if reflect.TypeOf(slice).Kind() != reflect.Slice {
 		return
 	}
@@ -40,6 +43,7 @@ func GenerateTree(slice any, rootId uint64, idField, pidField, nameField string)
 					Name:     name,
 					Children: make([]TreeNode, 0),
 				}
+				_, node.Selected = selectedSet[node.ID]
 				break
 			}
 		}
@@ -57,7 +61,7 @@ func GenerateTree(slice any, rootId uint64, idField, pidField, nameField string)
 		// 判断当前元素的 pid 是否等于 rootId
 		if pid == rootId {
 			// 创建子节点
-			childNode := GenerateTree(slice, id, idField, pidField, nameField)
+			childNode := GenerateTree(slice, id, idField, pidField, nameField, selectedSet)
 			childNode.PID = pid
 			if childNode != nil {
 				// 将子节点添加到当前节点的 children 字段中

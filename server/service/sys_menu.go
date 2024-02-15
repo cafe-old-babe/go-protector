@@ -22,7 +22,7 @@ func MakeSysMenuService(c *gin.Context) *SysMenuService {
 	return &self
 }
 
-func (_self *SysMenuService) List() (result *dto.Result) {
+func (_self *SysMenuService) ListTree() (result *dto.Result) {
 
 	var menuSlice []entity.SysMenu
 

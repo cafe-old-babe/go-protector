@@ -12,11 +12,11 @@ var SysMenuApi sysMenu
 type sysMenu struct {
 }
 
-// List 树形列表
-func (_self sysMenu) List(c *gin.Context) {
+// ListTree 树形列表
+func (_self sysMenu) ListTree(c *gin.Context) {
 
 	sysMenuService := service.MakeSysMenuService(c)
-	res := sysMenuService.List()
+	res := sysMenuService.ListTree()
 	c_result.Result(c, res)
 
 }

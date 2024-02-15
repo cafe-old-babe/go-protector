@@ -37,3 +37,8 @@ type MetaInfo struct {
 	Icon  string `json:"icon"`
 	Show  bool   `json:"show"`
 }
+
+type SysRolePageReq struct {
+	Pagination `json:"-"`
+	RoleName   string `json:"roleName"`
+}
