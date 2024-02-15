@@ -1,7 +1,8 @@
 package dto
 
 type RoleInfo struct {
-	Role Role `json:"role"`
+	Name string `json:"name"`
+	Role Role   `json:"role"`
 }
 
 type Permission struct {

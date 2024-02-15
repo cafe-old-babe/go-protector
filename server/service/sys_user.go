@@ -197,6 +197,7 @@ func (_self *SysUser) UserInfo() (res *dto.Result) {
 	}
 	// 对接antdPro
 	roleInfo := dto.RoleInfo{
+		Name: user.UserName,
 		Role: dto.Role{
 			Permissions: permissionSlice,
 		},
