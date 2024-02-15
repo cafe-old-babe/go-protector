@@ -38,7 +38,7 @@
 
 <script>
 import CTree from '@/components/Custom/Tree/'
-import UserList from '@/views/systemManager/user/components/UserList.vue'
+import UserList from './components/UserList.vue'
 import { loadDept } from '@/api/user'
 import EditDept from './components/EditDept.vue'
 import request from '@/utils/request'
