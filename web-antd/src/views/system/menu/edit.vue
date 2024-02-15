@@ -8,6 +8,7 @@
       @close="onClose"
     >
       <a-spin :spinning="loading">
+
         <a-form-model
           ref="form"
           :model="localRecord"
@@ -19,37 +20,90 @@
           <a-form-model-item
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
-            label="数据名称"
-            prop="dataName"
+            label="父级"
+            prop="pid"
           >
-            <a-input v-model="localRecord.dataName" placeholder="请输入数据名称"/>
-          </a-form-model-item>
-          <a-form-model-item
-            :label-col="formItemLayout.labelCol"
-            :wrapper-col="formItemLayout.wrapperCol"
-            label="数据编码"
-            prop="dataCode"
-          >
-            <a-input
-              v-model="localRecord.dataCode"
-              placeholder="请输入数据编码"
+            <a-tree-select
+              v-model="localRecord.pid"
+              style="width: 100%"
+              :dropdown-style="{ maxHeight: '200px', overflow: 'auto' }"
+              :tree-data="menuTreeData"
+              :replace-fields="replaceFields"
+              placeholder="请选择父级"
+              :defaultValue="localRecord.pid"
+              tree-default-expand-all
             />
           </a-form-model-item>
           <a-form-model-item
-            label="数据状态"
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
-            prop="dataStatus"
+            label="名称"
+            prop="name"
           >
-            <a-radio-group v-model="localRecord.dataStatus" :default-value="localRecord.dataStatus" button-style="solid">
+            <a-input v-model="localRecord.name" placeholder="请输入名称"/>
+          </a-form-model-item>
+          <a-form-model-item
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="权限标识"
+            prop="permission"
+          >
+            <a-input
+              v-model="localRecord.permission"
+              placeholder="权限标识"
+            />
+          </a-form-model-item>
+          <a-form-model-item
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="类型"
+            prop="menuType"
+          >
+            <a-radio-group
+              v-model="localRecord.menuType"
+              :default-value="localRecord.menuType"
+              @select="selectMenuType"
+            >
+              <a-radio-button :value="0">
+                目录
+              </a-radio-button>
+              <a-radio-button :value="1">
+                菜单
+              </a-radio-button>
+              <a-radio-button :value="2">
+                按钮
+              </a-radio-button>
+            </a-radio-group>
+          </a-form-model-item>
+          <a-form-model-item
+            label="显示状态"
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            prop="hidden"
+            v-if="localRecord.menuType!==2"
+          >
+            <a-radio-group v-model="localRecord.hidden" :default-value="localRecord.hidden??0" button-style="solid">
               <a-radio :value="0">
-                启用
+                显示
               </a-radio>
               <a-radio :value="1">
-                停用
+                隐藏
               </a-radio>
             </a-radio-group>
           </a-form-model-item>
+          <a-form-model-item
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="组件名称"
+            prop="component"
+            v-if="localRecord.menuType!==2"
+          >
+            <a-input
+              v-model="localRecord.component"
+              placeholder="组件名称"
+            />
+          </a-form-model-item>
+
         </a-form-model>
       </a-spin>
       <div
@@ -87,21 +141,46 @@ export default {
     record: {
       type: Object,
       default: () => null
+    },
+    menuTreeData: {
+      type: Array,
+      requires: true,
+      default: () => []
+    },
+    // 替换默认字段
+    replaceFields: {
+      type: Object,
+      default: () => {
+        return {
+          value: 'id',
+          key: 'id',
+          title: 'name'
+        }
+      }
     }
   },
   data() {
     return {
-      loading: true,
+      loading: false,
       localRecord: {},
       rules: {
-        dataStatus: [
-          { required: true, message: '请选择是否启用' }
+        pid: [
+          { required: true, message: '请选择父级' }
         ],
-        dataCode: [
-          { required: true, message: '请输入数据编码' }
+        permission: [
+          { required: true, message: '请输入权限标识' }
         ],
-        dataName: [
-          { required: true, message: '请输入数据名称' }
+        name: [
+          { required: true, message: '请输入名称' }
+        ],
+        menuType: [
+          { required: true, message: '请选择类型' }
+        ],
+        hidden: [
+          { required: true, message: '请选择显示状态' }
+        ],
+        component: [
+          { required: true, message: '请选择显示状态' }
         ]
       }
     }
@@ -135,17 +214,20 @@ export default {
           return false
         }
 
-        request.post('/dict/data/save', this.localRecord).then(({ code, message }) => {
+        request.post('/menu/save', this.localRecord).then(({ code, message }) => {
           if (code === 200) {
             this.$emit('ok')
             this.$message.success(message)
-            return
-          }
+          } else {
           this.$message.error(message)
+          }
         }).finally(() => {
           this.loading = false
         })
       })
+    },
+    selectMenuType: function (value) {
+      console.log(value)
     }
   }
 }

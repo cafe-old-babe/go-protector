@@ -42,6 +42,7 @@
     <Edit
       :visible="editVisible"
       :record="record"
+      :menu-tree-data="menuTreeData"
       @close="editClose"
       @ok="editOk"
     />
@@ -56,17 +57,6 @@ import Edit from './edit'
 export default {
   name: 'Type',
   components: { STable, Edit },
-  props: {
-    typeCode: {
-      type: String,
-      default: ''
-    }
-  },
-  watch: {
-    typeCode() {
-      this.$refs.table.refresh(true)
-    }
-  },
   data() {
     return {
       loading: false,
@@ -77,11 +67,13 @@ export default {
       selectedRows: [],
       record: {},
       data: [],
+      menuTreeData: [],
       loadData: () => {
         this.loading = true
         return request.post('/menu/list', { }).then((res) => {
           const { code, data, message } = res
           if (code === 200) {
+            this.setMenuTreeData([JSON.parse(JSON.stringify(data))])
             this.data = data.children
           } else {
             this.$message.error(message)
@@ -109,8 +101,7 @@ export default {
       this.selectedRows = selectedRows
     },
     editRecord: function (record) {
-      console.log('editRecord', record)
-      this.record = record
+      this.record = Object.assign({}, record)
       this.editVisible = true
     },
     deleteRecord: function (id) {
@@ -142,7 +133,7 @@ export default {
       }
       this.$confirm({
         title: '确认删除',
-        content: '是否删除选择数据?',
+        content: '同时删除关联关系,是否删除选择数据?',
         okText: '确认',
         okType: 'danger',
         cancelText: '取消',
@@ -151,16 +142,11 @@ export default {
       })
     },
     handleAdd: function () {
-      if (!this.typeCode) {
-        this.$message.warning('请选择字典类型')
-        return
-      }
-      this.record = { 'typeCode': this.typeCode }
       this.editVisible = true
     },
     editOk: function () {
       this.editClose()
-      this.$refs.table.refresh(false)
+      this.loadData()
     },
     editClose: function () {
       this.editVisible = false
@@ -181,7 +167,25 @@ export default {
         this.loading = false
       })
       // console.log(record, 'changeStatus')
+    },
+    setMenuTreeData: function (data) {
+      this.menuTreeData = data
+      this.menuTreeData.forEach(e => {
+        if (e.children && e.children.length > 0) {
+          this.deleteButton(e)
+        }
+      })
+    },
+    deleteButton: function (data) {
+      if (data.menuType === 1) {
+        data.children = []
+        return
+      }
+      data.children.forEach(elem => {
+        this.deleteButton(elem)
+      })
     }
+
   }
 }
 </script>

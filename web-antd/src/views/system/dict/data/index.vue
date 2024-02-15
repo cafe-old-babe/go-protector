@@ -139,7 +139,6 @@ export default {
       this.selectedRows = selectedRows
     },
     editRecord: function (record) {
-      console.log('editRecord', record)
       this.record = record
       this.editVisible = true
     },

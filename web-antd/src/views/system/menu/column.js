@@ -17,7 +17,7 @@ export const Columns = [
     scopedSlots: { customRender: 'status' }
   },
   {
-    title: '目录/菜单组件名称',
+    title: '目录/菜单组件',
     dataIndex: 'component'
   },
   {
