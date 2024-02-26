@@ -36,7 +36,7 @@ const (
 var EmptyVal any
 
 const (
-	User c_type.RoleRelationType = "user"
-	Menu c_type.RoleRelationType = "menu"
-	Dept c_type.RoleRelationType = "dept"
+	User c_type.RelationType = "user"
+	Menu c_type.RelationType = "menu"
+	Dept c_type.RelationType = "dept"
 )

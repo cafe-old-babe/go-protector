@@ -98,7 +98,7 @@ func (_self sysUser) DeptDelete(c *gin.Context) {
 	}
 	ids.Unscoped = true
 	ids.Value = &entity.SysDept{}
-	res := sysDeptService.CommonDelByIds(&ids, func() error {
+	res := sysDeptService.SimpleDelByIds(&ids, func() error {
 		if len(ids.GetIds()) <= 0 {
 			return c_error.ErrDeleteFailure
 		}
@@ -117,7 +117,7 @@ func (_self sysUser) DeptSave(c *gin.Context) {
 		return
 	}
 	_self.MakeService(c, &sysDeptService)
-	res := sysDeptService.CommonSave(&model, func() error {
+	res := sysDeptService.SimpleSave(&model, func() error {
 		return sysDeptService.SaveCheck(&model)
 	})
 	c_result.Result(c, res)

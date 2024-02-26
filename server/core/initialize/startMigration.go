@@ -24,6 +24,8 @@ func StartMigration() (err error) {
 		&entity.SysMenu{},
 		&entity.SysRole{},
 		&entity.SysRoleRelation{},
+		&entity.SysPost{},
+		&entity.SysPostRelation{},
 	)
 	return err
 }

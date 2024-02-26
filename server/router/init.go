@@ -8,4 +8,5 @@ func Init(routerGroup *gin.RouterGroup) {
 	initSysDict(routerGroup)
 	initSysMenu(routerGroup)
 	initSysRole(routerGroup)
+	initSysPost(routerGroup)
 }

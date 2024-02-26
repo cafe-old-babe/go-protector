@@ -8,4 +8,6 @@ const (
 	SysMenu                = "sys_menu"
 	SysRole                = "sys_role"
 	SysRoleRelation        = "sys_role_relation"
+	SysPost                = "sys_post"
+	SysPostRelation        = "sys_post_relation"
 )

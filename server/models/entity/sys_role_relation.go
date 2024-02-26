@@ -9,9 +9,9 @@ import (
 
 type SysRoleRelation struct {
 	ModelId
-	RoleId       uint64                  `gorm:"comment:角色ID"`
-	RelationId   uint64                  `gorm:"comment:关联ID"`
-	RelationType c_type.RoleRelationType `gorm:"comment:关联类型,user-用户,menu-菜单"`
+	RoleId       uint64              `gorm:"comment:角色ID"`
+	RelationId   uint64              `gorm:"comment:关联ID"`
+	RelationType c_type.RelationType `gorm:"comment:关联类型,user-用户,menu-菜单"`
 }
 
 func (*SysRoleRelation) TableName() string {

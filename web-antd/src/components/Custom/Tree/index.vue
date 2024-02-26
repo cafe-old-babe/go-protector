@@ -142,8 +142,10 @@ export default {
             })
           }
         })
+        this.expandedKeys = temp
+      } else {
+        this.selectedKeys = temp
       }
-      this.expandedKeys = temp
     }
   },
   data() {
@@ -154,8 +156,10 @@ export default {
       searchValue: '',
       // 用于搜索的数据副本
       dataList: [],
+      // 展开的key
+      expandedKeys: [],
       // 选中的key
-      expandedKeys: []
+      selectedKeys: []
     }
   },
   created() {
@@ -172,7 +176,7 @@ export default {
           this.$message.warn(message)
         }
       }).finally(() => {
-        this.loadDone(this.treeData, this.expandedKeys)
+        this.loadDone(this.treeData, this.selectedKeys)
       })
     },
     // 生成用于搜索时的数据

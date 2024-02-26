@@ -17,7 +17,7 @@ type sysRole struct {
 
 // GetRoleIdByRelationId 根据关联id查询角色id
 func (_self sysRole) GetRoleIdByRelationId(db *gorm.DB, relationId uint64,
-	relationType c_type.RoleRelationType) (roleIdSlice []uint64, err error) {
+	relationType c_type.RelationType) (roleIdSlice []uint64, err error) {
 	if relationId <= 0 || len(relationType) <= 0 {
 		err = c_error.ErrParamInvalid
 		return
@@ -42,6 +42,7 @@ func (_self sysRole) GetRoleIdByRelationId(db *gorm.DB, relationId uint64,
 func (_self sysRole) GetPermissionSliceByIds(db *gorm.DB, ids []uint64, menuType []int8, admin bool) (
 	menuSlice []entity.SysMenu, err error) {
 	tx := db.Debug().Table(table_name.SysMenu)
+	subQuery := db.Table(table_name.SysRole).Where("id in ? and status <> 1", ids).Select("id")
 
 	if !admin {
 		if len(ids) <= 0 {
@@ -59,7 +60,7 @@ func (_self sysRole) GetPermissionSliceByIds(db *gorm.DB, ids []uint64, menuType
 					}
 					return db
 				}).
-				Where("role_id in ? ", ids),
+				Where("role_id in (?) ", subQuery),
 		)
 	} else {
 		if len(menuType) > 0 {

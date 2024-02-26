@@ -37,8 +37,8 @@ func (_self *Service) MakeService(service ...IService) {
 	}
 }
 
-// CommonSave 通用保存 会保存所有的字段，即使字段是零值
-func (_self *Service) CommonSave(model schema.Tabler,
+// SimpleSave 通用保存 会保存所有的字段，即使字段是零值 简单
+func (_self *Service) SimpleSave(model schema.Tabler,
 	check ...func() error) *dto.Result {
 	if len(check) > 0 {
 		for _, f := range check {
@@ -66,8 +66,8 @@ func (_self *Service) CommonSave(model schema.Tabler,
 	return dto.ResultSuccess(model, message)
 }
 
-// CommonDelByIds 通用删除方法 根据ids删除数据
-func (_self *Service) CommonDelByIds(req *dto.IdsReq,
+// SimpleDelByIds 通用删除方法 根据ids删除数据
+func (_self *Service) SimpleDelByIds(req *dto.IdsReq,
 	check ...func() error) *dto.Result {
 
 	if len(check) > 0 {

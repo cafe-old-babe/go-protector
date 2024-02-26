@@ -42,7 +42,7 @@ func (_self sysRole) Save(c *gin.Context) {
 	var roleService service.SysRole
 	_self.MakeService(c, &roleService)
 
-	result := roleService.CommonSave(&model, func() error {
+	result := roleService.SimpleSave(&model, func() error {
 		return roleService.SaveCheck(&model)
 	})
 	c_result.Result(c, result)
