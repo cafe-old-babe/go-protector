@@ -26,7 +26,7 @@
         <a-card
           :bordered="false"
           :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}"
-          title="岗位列表">
+          :title="`[${currentDeptName??'全部'}]岗位列表`">
           <PostTable ref="postTable"/>
         </a-card>
       </a-layout-content>
@@ -56,6 +56,7 @@ export default {
       windowHeight: 0,
       deptIds: undefined,
       deptTreeData: [],
+      currentDeptName: null,
       loadDeptTree: () => {
         this.loading = true
         return loadDept().then(res => {
@@ -134,7 +135,9 @@ export default {
       this.editVisible = true
     },
     selectNode: function (key, e) {
+      console.log(e)
       if (!this.operateTreeNode) {
+        this.currentDeptName = e.selectedNodes.length > 0 ? e.selectedNodes[0].data.props.name : null
         this.$refs.postTable.loadPost(key)
       }
     },

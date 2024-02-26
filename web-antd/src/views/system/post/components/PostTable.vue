@@ -103,7 +103,6 @@ export default {
       this.editVisible = false
     },
     loadPost: function (deptIds = [], bool = true) {
-      console.log(deptIds)
       this.queryParam.deptIds = deptIds
       this.$refs.table.refresh(bool)
     }

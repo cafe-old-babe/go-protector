@@ -200,7 +200,6 @@ export default {
       const url = '/dict/data/' + record.id + '/' + (record.status ^ 1)
       this.loading = true
       request.post(url).then(res => {
-        // console.log(res)
         const resData = res?.data ?? {}
         if (resData.code === 200) {
           this.getData()

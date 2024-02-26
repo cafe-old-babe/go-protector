@@ -7,5 +7,5 @@ type PostPage struct {
 	Name      string         `json:"name"`
 	Code      string         `json:"code"`
 	DeptIds   string         `json:"deptIds"`
-	DeletedAt gorm.DeletedAt `json:"-"`
+	DeletedAt gorm.DeletedAt `json:"-"` //DeletedAt避坑指南
 }
