@@ -134,3 +134,13 @@ func (_self *SysRole) SetStatus(roleId uint64, status int8) *dto.Result {
 	}
 	return dto.ResultSuccessMsg("更新成功")
 }
+
+func (_self *SysRole) List() (res *dto.Result) {
+	var slice []entity.SysRole
+	if err := _self.DB.Find(&slice).Error; err != nil {
+		res = dto.ResultFailureErr(err)
+	} else {
+		res = dto.ResultSuccess(slice)
+	}
+	return
+}

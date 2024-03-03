@@ -124,3 +124,42 @@ func (_self sysRole) SavePermission(db *gorm.DB, roleId uint64, ids []uint64) er
 		return tx.Model(model).CreateInBatches(relationSlice, 100).Error
 	})
 }
+
+func (_self sysRole) UserIdBindRoleIds(db *gorm.DB, userId uint64, roleIds []uint64) (err error) {
+	if userId <= 0 {
+		return errors.New("无用户信息")
+	}
+	if err = db.Delete(&entity.SysRoleRelation{},
+		"relation_id = ? and relation_type = ?", userId, consts.User).Error; err != nil {
+		return
+	}
+	if len(roleIds) > 0 {
+		var slice []entity.SysRoleRelation
+		for _, roleId := range roleIds {
+			slice = append(slice, entity.SysRoleRelation{
+				RoleId:       roleId,
+				RelationId:   userId,
+				RelationType: consts.User,
+			})
+		}
+		err = db.Create(&slice).Error
+	}
+
+	return
+}
+
+// JoinUserRoleDB
+// select rr.relation_id as user_id,
+// GROUP_CONCAT(r.role_name SEPARATOR ',')  AS role_names,
+// GROUP_CONCAT(r.id SEPARATOR ',') AS role_ids
+// from sys_role_relation rr left join sys_role r on rr.role_id = r.id and rr.relation_type = 'user'
+// group by rr.relation_id
+func (_self sysRole) JoinUserRoleDB(db *gorm.DB) *gorm.DB {
+	return db.Table(table_name.SysRoleRelation+" as rr").
+		Joins("left join "+table_name.SysRole+
+			" as r on rr.role_id = r.id and rr.relation_type = ?", consts.User).
+		Select("rr.relation_id as user_id",
+			"GROUP_CONCAT(r.role_name SEPARATOR ',') AS role_names",
+			"GROUP_CONCAT(r.id SEPARATOR ',') AS role_ids",
+		).Group("rr.relation_id")
+}

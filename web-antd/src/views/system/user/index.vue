@@ -10,6 +10,7 @@
             :load-done="loadUser"
             :check="(keys) => loadUser([],keys)"
             @select="selectNode"
+            :show-operate-btn="false"
             @addTreeNode="addTreeNode"
             @updateTreeNode="updateTreeNode"
             @deleteTreeNode="deleteTreeNode"

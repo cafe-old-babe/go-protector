@@ -10,6 +10,7 @@ func initSysPost(group *gin.RouterGroup) {
 	{
 		sysPostApi := api.SysPostApi
 		routerGroup.POST("/page", sysPostApi.Page)
+		routerGroup.POST("/list/:deptId", sysPostApi.List)
 		routerGroup.POST("/save", sysPostApi.Save)
 		routerGroup.POST("/delete", sysPostApi.Delete)
 	}

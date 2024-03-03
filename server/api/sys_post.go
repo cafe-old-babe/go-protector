@@ -3,9 +3,11 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"go-protector/server/core/base"
+	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/custom/c_result"
 	"go-protector/server/models/dto"
 	"go-protector/server/service"
+	"strconv"
 )
 
 var SysPostApi sysPost
@@ -53,4 +55,20 @@ func (_self sysPost) Delete(c *gin.Context) {
 	req.Value = &service.SysPost{}
 	_self.MakeService(c, &postService)
 	c_result.Result(c, postService.DeleteByIds(&req))
+}
+
+func (_self sysPost) List(c *gin.Context) {
+	deptIdStr := c.Param("deptId")
+	deptId, err := strconv.ParseUint(deptIdStr, 10, 64)
+	if err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	if deptId <= 0 {
+		c_result.Err(c, c_error.ErrParamInvalid)
+		return
+	}
+	var postService service.SysPost
+	_self.MakeService(c, &postService)
+	c_result.Result(c, postService.ListByDeptId(deptId))
 }

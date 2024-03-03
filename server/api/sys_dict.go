@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"go-protector/server/core/base"
+	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/custom/c_result"
 	"go-protector/server/models/dto"
 	"go-protector/server/models/entity"
@@ -115,6 +116,17 @@ func (_self sysDict) DictDataDelete(c *gin.Context) {
 		return
 	}
 	c_result.Result(c, dataService.Delete(&req))
+}
+
+func (_self sysDict) DictDataList(c *gin.Context) {
+	var dataService service.SysDictData
+	_self.MakeService(c, &dataService)
+	dictType := c.Param("dictType")
+	if len(dictType) <= 0 {
+		c_result.Err(c, c_error.ErrParamInvalid)
+		return
+	}
+	c_result.Result(c, dataService.DictDataList(&dictType))
 }
 
 // endregion region

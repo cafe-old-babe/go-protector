@@ -6,9 +6,11 @@ import (
 	"go-protector/server/core/base"
 	"go-protector/server/core/consts"
 	"go-protector/server/core/consts/table_name"
+	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/scope"
 	"go-protector/server/dao"
 	"go-protector/server/models/dto"
+	"go-protector/server/models/entity"
 	"go-protector/server/models/vo"
 	"gorm.io/gorm"
 	"strings"
@@ -100,4 +102,20 @@ func (_self *SysPost) Save(req *dto.SysPostSaveReq) *dto.Result {
 		return dto.ResultFailureErr(err)
 	}
 	return dto.ResultSuccessMsg("保存成功")
+}
+
+func (_self *SysPost) ListByDeptId(deptId uint64) *dto.Result {
+	if deptId <= 0 {
+		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+	}
+	var postSlice []entity.SysPost
+	err := _self.DB.Find(&postSlice, "id in (?)",
+		_self.DB.Select("post_id").
+			Model(&entity.SysPostRelation{}).
+			Where("relation_type = ? and relation_id = ?", consts.Dept, deptId)).Error
+	if err != nil {
+		return dto.ResultFailureErr(err)
+	}
+	return dto.ResultSuccess(postSlice)
+
 }

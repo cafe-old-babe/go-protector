@@ -117,3 +117,43 @@ func (_self sysPost) Save(db *gorm.DB, req *dto.SysPostSaveReq) error {
 		return nil
 	})
 }
+
+func (_self sysPost) UserBindPostIds(db *gorm.DB, userId uint64, postIds []uint64) (err error) {
+
+	if userId <= 0 {
+		return errors.New("无用户信息")
+	}
+	if err = db.Delete(&entity.SysPostRelation{},
+		"relation_id = ? and relation_type = ?", userId, consts.User).Error; err != nil {
+		return
+	}
+	if len(postIds) > 0 {
+		var slice []entity.SysPostRelation
+		for _, roleId := range postIds {
+			slice = append(slice, entity.SysPostRelation{
+				PostId:       roleId,
+				RelationId:   userId,
+				RelationType: consts.User,
+			})
+		}
+		err = db.Create(&slice).Error
+	}
+
+	return
+}
+
+// JoinUserPostDB
+// select pr.relation_id as user_id,
+// GROUP_CONCAT(p.name SEPARATOR ',') AS post_names,
+// GROUP_CONCAT(p.id SEPARATOR ',') AS post_ids
+// from sys_post_relation pr  left join sys_post p on
+// and pr.relation_type = 'user' group by pr.relation_id
+func (_self sysPost) JoinUserPostDB(db *gorm.DB) *gorm.DB {
+	return db.Table(table_name.SysPostRelation+" as pr").
+		Joins("left join "+table_name.SysPost+
+			" as p on pr.post_id = p.id and pr.relation_type = ?", consts.User).
+		Select("pr.relation_id as user_id",
+			"GROUP_CONCAT(p.name SEPARATOR ',')  AS post_names",
+			"GROUP_CONCAT(p.id SEPARATOR ',')  AS post_ids",
+		).Group("pr.relation_id")
+}

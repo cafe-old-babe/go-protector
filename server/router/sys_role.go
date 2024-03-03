@@ -10,6 +10,7 @@ func initSysRole(group *gin.RouterGroup) {
 	{
 		sysRoleApi := api.SysRoleApi
 		routerGroup.POST("/page", sysRoleApi.Page)
+		routerGroup.POST("/list", sysRoleApi.List)
 		routerGroup.POST("/save", sysRoleApi.Save)
 		routerGroup.POST("/getPermission/:roleId", sysRoleApi.GetPermission)
 		routerGroup.POST("/savePermission/:roleId", sysRoleApi.SavePermission)

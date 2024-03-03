@@ -14,13 +14,19 @@ export const columns = [
     dataIndex: 'loginName'
   },
   {
-    title: '性别',
-    dataIndex: 'sex',
-    customRender: (text, record, index) => text === 0 ? '女' : '男'
+    title: '角色',
+    dataIndex: 'roleNames',
+    scopedSlots: { customRender: 'roleNames' }
+    // customRender: (text, record, index) => text === 0 ? '女' : '男'
   },
   {
     title: '部门',
     dataIndex: 'deptName'
+  },
+  {
+    title: '岗位',
+    dataIndex: 'postNames',
+    scopedSlots: { customRender: 'postNames' }
   },
   {
     title: '状态',

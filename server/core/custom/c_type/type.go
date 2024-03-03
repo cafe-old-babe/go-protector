@@ -35,7 +35,7 @@ func (_self *Time) UnmarshalJSON(data []byte) (err error) {
 
 }
 
-func (_self *Time) MarshalJSON() ([]byte, error) {
+func (_self Time) MarshalJSON() ([]byte, error) {
 	if !_self.Valid {
 		return []byte("null"), nil
 	}
@@ -50,7 +50,8 @@ func (_self *Time) String() string {
 	return _self.Time.Format(time.DateTime)
 }
 
-func (_self *Time) Value() (driver.Value, error) {
+// Value 天坑 https://github.com/golang/go/blob/master/src/database/sql/driver/types.go#L242
+func (_self Time) Value() (driver.Value, error) {
 	if !_self.Valid {
 		return nil, nil
 	}

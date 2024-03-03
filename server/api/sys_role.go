@@ -112,3 +112,9 @@ func (_self sysRole) SetStatus(c *gin.Context) {
 	_self.MakeService(c, &roleService)
 	c_result.Result(c, roleService.SetStatus(roleId, int8(status)))
 }
+
+func (_self sysRole) List(c *gin.Context) {
+	var roleService service.SysRole
+	_self.MakeService(c, &roleService)
+	c_result.Result(c, roleService.List())
+}

@@ -98,3 +98,16 @@ func (_self *SysDictData) Delete(req *dto.IdsReq) *dto.Result {
 	return dto.ResultSuccessMsg("删除成功")
 
 }
+
+func (_self *SysDictData) DictDataList(dictType *string) *dto.Result {
+	if dictType == nil || len(*dictType) <= 0 {
+		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+	}
+	var slice []vo.DictDataList
+	err := _self.DB.Model(&entity.SysDictData{}).Order("sort").
+		Find(&slice, "type_code = ? and status = '0'", dictType).Error
+	if err != nil {
+		return dto.ResultFailureErr(err)
+	}
+	return dto.ResultSuccess(slice)
+}

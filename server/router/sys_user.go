@@ -15,6 +15,8 @@ func initSysUser(group *gin.RouterGroup) {
 		routerGroup.POST("logout", userApi.Logout)
 		routerGroup.POST("setStatus", userApi.SetStatus)
 		routerGroup.POST("page", userApi.Page)
+		routerGroup.POST("save", userApi.Save)
+		routerGroup.POST("delete", userApi.Delete)
 		deptGroup := routerGroup.Group("dept")
 		{
 			deptGroup.POST("tree", userApi.DeptTree)

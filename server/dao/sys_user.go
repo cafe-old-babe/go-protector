@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	"errors"
+	"github.com/gin-gonic/gin/binding"
 	"go-protector/server/core/consts"
 	"go-protector/server/core/consts/table_name"
 	"go-protector/server/core/current"
@@ -114,13 +115,14 @@ func (_self *sysUser) UnlockUser(db *gorm.DB, dto *dto.SetStatus) error {
 		"user_status":   0,
 		"expiration_at": nil,
 	}
-	if len(dto.ExpirationAt) > 0 {
-		parse, err := time.Parse(dto.ExpirationAt, time.DateTime)
-		if err != nil {
-			return err
-		}
-		updateMap["expiration_at"] = parse
-	}
+	//if len(dto.ExpirationAt) > 0 {
+	//	parse, err := time.Parse(time.DateTime, dto.ExpirationAt)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	updateMap["expiration_at"] = parse
+	//}
+	updateMap["expiration_at"] = dto.ExpirationAt
 	res := db.Table(table_name.SysUser).
 		Where("id = ? and user_status != 0", dto.ID). // 防止ABA的问题
 		Updates(updateMap)
@@ -152,4 +154,67 @@ func (_self *sysUser) UpdateLastLoginIp(db *gorm.DB, id uint64, lastLoginIp stri
 	}
 	return
 
+}
+
+func (_self *sysUser) Save(db *gorm.DB, req *dto.UserSaveReq) (err error) {
+	// 校验
+	if req == nil {
+		return c_error.ErrParamInvalid
+	}
+	if err = binding.Validator.ValidateStruct(req); err != nil {
+		return
+	}
+	model := &entity.SysUser{
+		ModelId: entity.ModelId{
+			ID: req.ID,
+		},
+		LoginName:    req.LoginName,
+		Password:     req.Password,
+		ExpirationAt: req.ExpirationAt,
+		Username:     req.Username,
+		DeptId:       req.DeptId,
+		Sex:          req.Sex,
+	}
+	tx := db.Begin()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	if model.ID <= 0 {
+		var count int64
+		if err = db.Model(model).Where("login_name = ?",
+			req.LoginName).Count(&count).Error; err != nil {
+			return
+		}
+		if count > 0 {
+			return errors.New("用户帐号重复,请核对")
+		}
+		// 新增
+		if err = tx.Create(model).Error; err != nil {
+			return
+		}
+	} else {
+		// 更新
+		// Updates 方法支持 struct 和 map[string]interface{} 参数。当使用 struct 更新时，默认情况下GORM 只会更新非零值的字段
+		if err = tx.Omit(
+			"password",
+			"login_name",
+			"last_login_time",
+			"last_login_ip",
+		).Updates(model).Error; err != nil {
+			return
+		}
+	}
+	// 绑定角色
+	if err = SysRole.UserIdBindRoleIds(tx, model.ID, req.RoleIds); err != nil {
+		return
+	}
+	// 绑定岗位
+	err = SysPost.UserBindPostIds(tx, model.ID, req.PostIds)
+
+	return
 }

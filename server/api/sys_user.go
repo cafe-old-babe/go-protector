@@ -122,3 +122,28 @@ func (_self sysUser) DeptSave(c *gin.Context) {
 	})
 	c_result.Result(c, res)
 }
+
+func (_self sysUser) Save(c *gin.Context) {
+
+	var req dto.UserSaveReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	var sysUserService service.SysUser
+	_self.MakeService(c, &sysUserService)
+	c_result.Result(c, sysUserService.Save(&req))
+
+}
+
+func (_self sysUser) Delete(c *gin.Context) {
+	var req dto.IdsReq
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	var userService service.SysUser
+	_self.MakeService(c, &userService)
+	c_result.Result(c, userService.DeleteByIds(&req))
+}

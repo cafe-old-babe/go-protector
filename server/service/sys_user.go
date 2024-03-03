@@ -253,27 +253,32 @@ func (_self *SysUser) Page(req *dto.UserPageReq) (result *dto.Result) {
 	}
 	var count int64
 	var voSlice []vo.UserPage
-	err := _self.DB.Table(table_name.SysUser).
-		Select([]string{
-			table_name.SysUser + ".id",
-			table_name.SysUser + ".login_name",
-			table_name.SysUser + ".username",
-			table_name.SysUser + ".user_status as status",
-			table_name.SysDept + ".id as dept_id",
-			table_name.SysDept + ".dept_name",
-			table_name.SysUser + ".sex"}).
-		Scopes(
-			scope.Paginate(req.GetPagination()),
-			scope.Like(table_name.SysUser+".login_name", req.LoginName),
-			scope.Like(table_name.SysUser+".username", req.Username),
-			func(db *gorm.DB) *gorm.DB {
-				if len(req.DeptIds) > 0 {
-					db = db.Where(table_name.SysDept+".id", req.DeptIds)
-				}
-				return db
-			},
-		).Joins(`left join ` + table_name.SysDept + ` on ` +
-		table_name.SysDept + `.id = ` + table_name.SysUser + `.dept_id`).
+	tx := _self.DB.Table(table_name.SysUser + " as u")
+	err := tx.Select([]string{
+		"u.id",
+		"u.login_name",
+		"u.username",
+		"u.user_status as status",
+		"u.sex",
+		"d.id as dept_id",
+		"d.dept_name",
+		"p.post_names",
+		"p.post_ids",
+		"r.role_names",
+		"r.role_ids",
+	}).Scopes(
+		scope.Paginate(req.GetPagination()),
+		scope.Like("u.login_name", req.LoginName),
+		scope.Like("u.username", req.Username),
+		func(db *gorm.DB) *gorm.DB {
+			if len(req.DeptIds) > 0 {
+				db = db.Where("d.id in (?)", req.DeptIds)
+			}
+			return db
+		},
+	).Joins(`left join `+table_name.SysDept+` d on d.id = u.dept_id`).
+		Joins("left join (?) as p on p.user_id = u.id", dao.SysPost.JoinUserPostDB(_self.DB)).
+		Joins("left join (?) as r on r.user_id = u.id", dao.SysRole.JoinUserRoleDB(_self.DB)).
 		Find(&voSlice).Limit(-1).Offset(-1).Count(&count).Error
 	if err != nil {
 		result = dto.ResultFailureErr(err)
@@ -281,4 +286,51 @@ func (_self *SysUser) Page(req *dto.UserPageReq) (result *dto.Result) {
 		result = dto.ResultPage(voSlice, req.GetPagination(), count)
 	}
 	return
+}
+
+func (_self *SysUser) Save(req *dto.UserSaveReq) (result *dto.Result) {
+
+	if err := dao.SysUser.Save(_self.DB, req); err != nil {
+		return dto.ResultFailureErr(err)
+	}
+
+	return dto.ResultSuccessMsg("保存成功")
+
+}
+
+func (_self *SysUser) DeleteByIds(req *dto.IdsReq) (result *dto.Result) {
+
+	if req == nil || len(req.Ids) <= 0 {
+		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+	}
+	db := _self.DB.Begin()
+	defer func() {
+		if result == nil || !result.IsSuccess() {
+			db.Rollback()
+		} else {
+			db.Commit()
+		}
+	}()
+
+	// delete user
+	if err := db.Delete(&entity.SysUser{}, req.Ids).Error; err != nil {
+		result = dto.ResultFailureErr(err)
+		return
+	}
+
+	// delete post_relation
+	if err := db.Delete(&entity.SysPostRelation{},
+		"relation_id in (?) and relation_type = ?", req.Ids, consts.User).Error; err != nil {
+		result = dto.ResultFailureErr(err)
+		return
+	}
+
+	// delete role_relation
+	if err := db.Delete(&entity.SysRoleRelation{},
+		"relation_id in (?) and relation_type = ?", req.Ids, consts.User).Error; err != nil {
+		result = dto.ResultFailureErr(err)
+		return
+	}
+
+	return dto.ResultSuccessMsg("删除成功")
 }

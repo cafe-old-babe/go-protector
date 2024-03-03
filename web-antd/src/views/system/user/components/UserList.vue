@@ -55,6 +55,20 @@
           </a-tooltip>
         </a>
       </div>
+      <div slot="postNames" slot-scope="text,current">
+        <template v-for="(name, index) in current.postNames">
+          <a-tag :key="index" :title="name">
+            {{ name }}
+          </a-tag>
+        </template>
+      </div>
+      <div slot="roleNames" slot-scope="text,current">
+        <template v-for="(name, index) in current.roleNames">
+          <a-tag :key="index" :title="name">
+            {{ name }}
+          </a-tag>
+        </template>
+      </div>
       <span slot="action" slot-scope="text, current">
         <a style="margin-right: 8px" @click="editRecord(current)"> <a-icon type="edit" />编辑 </a>
         <a @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
@@ -67,6 +81,13 @@
       @close="editClose"
       @ok="editOk"
     />
+    <EditUserStatus
+      :visible="editStatusVisible"
+      :id="record.id"
+      :status="record.status"
+      @ok="editOk"
+      @cancel="editClose"
+    />
   </div>
 </template>
 
@@ -77,15 +98,17 @@ import { loadUser } from '@/api/user'
 import EditUser from './EditUser'
 import EditDept from './EditDept'
 import { columns } from './UserList.js'
+import EditUserStatus from '@/views/system/user/components/EditUserStatus.vue'
 
 export default {
   name: 'UserList',
-  components: { EditUser, EditDept, STable },
+  components: { EditUserStatus, EditUser, EditDept, STable },
   data() {
     return {
       windowHeight: 0,
       loading: false,
       editVisible: false,
+      editStatusVisible: false,
       columns: columns,
       queryParam: {},
       selectedRowKeys: [],
@@ -144,7 +167,7 @@ export default {
 
       if (!confirm) {
         this.loading = true
-        request.post('/dict/type/delete', param).then(res => {
+        request.post('/user/delete', param).then(res => {
           const { code, message } = res
           if (code === 200) {
             this.$message.success(message ?? '删除成功')
@@ -174,26 +197,15 @@ export default {
     editClose: function () {
       this.record = {}
       this.editVisible = false
+      this.editStatusVisible = false
     },
     loadUser: function (deptIds = [], bool = true) {
       this.queryParam.deptIds = deptIds
       this.$refs.table.refresh(bool)
     },
     changeStatus: function(record) {
-      this.loading = true
-      request.post('/user/setStatus', { id: record.id, userStatus: (record.status ^ 1) }).then(res => {
-        // console.log(res)
-        const { code, message } = res
-        if (code === 200) {
-          this.$message.info(message)
-          this.$refs.table.refresh(false)
-        } else {
-          this.$message.warning(message)
-        }
-      }).finally(() => {
-        this.loading = false
-      })
-      // console.log(record, 'changeStatus')
+      this.record = record
+      this.editStatusVisible = true
     }
   }
 }
