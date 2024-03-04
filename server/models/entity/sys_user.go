@@ -11,6 +11,7 @@ type SysUser struct {
 	LoginName     string         `json:"loginName" gorm:"size:32;comment:登录名"`
 	Password      string         `json:"password" gorm:"size:256;comment:密码"`
 	Username      string         `json:"username" gorm:"size:8;comment:用户名"`
+	Email         string         `json:"email"  gorm:"size:128;comment:邮箱"`
 	DeptId        uint64         `json:"deptId" gorm:"comment:部门ID"`
 	Sex           string         `json:"sex" gorm:"size:32;comment:性别,0:女,1:男"`
 	LastLoginTime sql.NullTime   `json:"lastLoginTime" gorm:"comment:最后登录时间"`

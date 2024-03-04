@@ -46,7 +46,8 @@ type UserSaveReq struct {
 	PostIds      []uint64    `json:"postIds"  binding:"required"`
 	RoleIds      []uint64    `json:"roleIds"  binding:"required"`
 	LoginName    string      `json:"loginName"  binding:"required"`
-	Password     string      `json:"password"  binding:"required_with=ID"`
+	Email        string      `json:"email"  binding:"required,email"`
+	Password     string      `json:"password"  binding:"required_without=ID"`
 	Username     string      `json:"username"  binding:"required"`
 	Sex          string      `json:"sex"  binding:"required"`
 	ExpirationAt c_type.Time `json:"expirationAt"`

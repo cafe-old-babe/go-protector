@@ -171,6 +171,7 @@ func (_self *sysUser) Save(db *gorm.DB, req *dto.UserSaveReq) (err error) {
 		LoginName:    req.LoginName,
 		Password:     req.Password,
 		ExpirationAt: req.ExpirationAt,
+		Email:        req.Email,
 		Username:     req.Username,
 		DeptId:       req.DeptId,
 		Sex:          req.Sex,
@@ -203,8 +204,6 @@ func (_self *sysUser) Save(db *gorm.DB, req *dto.UserSaveReq) (err error) {
 		if err = tx.Omit(
 			"password",
 			"login_name",
-			"last_login_time",
-			"last_login_ip",
 		).Updates(model).Error; err != nil {
 			return
 		}

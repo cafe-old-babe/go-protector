@@ -259,6 +259,7 @@ func (_self *SysUser) Page(req *dto.UserPageReq) (result *dto.Result) {
 		"u.login_name",
 		"u.username",
 		"u.user_status as status",
+		"u.email",
 		"u.sex",
 		"d.id as dept_id",
 		"d.dept_name",

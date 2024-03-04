@@ -30,10 +30,18 @@
             label="用户帐号"
             prop="loginName"
           >
-            <a-input v-model="localRecord.loginName" placeholder="请输入用户帐号"/>
+            <a-input v-model="localRecord.loginName" placeholder="请输入用户帐号" :disabled="!isEdit"/>
           </a-form-model-item>
           <a-form-model-item
-            v-if="!localRecord.id"
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="用户邮箱"
+            prop="email"
+          >
+            <a-input v-model="localRecord.email" placeholder="请输入用户邮箱"/>
+          </a-form-model-item>
+          <a-form-model-item
+            v-if="isEdit"
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
             label="用户密码"
@@ -43,7 +51,6 @@
           </a-form-model-item>
 
           <a-form-model-item
-            :disabled="localRecord.id"
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
             label="用户有效期"
@@ -185,7 +192,10 @@ export default {
           { required: true, message: '请输入登录帐号' }
         ],
         username: [
-          { required: true, message: '请输入类型名称' }
+          { required: true, message: '请输入用户名称' }
+        ],
+        email: [
+          { required: true, message: '请输入用户邮箱' }
         ],
         sex: [
           { required: true, message: '请输入性别' }
@@ -219,6 +229,9 @@ export default {
     }
   },
   computed: {
+    isEdit() {
+      return !this.localRecord.id
+    },
     formItemLayout() {
       const { formLayout } = this
       return formLayout === 'horizontal'
