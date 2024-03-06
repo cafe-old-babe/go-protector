@@ -17,6 +17,7 @@ type config struct {
 	Server   server   `yaml:"server"`
 	Redis    redis    `yaml:"redis"`
 	Jwt      Jwt      `yaml:"jwt"`
+	Email    Email    `yaml:"email"`
 }
 
 func GetConfig() *config {

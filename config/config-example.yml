@@ -38,3 +38,8 @@ logger:
   path: ./log
   fileName: go-protector.log
   level: debug
+email:
+  host: ""
+  port:
+  username: ""
+  password: ""
