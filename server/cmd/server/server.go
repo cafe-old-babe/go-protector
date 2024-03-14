@@ -10,6 +10,7 @@ import (
 
 var (
 	configFilePath string
+	migration      bool
 	StartCmd       = &cobra.Command{
 		Use:          "server",
 		Short:        "start server",
@@ -31,6 +32,10 @@ var (
 				fmt.Printf("无法访问文件: %s, err: %v \n", configFilePath, err)
 			}
 
+			if err = os.Setenv(consts.EnvMigration, fmt.Sprintf("%v", migration)); err != nil {
+				fmt.Printf("set env err: %v", err)
+				return
+			}
 			return
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -41,4 +46,5 @@ var (
 
 func init() {
 	StartCmd.PersistentFlags().StringVarP(&configFilePath, "config", "c", "config/config.yml", "Start server with provided configuration file")
+	StartCmd.PersistentFlags().BoolVarP(&migration, "migration", "m", true, "migration")
 }

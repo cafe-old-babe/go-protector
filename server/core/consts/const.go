@@ -4,7 +4,8 @@ import "go-protector/server/core/custom/c_type"
 
 const (
 	// EnvConfig 环境变量
-	EnvConfig = "config"
+	EnvConfig    = "config"
+	EnvMigration = "migration"
 
 	CfgEnvTest    = "test"
 	CfgEnvDebug   = "debug"
@@ -39,4 +40,13 @@ const (
 	User c_type.RelationType = "user"
 	Menu c_type.RelationType = "menu"
 	Dept c_type.RelationType = "dept"
+)
+
+const (
+	// LoginPolicyGlobal 全局配置
+	LoginPolicyGlobal c_type.LoginPolicyCode = "global"
+	// LoginPolicyEmail 邮件配置
+	LoginPolicyEmail c_type.LoginPolicyCode = "email"
+	// LoginPolicyOtp OTP认证
+	LoginPolicyOtp c_type.LoginPolicyCode = "otp"
 )

@@ -71,6 +71,9 @@ func GetServer() (server *http.Server, err error) {
 		return
 	}
 
+	if err = StartMigration(); err != nil {
+		return
+	}
 	server = initServer()
 	return
 }

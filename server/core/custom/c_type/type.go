@@ -9,6 +9,7 @@ import (
 )
 
 type RelationType string
+type LoginPolicyCode string
 
 type Time sql.NullTime
 

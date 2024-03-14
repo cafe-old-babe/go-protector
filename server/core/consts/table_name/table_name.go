@@ -10,4 +10,5 @@ const (
 	SysRoleRelation        = "sys_role_relation"
 	SysPost                = "sys_post"
 	SysPostRelation        = "sys_post_relation"
+	SysLoginPolicy         = "sys_login_policy"
 )
