@@ -8,7 +8,7 @@ module.exports = {
     'plugin:vue/strongly-recommended',
     '@vue/standard'
   ],
-  // yarn add eslint-plugin-html --dev
+  // yarn add eslint-plugin-html --dev 实现识别 vue和html格式
   plugins: [
     'vue',
     'html'
