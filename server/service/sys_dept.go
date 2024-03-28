@@ -12,13 +12,13 @@ type SysDept struct {
 	base.Service
 }
 
-func (_self *SysDept) DeptTree() *dto.Result {
+func (_self *SysDept) DeptTree() *base.Result {
 	var deptSlice []entity.SysDept
 	if err := _self.DB.Find(&deptSlice).Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
 	node := dto.GenerateTree(deptSlice, 0, "ID", "PID", "DeptName", nil)
-	return dto.ResultSuccess(node)
+	return base.ResultSuccess(node)
 }
 
 func (_self *SysDept) SaveCheck(entity *entity.SysDept) error {

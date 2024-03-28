@@ -15,7 +15,7 @@ type SysDictType struct {
 }
 
 // Page 字典类型分页查询
-func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *dto.Result) {
+func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *base.Result) {
 	var dictType entity.SysDictType
 	var list []entity.SysDictType
 	var count int64
@@ -27,34 +27,34 @@ func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *dto.Result) {
 		).Find(&list).                      // 查询数据
 		Limit(-1).Offset(-1).Count(&count). // 查询总数
 		Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultPage(list, req, count)
+	return base.ResultPage(list, req, count)
 }
 
 // Save 字典类型保存
-func (_self *SysDictType) Save(model *entity.SysDictType) *dto.Result {
+func (_self *SysDictType) Save(model *entity.SysDictType) *base.Result {
 	// todo 校验
 	if err := _self.DB.Save(model).Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultSuccess(model, "创建成功")
+	return base.ResultSuccess(model, "创建成功")
 }
 
 // Update 字典类型更新
-func (_self *SysDictType) Update(model *entity.SysDictType) *dto.Result {
+func (_self *SysDictType) Update(model *entity.SysDictType) *base.Result {
 	// todo 校验
 	if err := _self.DB.Save(model).Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultSuccess(model, "更新成功")
+	return base.ResultSuccess(model, "更新成功")
 }
 
 // Delete 字典类型删除
-func (_self *SysDictType) Delete(req *dto.IdsReq) *dto.Result {
+func (_self *SysDictType) Delete(req *base.IdsReq) *base.Result {
 
 	if req == nil || len(req.GetIds()) <= 0 {
-		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	ids := req.GetIds()
 	//todo 同时删除data
@@ -79,7 +79,7 @@ func (_self *SysDictType) Delete(req *dto.IdsReq) *dto.Result {
 	})
 
 	if err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultSuccessMsg("删除成功")
+	return base.ResultSuccessMsg("删除成功")
 }

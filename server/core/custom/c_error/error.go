@@ -11,4 +11,5 @@ var (
 	ErrUpdateFailure                = errors.New("更新失败")
 	ErrDeleteFailure                = errors.New("删除失败")
 	ErrAuthFailure                  = errors.New("认证失败，请重新登录")
+	ErrIllegalAccess                = errors.New("非法访问")
 )

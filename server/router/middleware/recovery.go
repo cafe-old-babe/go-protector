@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go-protector/server/core/config"
 	"go-protector/server/core/custom/c_logger"
 	"go-protector/server/core/custom/c_result"
 )
@@ -15,8 +17,12 @@ func Recovery(ctx *gin.Context) {
 			if ctx.IsAborted() {
 				ctx.Status(200)
 			}
-			c_result.Failure(ctx, nil, fmt.Sprintf("recover err: %v", err))
-			panic(err)
+			//c_result.Failure(ctx, nil, fmt.Sprintf("recover err: %v", err))
+			withError := ctx.Error(errors.New(fmt.Sprintf("%v", err)))
+			c_result.Err(ctx, withError)
+			if config.GetConfig().Server.Model != "release" {
+				panic(err)
+			}
 		}
 		return
 	}()

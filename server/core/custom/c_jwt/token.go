@@ -2,29 +2,34 @@ package c_jwt
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"go-protector/server/core/cache"
 	"go-protector/server/core/config"
+	"go-protector/server/core/consts"
+	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/utils"
-	"go-protector/server/models/dto"
-	time "time"
+	"golang.org/x/net/context"
+	"time"
 )
 
 const secretKey = "secret-p90-23n09.32342"
 
 // GenerateToken 生成token https://pkg.go.dev/github.com/golang-jwt/jwt/v5#Token
 // go get -u github.com/golang-jwt/jwt/v5
-func GenerateToken(currentUser *dto.CurrentUser) (jwtStringPointer *string, expireAt time.Time, err error) {
+func GenerateToken(currentUser *current.User) (jwtStringPointer *string, expireAt time.Time, err error) {
 	var bytes []byte
 	sessionTimeout := config.GetConfig().Jwt.SessionTimeout
+	if len(currentUser.SessionId) <= 0 {
+		currentUser.SessionId = utils.GetNextIdStr()
+	}
 	if bytes, err = json.Marshal(currentUser); err != nil {
 		return
 	}
-	if currentUser.SessionId <= 0 {
-		currentUser.SessionId = utils.GetNextId()
-	}
 	now := time.Now().Local()
-	expireAt = now.Add(time.Minute * time.Duration(sessionTimeout))
+	duration := time.Minute * time.Duration(sessionTimeout)
+	expireAt = now.Add(duration)
 	registeredClaims := jwt.RegisteredClaims{
 		// 过期时间
 		ExpiresAt: jwt.NewNumericDate(expireAt),
@@ -36,14 +41,19 @@ func GenerateToken(currentUser *dto.CurrentUser) (jwtStringPointer *string, expi
 
 	tokenPointer := jwt.NewWithClaims(jwt.SigningMethodHS256, registeredClaims)
 	var jwtString string
-	if jwtString, err = tokenPointer.SignedString([]byte(secretKey)); err == nil {
-		jwtStringPointer = &jwtString
+	if jwtString, err = tokenPointer.SignedString([]byte(secretKey)); err != nil {
+		return
 	}
+	jwtStringPointer = &jwtString
+	redisClient := cache.GetRedisClient()
+	key := fmt.Sprintf(consts.OnlineUserCacheKeyFmt, currentUser.LoginName)
+	err = redisClient.HSet(context.TODO(), key, currentUser.SessionId, jwtString).Err()
 	return
 }
 
 // ParserToken 解析token
-func ParserToken(jwtString *string) (userPointer *dto.CurrentUser, err error) {
+func ParserToken(jwtString *string) (userPointer *current.User, err error) {
+	// todo  check redis --> token
 
 	token, err := jwt.NewParser().ParseWithClaims(*jwtString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
@@ -55,7 +65,7 @@ func ParserToken(jwtString *string) (userPointer *dto.CurrentUser, err error) {
 	// 获取currentUser
 	subject, _ := claims.GetSubject()
 
-	var currentUser dto.CurrentUser
+	var currentUser current.User
 	if err = json.Unmarshal([]byte(subject), &currentUser); err != nil {
 		return
 	}
@@ -72,7 +82,7 @@ func ParserToken(jwtString *string) (userPointer *dto.CurrentUser, err error) {
 }
 
 // ReGenerateToken 重新生成Token,将之前的老token缓存一下
-func ReGenerateToken(jwtString *string, currentUser *dto.CurrentUser) (newJwtTString *string, err error) {
+func ReGenerateToken(jwtString *string, currentUser *current.User) (newJwtTString *string, err error) {
 	if jwtString == nil || len(*jwtString) <= 0 {
 		err = c_error.ErrParamInvalid
 		return

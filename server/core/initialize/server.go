@@ -22,9 +22,9 @@ func initServer() (server *http.Server) {
 
 	gin.SetMode(config.GetConfig().Server.Model)
 	engine.Use(middleware.Cors())
+	engine.Use(middleware.RecordLog)
 	engine.Use(middleware.Recovery)
 	engine.Use(middleware.JwtAuth())
-	engine.Use(middleware.RecordLog)
 	engine.Use(middleware.SetDB)
 
 	routerGroup := engine.Group(consts.ServerUrlPrefix)

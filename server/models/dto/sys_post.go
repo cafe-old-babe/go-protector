@@ -1,7 +1,9 @@
 package dto
 
+import "go-protector/server/core/base"
+
 type SysPostPageReq struct {
-	Pagination
+	base.Pagination
 	Name    string   `json:"name"`
 	DeptIds []uint64 `json:"deptIds"`
 	Code    string   `json:"code"`

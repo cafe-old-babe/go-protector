@@ -50,7 +50,7 @@ func (_self sysRole) Save(c *gin.Context) {
 
 // Delete 删除
 func (_self sysRole) Delete(c *gin.Context) {
-	var req dto.IdsReq
+	var req base.IdsReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)
 		return
@@ -84,7 +84,7 @@ func (_self sysRole) SavePermission(c *gin.Context) {
 		c_result.Err(c, c_error.ErrParamInvalid)
 		return
 	}
-	var req dto.IdsReq
+	var req base.IdsReq
 	if err = c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)
 		return

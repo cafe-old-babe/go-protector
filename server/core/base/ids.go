@@ -1,4 +1,4 @@
-package dto
+package base
 
 type IdsReq struct {
 	Ids      []uint64 `json:"ids" binding:"required"`

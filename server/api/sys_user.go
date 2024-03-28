@@ -18,8 +18,8 @@ type sysUser struct {
 }
 
 func (_self sysUser) Login(c *gin.Context) {
-	var loginDTO dto.Login
-	if err := c.BindJSON(&loginDTO); err != nil {
+	var loginDTO dto.LoginDTO
+	if err := c.ShouldBindJSON(&loginDTO); err != nil {
 		c_logger.GetLogger(c).Error("login Error: %v", err)
 		c_result.Failure(c, nil, err.Error())
 		return
@@ -90,7 +90,7 @@ func (_self sysUser) DeptTree(c *gin.Context) {
 // DeptDelete 删除
 func (_self sysUser) DeptDelete(c *gin.Context) {
 	var sysDeptService service.SysDept
-	var ids dto.IdsReq
+	var ids base.IdsReq
 	_self.MakeService(c, &sysDeptService)
 	if err := c.ShouldBindJSON(&ids); err != nil {
 		c_result.Err(c, err)
@@ -137,7 +137,7 @@ func (_self sysUser) Save(c *gin.Context) {
 }
 
 func (_self sysUser) Delete(c *gin.Context) {
-	var req dto.IdsReq
+	var req base.IdsReq
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)

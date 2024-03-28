@@ -45,7 +45,7 @@ func (_self sysPost) Save(c *gin.Context) {
 
 // Delete 删除
 func (_self sysPost) Delete(c *gin.Context) {
-	var req dto.IdsReq
+	var req base.IdsReq
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)

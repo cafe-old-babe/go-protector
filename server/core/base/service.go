@@ -5,7 +5,6 @@ import (
 	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/custom/c_logger"
 	"go-protector/server/core/database"
-	"go-protector/server/models/dto"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"reflect"
@@ -39,11 +38,11 @@ func (_self *Service) MakeService(service ...IService) {
 
 // SimpleSave 通用保存 会保存所有的字段，即使字段是零值 简单
 func (_self *Service) SimpleSave(model schema.Tabler,
-	check ...func() error) *dto.Result {
+	check ...func() error) *Result {
 	if len(check) > 0 {
 		for _, f := range check {
 			if err := f(); err != nil {
-				return dto.ResultFailureErr(err)
+				return ResultFailureErr(err)
 			}
 		}
 	}
@@ -61,29 +60,29 @@ func (_self *Service) SimpleSave(model schema.Tabler,
 		message = "更新成功"
 	}
 	if err != nil {
-		return dto.ResultFailureErr(err)
+		return ResultFailureErr(err)
 	}
-	return dto.ResultSuccess(model, message)
+	return ResultSuccess(model, message)
 }
 
 // SimpleDelByIds 通用删除方法 根据ids删除数据
-func (_self *Service) SimpleDelByIds(req *dto.IdsReq,
-	check ...func() error) *dto.Result {
+func (_self *Service) SimpleDelByIds(req *IdsReq,
+	check ...func() error) *Result {
 
 	if len(check) > 0 {
 		for _, f := range check {
 			if err := f(); err != nil {
-				return dto.ResultFailureErr(err)
+				return ResultFailureErr(err)
 			}
 		}
 	}
 	if req == nil || len(req.GetIds()) <= 0 || req.Value == nil {
-		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+		return ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	if len(check) > 0 {
 		for _, f := range check {
 			if err := f(); err != nil {
-				return dto.ResultFailureErr(err)
+				return ResultFailureErr(err)
 			}
 		}
 	}
@@ -95,12 +94,12 @@ func (_self *Service) SimpleDelByIds(req *dto.IdsReq,
 	}
 	result := tx.Delete(req.Value, req.GetIds())
 	if result.Error != nil {
-		return dto.ResultFailureErr(result.Error)
+		return ResultFailureErr(result.Error)
 	}
 	if result.RowsAffected <= 0 {
 		_self.Logger.Error("删除失败,无删除记录")
-		return dto.ResultFailureMsg("删除失败")
+		return ResultFailureMsg("删除失败")
 	}
-	return dto.ResultSuccessMsg("删除成功")
+	return ResultSuccessMsg("删除成功")
 
 }

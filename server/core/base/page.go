@@ -1,4 +1,4 @@
-package dto
+package base
 
 type Page struct {
 	TotalCount int `json:"totalCount"`

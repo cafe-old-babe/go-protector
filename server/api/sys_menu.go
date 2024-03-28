@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"go-protector/server/core/base"
 	"go-protector/server/core/custom/c_result"
 	"go-protector/server/models/dto"
 	"go-protector/server/service"
@@ -35,7 +36,7 @@ func (_self sysMenu) Save(c *gin.Context) {
 
 // Delete 删除
 func (_self sysMenu) Delete(c *gin.Context) {
-	var req dto.IdsReq
+	var req base.IdsReq
 	sysMenuService := service.MakeSysMenuService(c)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)

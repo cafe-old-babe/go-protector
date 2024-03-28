@@ -1,5 +1,7 @@
 package dto
 
+import "go-protector/server/core/base"
+
 type RoleInfo struct {
 	Name string `json:"name"`
 	Role Role   `json:"role"`
@@ -39,6 +41,6 @@ type MetaInfo struct {
 }
 
 type SysRolePageReq struct {
-	Pagination `json:"-"`
-	RoleName   string `json:"roleName"`
+	base.Pagination `json:"-"`
+	RoleName        string `json:"roleName"`
 }

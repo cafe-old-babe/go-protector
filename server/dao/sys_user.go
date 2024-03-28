@@ -32,20 +32,19 @@ func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUser) (
 
 	tx := db.Scopes(func(db *gorm.DB) *gorm.DB {
 		db.Where("login_name = ?", dto.LoginName)
-		if dto.UserStatus == 0 {
-			db.Where("user_status = ?", dto.UserStatus)
-		}
 		return db
 	})
 	if dto.IsUnscoped {
 		tx = tx.Unscoped()
 	}
 	if err = tx.Preload("SysDept").First(sysUser).Error; err != nil {
-		if errors.Is(gorm.ErrRecordNotFound, err) {
-			sysUser = nil
-			err = c_error.ErrRecordNotFoundSysUser
-			return
-		}
+
+		return
+		//if errors.Is(gorm.ErrRecordNotFound, err) {
+		//	sysUser = nil
+		//	err = c_error.ErrRecordNotFoundSysUser
+		//	return
+		//}
 	}
 
 	var roleIdSlice []uint64

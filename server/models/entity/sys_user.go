@@ -23,6 +23,7 @@ type SysUser struct {
 	SysRoleIds    []uint64       `json:"sysRoleIds" gorm:"-"`                            //
 	SysRoles      []SysRole      `json:"sysRoles" gorm:"-"`                              //
 	SysDept       SysDept        `json:"sysDept" gorm:"foreignKey:DeptId;references:ID"` // https://gorm.io/zh_CN/docs/belongs_to.html#Belongs-to-%E7%9A%84-CRUD
+	SessionId     string         `json:"sessionId,omitempty" gorm:"-"`
 	ModelDelete
 	ModelControl
 }

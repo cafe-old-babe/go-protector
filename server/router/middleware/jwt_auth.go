@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"go-protector/server/core/base"
 	"go-protector/server/core/consts"
 	"go-protector/server/core/current"
 	"go-protector/server/core/custom/c_error"
 	"go-protector/server/core/custom/c_jwt"
 	"go-protector/server/core/custom/c_logger"
-	"go-protector/server/models/dto"
 	"net/http"
 	"path"
 	"strings"
@@ -50,9 +50,10 @@ func JwtAuth() gin.HandlerFunc {
 		oldTokenStr := tokenStr
 		currentUser, err := c_jwt.ParserToken(&tokenStr)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, dto.ResultCustom(http.StatusUnauthorized, nil, err.Error()))
+			c.AbortWithStatusJSON(http.StatusOK, base.ResultCustom(http.StatusUnauthorized, nil, err.Error()))
 			return
 		}
+		c.Request = c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))
 		if oldTokenStr != tokenStr {
 			c.Writer.Header().Set(consts.AuthHeaderKey, tokenStr)
 			c_logger.GetLogger(c).Info("-------------------")
@@ -61,6 +62,5 @@ func JwtAuth() gin.HandlerFunc {
 			c_logger.GetLogger(c).Info("-------------------")
 		}
 
-		c.Request = c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))
 	}
 }

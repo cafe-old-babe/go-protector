@@ -1,60 +1,89 @@
 package dto
 
 import (
-	"encoding/json"
 	"fmt"
-	"go-protector/server/core/consts"
 	"go-protector/server/core/custom/c_translator"
-	"go-protector/server/core/custom/c_type"
 	"reflect"
 	"testing"
 )
 
-func TestCreate(t *testing.T) {
+func TestGlobalLoginPolicyDTO_New(t *testing.T) {
+	type fields struct {
+		basePolicyDTO basePolicyDTO
+		Mode          string
+	}
 	type args struct {
-		t      c_type.LoginPolicyCode
-		enable int
-		PJson  string
+		param map[string]interface{}
 	}
-	otpWant := OTPLoginPolicyDTO{
-		Issuer:     "hhh",
-		Period:     30,
-		SecretSize: 0,
-	}
-	marshal, _ := json.Marshal(otpWant)
-	_ = json.Unmarshal(marshal, &otpWant.rawParam)
-
 	tests := []struct {
 		name    string
+		fields  fields
 		args    args
 		want    ILoginPolicyDTO
 		wantErr bool
 	}{
 		{
-			name: "otp",
-			args: args{
-				t:     consts.LoginPolicyOtp,
-				PJson: string(marshal),
+			name: "test1",
+			fields: fields{
+				basePolicyDTO: basePolicyDTO{
+					rawParam: nil,
+					Enable:   "2",
+				},
+				Mode: "2",
 			},
-			want:    otpWant,
-			wantErr: false,
+			args: args{
+				param: map[string]interface{}{
+					"mode":   "2",
+					"enable": "2",
+				},
+			},
+			want: &GlobalLoginPolicyDTO{
+				basePolicyDTO: basePolicyDTO{
+					rawParam: map[string]interface{}{
+						"mode":   "2",
+						"enable": "2",
+					},
+					Enable: "2",
+				},
+				Mode: "2",
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CreateLoginPolicyDTO(tt.args.t, tt.args.PJson)
+			_self := GlobalLoginPolicyDTO{
+				basePolicyDTO: tt.fields.basePolicyDTO,
+				Mode:          tt.fields.Mode,
+			}
+			got, err := _self.New(tt.args.param)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateLoginPolicyDTO() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateLoginPolicyDTO() got = %v, want %v", got, tt.want)
+				t.Errorf("New() got = %v, want %v", got, tt.want)
 			}
-			if err = got.Verify(); err != nil {
+			if err := _self.Validate(got); (err != nil) != tt.wantErr {
 				err = c_translator.ConvertValidateErr(err)
-				t.Errorf("Verify error = %v", err)
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			fmt.Printf("%v\n", got)
 		})
 	}
+}
+
+func TestMap(t *testing.T) {
+	target := make(map[string]string)
+	targetSlice := make([]string, 0)
+	modifyMap(target)
+	modifySlice(&targetSlice)
+	fmt.Printf("%v\n", target)
+	fmt.Printf("%v\n", targetSlice)
+}
+
+func modifySlice(slice *[]string) {
+	*slice = append(*slice, "1")
+}
+
+func modifyMap(target map[string]string) {
+	target["1"] = "1"
 }

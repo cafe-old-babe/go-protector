@@ -51,7 +51,7 @@ func (_self sysDict) DictTypeSave(c *gin.Context) {
 func (_self sysDict) DictTypeDelete(c *gin.Context) {
 	var typeService service.SysDictType
 	_self.MakeService(c, &typeService)
-	var req dto.IdsReq
+	var req base.IdsReq
 	if err := c.BindJSON(&req); err != nil {
 		typeService.Logger.Error("dictType DictTypeDelete Error: %v", err)
 		c_result.Err(c, err)
@@ -109,7 +109,7 @@ func (_self sysDict) DictDataUpdateStatus(c *gin.Context) {
 func (_self sysDict) DictDataDelete(c *gin.Context) {
 	var dataService service.SysDictData
 	_self.MakeService(c, &dataService)
-	var req dto.IdsReq
+	var req base.IdsReq
 	if err := c.BindJSON(&req); err != nil {
 		dataService.Logger.Error("dictData DictDataDelete Error: %v", err)
 		c_result.Err(c, err)

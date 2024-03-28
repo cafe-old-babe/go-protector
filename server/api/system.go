@@ -5,7 +5,6 @@ import (
 	"go-protector/server/core/base"
 	"go-protector/server/core/custom/c_captcha"
 	"go-protector/server/core/custom/c_result"
-	"go-protector/server/models/dto"
 )
 
 var SystemApi system
@@ -21,7 +20,7 @@ func (_self system) GenerateCaptcha(c *gin.Context) {
 		c_result.Err(c, err)
 		return
 	}
-	c_result.Result(c, dto.ResultSuccess(map[string]string{
+	c_result.Result(c, base.ResultSuccess(map[string]string{
 		"cid":  id,
 		"b64s": b64s,
 	}))
@@ -29,5 +28,5 @@ func (_self system) GenerateCaptcha(c *gin.Context) {
 }
 
 func (_self system) Routes(c *gin.Context) {
-	c_result.Result(c, dto.ResultSuccess(nil))
+	c_result.Result(c, base.ResultSuccess(nil))
 }

@@ -19,6 +19,6 @@ func InitRedis(options *redis.Options) error {
 	return pingErr
 }
 
-func GetRedis() *redis.Client {
+func GetRedisClient() *redis.Client {
 	return _redis
 }

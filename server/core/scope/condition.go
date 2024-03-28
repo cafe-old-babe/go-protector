@@ -2,12 +2,12 @@ package scope
 
 import (
 	"fmt"
-	"go-protector/server/models/dto"
+	"go-protector/server/core/base"
 	"gorm.io/gorm"
 )
 
 // Paginate 分页查询
-func Paginate(page dto.IPagination) func(db *gorm.DB) *gorm.DB {
+func Paginate(page base.IPagination) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if page != nil {
 			offset := (page.GetPageIndex() - 1) * page.GetPageSize()

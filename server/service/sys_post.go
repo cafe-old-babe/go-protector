@@ -20,7 +20,7 @@ type SysPost struct {
 	base.Service
 }
 
-func (_self *SysPost) Page(req *dto.SysPostPageReq) *dto.Result {
+func (_self *SysPost) Page(req *dto.SysPostPageReq) *base.Result {
 	var slice []vo.PostPage
 	var count int64
 
@@ -62,9 +62,9 @@ func (_self *SysPost) Page(req *dto.SysPostPageReq) *dto.Result {
 	}
 	if err := tx.Joins("left join (?) as d on r.relation_id = d.id", rawTx).Group("p.id").
 		Find(&slice).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultPage(slice, req.GetPagination(), count)
+	return base.ResultPage(slice, req.GetPagination(), count)
 }
 
 func (_self *SysPost) CheckSave(req *dto.SysPostSaveReq) (err error) {
@@ -87,26 +87,26 @@ func (_self *SysPost) CheckSave(req *dto.SysPostSaveReq) (err error) {
 	return
 }
 
-func (_self *SysPost) DeleteByIds(req *dto.IdsReq) *dto.Result {
+func (_self *SysPost) DeleteByIds(req *base.IdsReq) *base.Result {
 
 	if err := dao.SysPost.DeleteByPostId(_self.DB, req.GetIds()); err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultSuccessMsg("删除成功")
+	return base.ResultSuccessMsg("删除成功")
 
 }
 
-func (_self *SysPost) Save(req *dto.SysPostSaveReq) *dto.Result {
+func (_self *SysPost) Save(req *dto.SysPostSaveReq) *base.Result {
 
 	if err := dao.SysPost.Save(_self.DB, req); err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultSuccessMsg("保存成功")
+	return base.ResultSuccessMsg("保存成功")
 }
 
-func (_self *SysPost) ListByDeptId(deptId uint64) *dto.Result {
+func (_self *SysPost) ListByDeptId(deptId uint64) *base.Result {
 	if deptId <= 0 {
-		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	var postSlice []entity.SysPost
 	err := _self.DB.Find(&postSlice, "id in (?)",
@@ -114,8 +114,8 @@ func (_self *SysPost) ListByDeptId(deptId uint64) *dto.Result {
 			Model(&entity.SysPostRelation{}).
 			Where("relation_type = ? and relation_id = ?", consts.Dept, deptId)).Error
 	if err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
-	return dto.ResultSuccess(postSlice)
+	return base.ResultSuccess(postSlice)
 
 }

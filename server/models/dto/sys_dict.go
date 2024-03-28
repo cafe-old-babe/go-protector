@@ -1,7 +1,9 @@
 package dto
 
+import "go-protector/server/core/base"
+
 type DictTypePageReq struct {
-	Pagination
+	base.Pagination
 	TypeCode string `json:"typeCode"`
 	TypeName string `json:"typeName"`
 }

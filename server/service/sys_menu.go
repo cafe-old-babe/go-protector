@@ -22,12 +22,12 @@ func MakeSysMenuService(c *gin.Context) *SysMenuService {
 	return &self
 }
 
-func (_self *SysMenuService) ListTree() (result *dto.Result) {
+func (_self *SysMenuService) ListTree() (result *base.Result) {
 
 	var menuSlice []entity.SysMenu
 
 	if err := _self.DB.Find(&menuSlice).Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
 	menuMap := map[uint64][]vo.SysMenuVO{}
 
@@ -68,20 +68,20 @@ func (_self *SysMenuService) ListTree() (result *dto.Result) {
 		Children: menuVOSlice,
 	}
 
-	return dto.ResultSuccess(root)
+	return base.ResultSuccess(root)
 }
 
-func (_self *SysMenuService) Save(req *dto.SysMenuSaveReq) (result *dto.Result) {
+func (_self *SysMenuService) Save(req *dto.SysMenuSaveReq) (result *base.Result) {
 	if req == nil {
-		return dto.ResultFailureErr(c_error.ErrParamInvalid)
+		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	if err := binding.Validator.ValidateStruct(req); err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
 	if req.MenuType != 2 {
 		// 如果不是按钮 组件名称必填
 		if len(req.Component) <= 0 {
-			return dto.ResultFailureErr(errors.New("组件名称必填"))
+			return base.ResultFailureErr(errors.New("组件名称必填"))
 		}
 	}
 	model := &entity.SysMenu{
@@ -103,20 +103,20 @@ func (_self *SysMenuService) Save(req *dto.SysMenuSaveReq) (result *dto.Result) 
 		res = _self.DB.Updates(model)
 	}
 	if res.Error != nil {
-		return dto.ResultFailureErr(res.Error)
+		return base.ResultFailureErr(res.Error)
 	}
 	if res.RowsAffected <= 0 {
-		return dto.ResultFailureMsg("保存失败")
+		return base.ResultFailureMsg("保存失败")
 	}
-	return dto.ResultSuccess(model, "保存成功")
+	return base.ResultSuccess(model, "保存成功")
 }
 
-func (_self *SysMenuService) Delete(req *dto.IdsReq) *dto.Result {
+func (_self *SysMenuService) Delete(req *base.IdsReq) *base.Result {
 	if err := _self.DB.Unscoped().Delete(&entity.SysMenu{}, req.GetIds()).Error; err != nil {
-		return dto.ResultFailureErr(err)
+		return base.ResultFailureErr(err)
 	}
 	// todo 删除关联关系
-	return dto.ResultSuccessMsg("删除成功")
+	return base.ResultSuccessMsg("删除成功")
 }
 
 func generateChildren(menuVO *vo.SysMenuVO, menuMap map[uint64][]vo.SysMenuVO) (children []vo.SysMenuVO) {

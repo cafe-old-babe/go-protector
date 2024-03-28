@@ -46,7 +46,7 @@ func TestServer(t *testing.T) {
 	t.Run("login/success", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		var buffer bytes.Buffer
-		login := dto.Login{
+		login := dto.LoginDTO{
 			LoginName: "admin",
 			Password:  "888888",
 		}
@@ -62,7 +62,7 @@ func TestServer(t *testing.T) {
 	t.Run("login/failure", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		var buffer bytes.Buffer
-		login := dto.Login{
+		login := dto.LoginDTO{
 			LoginName: "admin",
 			Password:  "8888880",
 		}

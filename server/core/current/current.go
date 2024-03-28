@@ -3,8 +3,21 @@ package current
 import (
 	"context"
 	"go-protector/server/core/consts"
-	"go-protector/server/models/dto"
 )
+
+type User struct {
+	ID        uint64   `json:"id"`
+	SessionId string   `json:"sessionId"`
+	LoginName string   `json:"loginName"`
+	Email     string   `json:"email"`
+	UserName  string   `json:"userName"`
+	LoginTime string   `json:"loginTime"`
+	LoginIp   string   `json:"loginIp"`
+	Avatar    string   `json:"avatar"`
+	RoleIds   []uint64 `json:"roleIds"`
+	DeptId    uint64   `json:"deptId"`
+	IsAdmin   bool     `json:"isAdmin"`
+}
 
 func GetUserId(c context.Context) uint64 {
 	if data, ok := c.Value(consts.CtxKeyUserId).(uint64); ok {
@@ -21,7 +34,7 @@ func SetUserId(c context.Context, data uint64) context.Context {
 }
 
 // SetUser 设置当前用户
-func SetUser(c context.Context, user *dto.CurrentUser) (nc context.Context) {
+func SetUser(c context.Context, user *User) (nc context.Context) {
 	if c == nil || user == nil {
 		return
 	}
@@ -30,7 +43,7 @@ func SetUser(c context.Context, user *dto.CurrentUser) (nc context.Context) {
 }
 
 // GetUser 获取当前用户
-func GetUser(c context.Context) (user *dto.CurrentUser, ok bool) {
-	user, ok = c.Value(consts.CtxKeyCurrentUser).(*dto.CurrentUser)
+func GetUser(c context.Context) (user *User, ok bool) {
+	user, ok = c.Value(consts.CtxKeyCurrentUser).(*User)
 	return
 }

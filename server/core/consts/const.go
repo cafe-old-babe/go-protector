@@ -22,7 +22,8 @@ const (
 	CtxKeyLoginName   = "loginName"
 	CtxKeyUserName    = "userName"
 
-	LockTypeExpire = 1
+	LockTypeExpire          = 1
+	LockTypePasswordFailure = 2
 
 	// CachePrefix 缓存前缀
 	CachePrefix = "go-protector"
@@ -49,4 +50,17 @@ const (
 	LoginPolicyEmail c_type.LoginPolicyCode = "email"
 	// LoginPolicyOtp OTP认证
 	LoginPolicyOtp c_type.LoginPolicyCode = "otp"
+	// LoginPolicyShare 共享登录校验
+	LoginPolicyShare c_type.LoginPolicyCode = "share"
+	// LoginPolicyIntruder 防爆破登录策略
+	LoginPolicyIntruder c_type.LoginPolicyCode = "intruder"
+)
+
+const (
+	// OnlineUserCacheKeyFmt 存放在线用户 -> online:{登录名}
+	OnlineUserCacheKeyFmt = CachePrefix + ":online:%s"
+	// LoginPolicyCacheKeyFmt 存放策略 -> login:{登录名}:{sessionId}:policy
+	LoginPolicyCacheKeyFmt = CachePrefix + ":login:%s:%s:policy"
+	// LoginIntruderCacheKeyFmt 防爆破策略 -> login:intruder:{day}:{登录名}
+	LoginIntruderCacheKeyFmt = CachePrefix + ":login:intruder:%d:%s"
 )

@@ -1,18 +1,22 @@
 package dto
 
-import "time"
+import (
+	"go-protector/server/core/current"
+	"time"
+)
 
-type Login struct {
-	LoginName string `json:"loginName"`
-	Password  string `json:"password"`
+type LoginDTO struct {
+	LoginName string `json:"loginName"  binding:"required"`
+	Password  string `json:"password"  binding:"required"`
 	// region 验证码相关
 	Cid  string `json:"cid"`
 	Code string `json:"code"`
 	// endregion
+	PolicyParam *LoginPolicyParamDTO `json:"policyParam"`
 }
 
 type LoginSuccess struct {
-	SysUser     *CurrentUser   `json:"user"`
+	SysUser     *current.User  `json:"user"`
 	Token       string         `json:"token"`
 	ExpireAt    time.Time      `json:"expireAt"`
 	Permissions map[string]any `json:"permissions"`

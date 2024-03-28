@@ -1,6 +1,9 @@
 package utils
 
-import "github.com/GUAIK-ORG/go-snowflake/snowflake"
+import (
+	"github.com/GUAIK-ORG/go-snowflake/snowflake"
+	"strconv"
+)
 
 var _innerSnowflake *snowflake.Snowflake
 
@@ -13,5 +16,10 @@ func init() {
 }
 func GetNextId() (nextId uint64) {
 	nextId = uint64(_innerSnowflake.NextVal())
+	return
+}
+
+func GetNextIdStr() (nextId string) {
+	nextId = strconv.FormatUint(GetNextId(), 10)
 	return
 }
