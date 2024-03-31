@@ -18,7 +18,8 @@ var ignoreUrlSet map[string]map[string]any
 func init() {
 	ignoreUrlSet = map[string]map[string]any{
 		"POST": {
-			path.Join(consts.ServerUrlPrefix, "/user", "login"): consts.EmptyVal,
+			path.Join(consts.ServerUrlPrefix, "/user", "login"):  consts.EmptyVal,
+			path.Join(consts.ServerUrlPrefix, "/user", "logout"): consts.EmptyVal,
 		},
 		"GET": {
 			path.Join(consts.ServerUrlPrefix, "system", "/captcha"): consts.EmptyVal,
@@ -50,7 +51,7 @@ func JwtAuth() gin.HandlerFunc {
 		oldTokenStr := tokenStr
 		currentUser, err := c_jwt.ParserToken(&tokenStr)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, base.ResultCustom(http.StatusUnauthorized, nil, err.Error()))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, base.ResultCustom(http.StatusUnauthorized, nil, err.Error()))
 			return
 		}
 		c.Request = c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))

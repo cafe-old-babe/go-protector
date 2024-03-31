@@ -473,7 +473,7 @@ func (_self *SysUser) GetLoginPolicyResult(user *entity.SysUser, policyInfoMap P
 		return nil
 	}
 
-	// 缓存用户信息 登录策略信息
+	// 录策略信息
 	policyKey := fmt.Sprintf(consts.LoginPolicyCacheKeyFmt, user.LoginName, res.SessionId)
 	redisClient := cache.GetRedisClient()
 	var err error
@@ -499,7 +499,7 @@ func (_self *SysUser) GetLoginPolicyResult(user *entity.SysUser, policyInfoMap P
 		return
 	}
 
-	return base.ResultCustom(201, res)
+	return base.ResultCustom(201, res, "请继续认证")
 }
 
 // ValidateLoginPolicyParam 校验认证策略

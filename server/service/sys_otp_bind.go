@@ -71,8 +71,9 @@ func (_self *SysOtpBind) VerifyCode(user current.User, code string) (err error) 
 	}
 	var key *otp.Key
 	key, err = otp.NewKeyFromURL(model.OtpAuthURL)
+	now := time.Now()
 	var pass bool
-	if pass, err = totp.ValidateCustom(code, model.Secret, time.Now().UTC(), totp.ValidateOpts{
+	if pass, err = totp.ValidateCustom(code, key.Secret(), now, totp.ValidateOpts{
 		Period:    uint(key.Period()),
 		Skew:      1,
 		Digits:    key.Digits(),
@@ -101,13 +102,12 @@ func (_self *SysOtpBind) CreateOtpByUser(user current.User,
 		Period:      policyDTO.Period,
 		SecretSize:  policyDTO.SecretSize,
 		Digits:      otp.DigitsSix,
-		Algorithm:   otp.AlgorithmSHA256,
+		Algorithm:   otp.AlgorithmSHA1,
 	}); err != nil {
 		return
 	}
 	model = entity.SysOtpBind{
 		UserId:     user.ID,
-		Secret:     key.Secret(),
 		OtpAuthURL: key.URL(),
 	}
 	err = _self.DB.Clauses(clause.OnConflict{

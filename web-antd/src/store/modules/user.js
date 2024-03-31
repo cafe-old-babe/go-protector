@@ -39,13 +39,16 @@ const user = {
     Login ({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         login(userInfo).then(response => {
-          if (response.code !== 200) {
+          if (response.code === 400) {
             reject(response)
             return
           }
-          const { token, expireAt } = response.data
-          storage.set(ACCESS_TOKEN, token, new Date(expireAt))
-          commit('SET_TOKEN', token)
+          if (response.code === 200) {
+            const { token, expireAt } = response.data
+            storage.set(ACCESS_TOKEN, token, new Date(expireAt))
+            commit('SET_TOKEN', token)
+          }
+
           resolve(response)
         }).catch(error => {
           reject(error)

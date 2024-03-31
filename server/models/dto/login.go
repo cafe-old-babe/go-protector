@@ -7,7 +7,7 @@ import (
 
 type LoginDTO struct {
 	LoginName string `json:"loginName"  binding:"required"`
-	Password  string `json:"password"  binding:"required"`
+	Password  string `json:"password"  binding:"required_without=PolicyParam"`
 	// region 验证码相关
 	Cid  string `json:"cid"`
 	Code string `json:"code"`

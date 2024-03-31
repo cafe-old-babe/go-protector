@@ -226,7 +226,7 @@
                   v-if="localRecord.share.singleOnline===1"
                   :label-col="formItemLayout.labelCol"
                   :wrapper-col="formItemLayout.wrapperCol"
-                  label="多人登录时操作"
+                  label="异地多人登录时"
                   prop="singleOnlineOperate"
                 >
                   <a-radio-group
@@ -247,7 +247,7 @@
             <a-tab-pane key="intruder" :tab="localRecord.intruder.name??'防爆破登录策略'">
               <a-alert message="当用户输入密码错误到达阈值时,将锁定用户" banner />
               <a-form-model
-                ref="share"
+                ref="intruder"
                 :model="localRecord.intruder"
                 :label-col="{ span: 6 }"
                 :wrapper-col="{ span: 6 }"

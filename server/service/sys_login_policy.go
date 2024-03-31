@@ -317,8 +317,15 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 	if !ok {
 		return c_error.ErrParamInvalid
 	}
-	randomCode := utils.GetRandomCode()
+
 	expireTime := emailDTO.ExpireTime
+	expiration := time.Duration(expireTime) * time.Minute
+	if err = email.VerifySendInterval(processDTO.Service.Context, redisKey, expiration, 1*time.Minute); err != nil {
+		return err
+	}
+
+	randomCode := utils.GetRandomCode()
+
 	body := fmt.Sprintf("您好: 您的验证码为: %s,有效期为%d分钟", randomCode, expireTime)
 
 	if err = email.Send(&email.SendDTO{
@@ -331,7 +338,7 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 	}
 
 	err = redisClient.Set(processDTO.Service.Context,
-		redisKey, randomCode, time.Duration(expireTime)*time.Minute).Err()
+		redisKey, randomCode, expiration).Err()
 
 	return
 }
@@ -359,7 +366,6 @@ type otpLoginPolicyService struct {
 }
 
 func (_self otpLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO) (err error) {
-	//TODO 发送邮箱html二维码 防止暴力发送
 	//发送邮箱验证码 防止暴力发送
 	if processDTO == nil {
 		return c_error.ErrParamInvalid
@@ -389,6 +395,11 @@ func (_self otpLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO) (
 		return
 	}
 	defer redisClient.Del(processDTO.Service.Context, lockKey)
+
+	if err = email.VerifySendInterval(processDTO.Service.Context, redisKey, 1*time.Minute, 0); err != nil {
+		return err
+	}
+
 	var otpService SysOtpBind
 	processDTO.Service.MakeService(&otpService)
 	var qrCodeBase64 string

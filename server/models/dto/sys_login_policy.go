@@ -135,7 +135,7 @@ type OTPLoginPolicyDTO struct {
 	// Issuer 签发名称
 	Issuer string `json:"issuer" binding:"required,max=64"`
 	// Period 间隔时长
-	Period uint `json:"period" binding:"required,min=30,max=60"`
+	Period uint `json:"period" binding:"required,gte=30,max=60"`
 	// SecretSize
 	SecretSize uint `json:"secretSize" binding:"required,gte=12,max=24"`
 }
@@ -170,7 +170,7 @@ func (_self EmailLoginPolicyDTO) New(param map[string]interface{}) (ILoginPolicy
 
 type GlobalLoginPolicyDTO struct {
 	basePolicyDTO `json:"-"`
-	Mode          string `json:"mode"  binding:"required,oneof=0 1"`
+	Mode          string `json:"mode"  binding:"required,oneof=0 1"` // 0 全部通过 1 通过一个即可
 }
 
 func (_self GlobalLoginPolicyDTO) New(param map[string]interface{}) (ILoginPolicyDTO, error) {
@@ -188,11 +188,11 @@ func (_self GlobalLoginPolicyDTO) New(param map[string]interface{}) (ILoginPolic
 type ShareLoginPolicyDTO struct {
 	basePolicyDTO `json:"-"`
 	// 登录间隔
-	LoginInterval uint `json:"loginInterval"  binding:"required;max=10,min=0"`
+	LoginInterval uint `json:"loginInterval"  binding:"max=10,gte=0"`
 	// 单用户登陆 0:不限制;1;仅一人在线
-	SingleOnline uint `json:"singleOnline"  binding:"required;oneof=0 1"`
+	SingleOnline uint `json:"singleOnline"  binding:"oneof=0 1"`
 	// 处理单用户登录 0:禁止当前用户登录,1:踢掉在线用户
-	SingleOnlineOperate uint `json:"singleOnlineOperate"  binding:"required;oneof=0 1"`
+	SingleOnlineOperate uint `json:"singleOnlineOperate"  binding:"oneof=0 1"`
 }
 
 func (_self ShareLoginPolicyDTO) New(param map[string]interface{}) (ILoginPolicyDTO, error) {

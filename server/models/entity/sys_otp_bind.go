@@ -1,7 +1,13 @@
 package entity
 
+import "go-protector/server/core/consts/table_name"
+
 type SysOtpBind struct {
-	UserId     uint64 `gorm:"comment:用户ID"  json:"-"`
-	Secret     string `gorm:"comment:秘钥,size:128"  json:"-"`
+	UserId     uint64 `gorm:"comment:用户ID;primaryKey"  json:"-"`
 	OtpAuthURL string `gorm:"size:4096;comment:二维码URL"  json:"-"`
+}
+
+func (SysOtpBind) TableName() string {
+
+	return table_name.SysOtpBind
 }

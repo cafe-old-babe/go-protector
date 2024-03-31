@@ -11,4 +11,5 @@ const (
 	SysPost                = "sys_post"
 	SysPostRelation        = "sys_post_relation"
 	SysLoginPolicy         = "sys_login_policy"
+	SysOtpBind             = "sys_otp_bind"
 )

@@ -38,6 +38,7 @@ var (
 		}
 		// 当前时间是否在有效期之后
 		if !time.Now().After(sysUser.ExpirationAt.Time) {
+			isLoop = true
 			return
 		}
 
@@ -60,6 +61,10 @@ var (
 	checkUserPassword = func(_self base.Service, sysUser *entity.SysUser,
 		loginDTO *dto.LoginDTO, policyDTOMap PolicyDTOMap) (res *base.Result, isLoop bool) {
 		_self.Logger.Debug("chain do checkUserPassword")
+		if loginDTO.PolicyParam != nil {
+			// 策略登录不参与校验密码
+			return
+		}
 		if sysUser.Password == loginDTO.Password {
 			return
 		}
@@ -177,6 +182,7 @@ var (
 	}
 
 	// checkAuthenticationPolicy 认证策略
+	// 400:失败提示信息; 200:登录成功; 201:触发登录策略; 203:展示提示信息
 	checkAuthenticationPolicy = func(_self base.Service, sysUser *entity.SysUser,
 		loginDTO *dto.LoginDTO, policyDTOMap PolicyDTOMap) (res *base.Result, isLoop bool) {
 		policyParam := loginDTO.PolicyParam
@@ -225,10 +231,12 @@ func (_self *SysLoginPolicyChain) Do(sysUser *entity.SysUser, loginDTO *dto.Logi
 		if isLoop {
 			loopChain = append(loopChain, chain[i])
 		}
-		if res == nil || !res.IsSuccess() {
+		if res == nil {
 			continue
 		}
-		return
+		if !res.IsSuccess() {
+			return
+		}
 	}
 	for i := range loopChain {
 		_self.Context.Set("status", "second")

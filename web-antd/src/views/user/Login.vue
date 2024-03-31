@@ -1,20 +1,20 @@
 <template>
   <div class="main">
     <a-form id="formLogin" class="user-layout-login" ref="formLogin" :form="form" @submit="handleSubmit">
+      <a-alert
+        v-if="isLoginAlert"
+        :type="loginAlertType"
+        showIcon
+        style="margin-bottom: 24px"
+        :message="this.loginAlertMessage"
+      />
       <a-tabs
         :activeKey="customActiveKey"
+        :animated="false"
         :tabBarStyle="{ textAlign: 'center', borderBottom: 'unset' }"
         @change="handleTabClick"
       >
-
-        <a-tab-pane key="tab1" :tab="$t('user.login.tab-login-credentials')">
-          <a-alert
-            v-if="isLoginError"
-            type="error"
-            showIcon
-            style="margin-bottom: 24px"
-            :message="this.loginFailureMessage"
-          />
+        <a-tab-pane key="firstTab" v-if="state.firstTab" :tab="$t('user.login.tab-login-credentials')">
           <a-form-item>
             <a-input
               size="large"
@@ -60,8 +60,8 @@
             </a-input>
           </a-form-item>
         </a-tab-pane>
-        <!--
-        <a-tab-pane key="tab2" :tab="$t('user.login.tab-login-mobile')">
+        <a-tab-pane key="emailTab" v-if="state.emailTab" tab="邮箱认证">
+          <!--
           <a-form-item>
             <a-input
               size="large"
@@ -78,6 +78,7 @@
               <a-icon slot="prefix" type="mobile" :style="{ color: 'rgba(0,0,0,.25)' }" />
             </a-input>
           </a-form-item>
+-->
 
           <a-row :gutter="16">
             <a-col class="gutter-row" :span="16">
@@ -103,13 +104,43 @@
                 class="getCaptcha"
                 tabindex="-1"
                 :disabled="state.smsSendBtn"
-                @click.stop.prevent="getCaptcha"
+                @click.stop.prevent="(e)=>sendEmailCode(e,'email')"
                 v-text="(!state.smsSendBtn && $t('user.register.get-verification-code')) || state.time + ' s'"
               ></a-button>
             </a-col>
           </a-row>
         </a-tab-pane>
-        -->
+        <a-tab-pane key="otpTab" v-if="state.otpTab" tab="动态令牌认证">
+          <a-row :gutter="16">
+            <a-col class="gutter-row" :span="16">
+              <a-form-item>
+                <a-input
+                  size="large"
+                  type="text"
+                  :placeholder="$t('user.login.mobile.verification-code.placeholder')"
+                  v-decorator="[
+                    'captcha',
+                    {
+                      rules: [{ required: true, message: $t('user.verification-code.required') }],
+                      validateTrigger: 'blur',
+                    },
+                  ]"
+                >
+                  <a-icon slot="prefix" type="scan" :style="{ color: 'rgba(0,0,0,.25)' }" />
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col class="gutter-row" :span="8">
+              <a-button
+                class="getCaptcha"
+                tabindex="-1"
+                :disabled="state.smsSendBtn"
+                @click.stop.prevent="(e)=>sendEmailCode(e,'otp')"
+                v-text="(!state.smsSendBtn && $t('user.register.get-verification-code')) || state.time + ' s'"
+              ></a-button>
+            </a-col>
+          </a-row>
+        </a-tab-pane>
       </a-tabs>
 
       <a-form-item>
@@ -162,7 +193,7 @@
 import TwoStepCaptcha from '@/components/tools/TwoStepCaptcha'
 import { mapActions } from 'vuex'
 import { timeFix } from '@/utils/util'
-import { getSmsCaptcha, getCaptcha } from '@/api/login'
+import { getCaptcha } from '@/api/login'
 
 export default {
   components: {
@@ -170,23 +201,36 @@ export default {
   },
   data () {
     return {
-      customActiveKey: 'tab1',
+      customActiveKey: 'firstTab',
       loginBtn: false,
       // login type: 0 email, 1 username, 2 telephone
       loginType: 0,
-      isLoginError: false,
+      isLoginAlert: false,
+      loginAlertType: 'error',
       requiredTwoStepCaptcha: false,
       stepCaptchaVisible: false,
       b64s: '',
       cid: '',
+      loginPolicyParam: {
+        loginName: '',
+        policyParam: {
+          sessionId: '',
+          policyCode: '',
+          operate: 0,
+          val: ''
+        }
+      },
       form: this.$form.createForm(this),
-      loginFailureMessage: '',
+      loginAlertMessage: '',
       state: {
         time: 60,
         loginBtn: false,
         // login type: 0 email, 1 username, 2 telephone
         loginType: 0,
-        smsSendBtn: false
+        smsSendBtn: false,
+        firstTab: true,
+        emailTab: false,
+        otpTab: false
       }
     }
   },
@@ -228,7 +272,67 @@ export default {
     },
     handleTabClick (key) {
       this.customActiveKey = key
-      // this.form.resetFields()
+      this.form.resetFields()
+      switch (key) {
+        case 'emailTab':
+          this.loginPolicyParam.policyParam.policyCode = 'email'
+          break
+        case 'otpTab':
+          this.loginPolicyParam.policyParam.policyCode = 'otp'
+          break
+      }
+    },
+    doLogin: function (loginParams) {
+      this.Login(loginParams)
+        .then((res) => {
+          const { code, message, data } = res
+          if (code === 200) {
+            this.loginSuccess(res)
+            return
+          } else if (code === 201) {
+            // 加载策略
+            this.loginPolicyParam = {
+              loginName: loginParams.loginName,
+              policyParam: {
+                sessionId: data.sessionId
+              }
+            }
+            this.state.time = -1
+            this.state.firstTab = false
+            this.state.emailTab = false
+            this.state.otpTab = false
+            if (data.policyCode.includes('otp')) {
+              this.state.otpTab = true
+              this.handleTabClick('otpTab')
+              // this.$forceUpdate()
+            }
+            if (data.policyCode.includes('email')) {
+              this.state.emailTab = true
+              this.handleTabClick('emailTab')
+              // this.$forceUpdate()
+            }
+          } else if (code === 203) {
+            if (loginParams.policyParam && loginParams.policyParam.operate === 0) {
+              const {
+                state
+              } = this
+              const interval = window.setInterval(() => {
+                if (state.time-- <= 0) {
+                  state.time = 60
+                  state.smsSendBtn = false
+                  window.clearInterval(interval)
+                }
+              }, 1000)
+              this.state.smsSendBtn = true
+            }
+          }
+          this.isLoginAlert = true
+          this.loginAlertType = 'info'
+          this.loginAlertMessage = message
+        }).catch((err) => this.requestFailed(err))
+        .finally(() => {
+          this.state.loginBtn = false
+        })
     },
     handleSubmit (e) {
       e.preventDefault()
@@ -236,28 +340,34 @@ export default {
         form: { validateFields },
         state,
         customActiveKey,
-        Login,
         cid
       } = this
 
       state.loginBtn = true
 
-      const validateFieldsKey = customActiveKey === 'tab1' ? ['username', 'password', 'code'] : ['mobile', 'captcha']
+      const validateFieldsKey = customActiveKey === 'firstTab' ? ['username', 'password', 'code'] : ['captcha']
 
       validateFields(validateFieldsKey, { force: true }, (err, values) => {
         if (!err) {
-          const loginParams = { ...values, cid: cid }
-          delete loginParams.username
+          let loginParams
+          if (customActiveKey === 'firstTab') {
+            loginParams = { ...values, cid: cid }
+            delete loginParams.username
+            // console.log('login form', loginParams)
+            loginParams.loginName = values.username
+          } else {
+            this.loginPolicyParam.policyParam.val = values.captcha
+            this.loginPolicyParam.policyParam.operate = 1
+            loginParams = this.loginPolicyParam
+          }
+          // const loginParams = { ...values, cid: cid }
+          // delete loginParams.username
+          // loginParams.loginName = values.username
+
           // console.log('login form', loginParams)
-          loginParams.loginName = values.username
           // loginParams[!state.loginType ? 'email' : 'username'] = values.username
           // loginParams.password = md5(values.password)
-          Login(loginParams)
-            .then((res) => this.loginSuccess(res))
-            .catch((err) => this.requestFailed(err))
-            .finally(() => {
-              state.loginBtn = false
-            })
+          this.doLogin(loginParams)
         } else {
           setTimeout(() => {
             state.loginBtn = false
@@ -265,14 +375,20 @@ export default {
         }
       })
     },
-    getCaptcha (e) {
+    sendEmailCode (e, code) {
       e.preventDefault()
-      const {
+
+      this.loginPolicyParam.policyParam.operate = 0
+      this.loginPolicyParam.policyParam.policyCode = code
+      this.doLogin(this.loginPolicyParam)
+
+      // const hide = this.$message.loading('验证码发送中..', 0)
+     /* const {
         form: { validateFields },
         state
-      } = this
+      } = this */
 
-      validateFields(['mobile'], { force: true }, (err, values) => {
+      /* validateFields(['mobile'], { force: true }, (err, values) => {
         if (!err) {
           state.smsSendBtn = true
 
@@ -302,7 +418,7 @@ export default {
               this.requestFailed(err)
             })
         }
-      })
+      }) */
     },
     stepCaptchaSuccess () {
       this.loginSuccess()
@@ -335,12 +451,15 @@ export default {
           description: `${timeFix()}，欢迎回来`
         })
       }, 1000)
-      this.isLoginError = false
+      this.isLoginAlert = false
     },
     requestFailed (err) {
-      this.isLoginError = true
-      this.loginFailureMessage = err.message
-      this.refreshCode()
+      this.isLoginAlert = true
+      this.loginAlertType = 'error'
+      this.loginAlertMessage = err.message
+      if (this.customActiveKey === 'firstTab') {
+        this.refreshCode()
+      }
      /* this.$notification['error']({
         message: '错误',
         description: ((err.response || {}).data || {}).message || '请求出现错误，请稍后再试',
