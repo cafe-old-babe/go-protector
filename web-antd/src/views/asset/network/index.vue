@@ -1,48 +1,54 @@
 <template>
   <div>
     <a-card :bordered="false" >
+      <div class="table-page-search-wrapper">
+        <a-form layout="inline">
+          <a-row :gutter="48">
+            <a-col :md="8" :sm="24">
+              <a-form-item label="名称">
+                <a-input v-model="queryParam.anName" placeholder="" />
+              </a-form-item>
+            </a-col>
+            <a-col :md="8" :sm="24">
+              <a-form-item label="IP">
+                <a-input v-model="queryParam.anIp" placeholder="" />
+              </a-form-item>
+            </a-col>
+
+            <a-col :md="8" :sm="24">
+              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
+              <a-button style="margin-left: 8px" @click="() => (this.queryParam = {})">重置</a-button>
+            </a-col>
+          </a-row>
+        </a-form>
+      </div>
       <div class="table-operator">
-        <a-button type="primary" @click="loadData">刷新</a-button>
-        <a-button type="primary" @click="handleAdd">新建</a-button>
+        <a-button
+          type="primary"
+          @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
         <a-button type="danger" @click="deleteBatch">批量删除</a-button>
       </div>
-      <a-table
+      <s-table
         ref="table"
         rowKey="id"
         :loading="loading"
         :columns="columns"
-        :data-source="data"
+        :data="loadData"
         :rowSelection="rowSelection"
-        :pagination="false"
+        :showSizeChanger="true"
       >
         <span slot="serial" slot-scope="{index}">
           {{ index + 1 }}
         </span>
-        <div slot="status" slot-scope="text,current">
-          <a v-if="current.menuType!==2">
-            <a-tooltip
-              placement="left"
-              :title="current.hidden===0?'点击隐藏':'点击显示'"
-              :get-popup-container="(trigger) => trigger.parentElement">
-              <a-tag
-                :color="current.hidden===0?'green':'red'"
-                @click="changeStatus(current)"
-              >
-                {{ current.hidden===0?'显示':'隐藏' }}
-              </a-tag>
-            </a-tooltip>
-          </a>
-        </div>
         <span slot="action" slot-scope="text, current">
           <a style="margin-right: 8px" @click="editRecord(current)"> <a-icon type="edit" />编辑 </a>
-          <a v-action:delete @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
+          <a @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
         </span>
-      </a-table>
+      </s-table>
     </a-card>
     <Edit
       :visible="editVisible"
       :record="record"
-      :menu-tree-data="menuTreeData"
       @close="editClose"
       @ok="editOk"
     />
@@ -66,20 +72,13 @@ export default {
       selectedRowKeys: [],
       selectedRows: [],
       record: {},
-      data: [],
-      menuTreeData: [],
-      loadData: () => {
-        this.loading = true
-        return request.post('/menu/list', { }).then((res) => {
+      loadData: (parameter) => {
+        return request.post('/asset-network/page', parameter).then((res) => {
           const { code, data, message } = res
           if (code === 200) {
-            this.setMenuTreeData([JSON.parse(JSON.stringify(data))])
-            this.data = data.children
-          } else {
-            this.$message.error(message)
+            return data
           }
-        }).finally(() => {
-          this.loading = false
+          return new Error(message)
         })
       }
     }
@@ -91,9 +90,6 @@ export default {
         onChange: this.onSelectChange
       }
     }
-  },
-  created() {
-    this.loadData()
   },
   methods: {
     onSelectChange(selectedRowKeys, selectedRows) {
@@ -119,11 +115,11 @@ export default {
 
       if (!confirm) {
         this.loading = true
-        request.post('/menu/delete', param).then(res => {
+        request.post('/asset-network/delete', param).then(res => {
           const { code, message } = res
           if (code === 200) {
             this.$message.success(message ?? '删除成功')
-            this.loadData()
+            this.$refs.table.refresh(false)
           } else {
             this.$message.error(message)
             this.loading = false
@@ -133,7 +129,7 @@ export default {
       }
       this.$confirm({
         title: '确认删除',
-        content: '同时删除关联关系,是否删除选择数据?',
+        content: '已使用的网络域无法删除,是否删除选择数据?',
         okText: '确认',
         okType: 'danger',
         cancelText: '取消',
@@ -141,49 +137,13 @@ export default {
         onOk: () => this.doDelete(param, false)
       })
     },
-    handleAdd: function () {
-      this.editVisible = true
-    },
     editOk: function () {
       this.editClose()
-      this.loadData()
+      this.$refs.table.refresh(false)
     },
     editClose: function () {
       this.editVisible = false
       this.record = {}
-    },
-    changeStatus: function(record) {
-      const url = '/dict/data/' + record.id + '/' + (record.status ^ 1)
-      this.loading = true
-      request.post(url).then(res => {
-        // console.log(res)
-        const resData = res?.data ?? {}
-        if (resData.code === 200) {
-          this.getData()
-        } else {
-          this.$message.warning(resData.message)
-        }
-      }).finally(() => {
-        this.loading = false
-      })
-      // console.log(record, 'changeStatus')
-    },
-    setMenuTreeData: function (data) {
-      this.menuTreeData = data
-      this.menuTreeData.forEach(e => {
-        if (e.children && e.children.length > 0) {
-          this.deleteButton(e)
-        }
-      })
-    },
-    deleteButton: function (data) {
-      if (data.menuType === 1) {
-        data.children = []
-        return
-      }
-      data.children?.forEach(elem => {
-        this.deleteButton(elem)
-      })
     }
 
   }

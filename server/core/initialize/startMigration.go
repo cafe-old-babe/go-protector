@@ -29,6 +29,7 @@ func StartMigration() (err error) {
 			&entity.SysPostRelation{},
 			&entity.SysLoginPolicy{},
 			&entity.SysOtpBind{},
+			&entity.AssetNetwork{},
 		)
 	return err
 }

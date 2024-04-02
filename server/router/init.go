@@ -10,4 +10,5 @@ func Init(routerGroup *gin.RouterGroup) {
 	initSysRole(routerGroup)
 	initSysPost(routerGroup)
 	initSysLoginPolicy(routerGroup)
+	initAssetNetwork(routerGroup)
 }

@@ -12,4 +12,5 @@ const (
 	SysPostRelation        = "sys_post_relation"
 	SysLoginPolicy         = "sys_login_policy"
 	SysOtpBind             = "sys_otp_bind"
+	AssetNetwork           = "asset_network"
 )
