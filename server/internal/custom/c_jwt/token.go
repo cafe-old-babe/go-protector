@@ -75,8 +75,10 @@ func ParserToken(jwtString *string) (userPointer *current.User, err error) {
 	// 如果token的未过有效期, 但token时效性过期了,更换token
 	tokenTimeout := config.GetConfig().Jwt.TokenTimeout
 	if !iat.Add(time.Minute * time.Duration(tokenTimeout)).After(time.Now()) {
-		jwtString, err = ReGenerateToken(jwtString, userPointer)
-
+		var newJwtString *string
+		if newJwtString, err = ReGenerateToken(jwtString, userPointer); err != nil {
+			*jwtString = *newJwtString
+		}
 	}
 	return
 }

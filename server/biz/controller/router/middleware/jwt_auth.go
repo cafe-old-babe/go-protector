@@ -55,13 +55,12 @@ func JwtAuth() gin.HandlerFunc {
 			return
 		}
 		c.Request = c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))
-		if oldTokenStr != tokenStr {
-			c.Writer.Header().Set(consts.AuthHeaderKey, tokenStr)
-			c_logger.GetLogger(c).Info("-------------------")
-			c_logger.GetLogger(c).Info("old: %s", oldTokenStr)
-			c_logger.GetLogger(c).Info("new: %s", tokenStr)
-			c_logger.GetLogger(c).Info("-------------------")
-		}
 
+		if oldTokenStr != tokenStr {
+			//c.Header(consts.AuthHeaderKey, tokenStr)
+			c.Writer.Header().Set(consts.AuthHeaderKey, tokenStr)
+
+		}
+		c.Next()
 	}
 }
