@@ -2,8 +2,10 @@ package c_jwt
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"go-protector/server/internal/cache"
 	"go-protector/server/internal/config"
 	"go-protector/server/internal/consts"
@@ -46,14 +48,17 @@ func GenerateToken(currentUser *current.User) (jwtStringPointer *string, expireA
 	}
 	jwtStringPointer = &jwtString
 	redisClient := cache.GetRedisClient()
-	key := fmt.Sprintf(consts.OnlineUserCacheKeyFmt, currentUser.LoginName)
-	err = redisClient.HSet(context.TODO(), key, currentUser.SessionId, jwtString).Err()
+	key := fmt.Sprintf(consts.OnlineUserCacheKeyFmt, currentUser.LoginName, currentUser.SessionId)
+	err = redisClient.Set(context.TODO(), key, jwtString, duration).Err()
 	return
 }
 
 // ParserToken 解析token
 func ParserToken(jwtString *string) (userPointer *current.User, err error) {
-	// todo  check redis --> token
+
+	if err = DoCheckTokenEffective(jwtString, userPointer); err != nil {
+		return
+	}
 
 	token, err := jwt.NewParser().ParseWithClaims(*jwtString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
@@ -83,14 +88,52 @@ func ParserToken(jwtString *string) (userPointer *current.User, err error) {
 	return
 }
 
+// DoCheckTokenEffective check redis --> token
+func DoCheckTokenEffective(jwtToken *string, currentUser *current.User) (err error) {
+	keyFmt := consts.OnlineUserCacheKeyFmt
+
+	redisClient := cache.GetRedisClient()
+	var currentJwt string
+	var key string
+	for {
+		key = fmt.Sprintf(keyFmt, currentUser.LoginName, currentUser.SessionId)
+		currentJwt, err = redisClient.Get(context.Background(), key).Result()
+		if err != nil {
+			if !errors.Is(err, redis.Nil) {
+				return
+			}
+		}
+		if currentJwt == *jwtToken {
+			// effective
+			err = nil
+			return
+		}
+
+		if keyFmt != consts.OnlineUserCacheLastKeyFmt {
+			keyFmt = consts.OnlineUserCacheLastKeyFmt
+			continue
+		}
+		err = c_error.ErrAuthFailure
+		return
+
+	}
+
+}
+
 // ReGenerateToken 重新生成Token,将之前的老token缓存一下
 func ReGenerateToken(jwtString *string, currentUser *current.User) (newJwtTString *string, err error) {
 	if jwtString == nil || len(*jwtString) <= 0 {
 		err = c_error.ErrParamInvalid
 		return
 	}
-	//redis := cache.GetRedis()
-	// todo 并发换token
+	redisClient := cache.GetRedisClient()
+	key := fmt.Sprintf(consts.OnlineUserCacheLastKeyFmt, currentUser.LoginName, currentUser.SessionId)
+	var setStatus bool
+	// 并发换token
+	if setStatus, err = redisClient.SetNX(context.Background(), key, jwtString, time.Minute).Result(); err != nil || !setStatus {
+		return
+	}
+
 	newJwtTString, _, err = GenerateToken(currentUser)
 	return
 }

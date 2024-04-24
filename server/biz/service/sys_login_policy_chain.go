@@ -154,17 +154,23 @@ var (
 		}
 		isLoop = true
 		redisClient := cache.GetRedisClient()
-		key := fmt.Sprintf(consts.OnlineUserCacheKeyFmt, loginDTO.LoginName)
+		key := fmt.Sprintf(consts.OnlineUserCacheKeyFmt, loginDTO.LoginName, "*")
+		scan := redisClient.Scan(_self.Context, 0, key, 0)
+		if scan.Err() != nil {
+			res = base.ResultFailureErr(scan.Err())
+			return
+		}
+		var keys []string
+		iterator := scan.Iterator()
+		for iterator.Next(_self.Context) {
+			if loginPolicyDTO.SingleOnlineOperate == 0 {
+				res = base.ResultFailureMsg("该账号正在使用中,请稍后再试")
+				return
+			}
+			keys = append(keys, iterator.Val())
+		}
 
-		keys, err := redisClient.HKeys(_self.Context, key).Result()
-		if err != nil {
-			return
-		}
 		if len(keys) <= 0 {
-			return
-		}
-		if loginPolicyDTO.SingleOnlineOperate == 0 {
-			res = base.ResultFailureMsg("该账号正在使用中,请稍后再试")
 			return
 		}
 		value, exists := _self.Context.Get("status")
@@ -172,7 +178,7 @@ var (
 			return
 		}
 		if value == "second" {
-			if _, err := redisClient.HDel(_self.Context, key, keys...).Result(); err != nil {
+			if _, err := redisClient.Del(_self.Context, keys...).Result(); err != nil {
 				res = base.ResultFailureMsg("系统繁忙,请稍后再试")
 				return
 			}

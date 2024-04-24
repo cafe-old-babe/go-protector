@@ -57,8 +57,10 @@ const (
 )
 
 const (
-	// OnlineUserCacheKeyFmt 存放在线用户 -> online:{登录名}
-	OnlineUserCacheKeyFmt = CachePrefix + ":online:%s"
+	// OnlineUserCacheKeyFmt 存放在线用户 -> online:{登录名}:{sessionId}
+	OnlineUserCacheKeyFmt = CachePrefix + ":online:%s:%s"
+	// OnlineUserCacheLastKeyFmt 换token之前保留当前token 最后一个有效token
+	OnlineUserCacheLastKeyFmt = OnlineUserCacheKeyFmt + ":last"
 	// LoginPolicyCacheKeyFmt 存放策略 -> login:{登录名}:{sessionId}:policy
 	LoginPolicyCacheKeyFmt = CachePrefix + ":login:%s:%s:policy"
 	// LoginIntruderCacheKeyFmt 防爆破策略 -> login:intruder:{day}:{登录名}
