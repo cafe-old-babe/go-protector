@@ -3,6 +3,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 go get -u github.com/spf13/cobra
 go get github.com/spf13/cobra-cli
 go install github.com/spf13/cobra-cli
+cobra-cli  init
 */
 package cmd
 

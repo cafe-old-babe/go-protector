@@ -1,0 +1,319 @@
+package service
+
+import (
+	"errors"
+	"fmt"
+	"go-protector/server/biz/model/dao"
+	"go-protector/server/biz/model/dto"
+	"go-protector/server/biz/model/entity"
+	"go-protector/server/internal/base"
+	"go-protector/server/internal/consts/table_name"
+	"go-protector/server/internal/custom/c_error"
+	"go-protector/server/internal/database/condition"
+	"go-protector/server/internal/utils"
+	"go-protector/server/internal/utils/sshCli"
+	"golang.org/x/crypto/ssh"
+	"gorm.io/gorm"
+)
+
+var findAssetInfoAccountSliceMap = map[string]func(base.IService, []uint64) ([]entity.AssetInfoAccount, error){}
+
+func init() {
+	findAssetInfoAccountSliceMap["asset"] = func(_self base.IService, ids []uint64) (slice []entity.AssetInfoAccount, err error) {
+		return findAssetInfoAccountSliceByIds(_self, ids)
+	}
+	findAssetInfoAccountSliceMap["account"] = func(_self base.IService, ids []uint64) ([]entity.AssetInfoAccount, error) {
+		var accountService AssetAccount
+		_self.MakeService(&accountService)
+		return accountService.FindAssetInfoAccountSliceByIds(ids)
+	}
+
+}
+
+type AssetInfo struct {
+	base.Service
+}
+
+func (_self *AssetInfo) Page(req *dto.AssetInfoPageReq) (res *base.Result) {
+	var err error
+	var assetInfoSlice []*entity.AssetInfo
+	var count int64
+	defer func() {
+		if res != nil {
+			return
+		}
+		if err != nil {
+			res = base.ResultFailureErr(err)
+			return
+		}
+		res = base.ResultPage(assetInfoSlice, req, count)
+		return
+	}()
+	if req == nil {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	tx := _self.DB.Scopes(
+		condition.Paginate(req),
+		condition.Like(table_name.AssetBasic+".asset_name", req.AssetName),
+		condition.Like(table_name.AssetBasic+".IP", req.IP),
+		func(db *gorm.DB) *gorm.DB {
+			if len(req.GroupIds) > 0 {
+				db = db.Where(table_name.AssetBasic+".asset_group_id in ?", req.GroupIds)
+			}
+			return db
+		},
+	)
+	err = tx.Joins("AssetGateway").
+		Joins("ManagerUser").
+		Joins("AssetGroup").
+		Joins("RootAcc", _self.DB.Where("account_type = ?", "0")).
+		//Joins("left join " + table_name.AssetAccount +
+		//	" on " + table_name.AssetBasic + ".id = " + table_name.AssetAccount + ".asset_id and account_type = '0' ").
+		Find(&assetInfoSlice).
+		Limit(-1).Offset(-1).Count(&count).Error
+	if err != nil {
+		return
+	}
+	var accountService AssetAccount
+	_self.MakeService(&accountService)
+
+	// 清空密码
+	for i := range assetInfoSlice {
+		assetInfoSlice[i].RootAcc.Password = ""
+	}
+	return
+}
+
+// Save 保存资产信息
+func (_self *AssetInfo) Save(req *dto.AssetInfoSaveReq) (res *base.Result) {
+	_self.DB = _self.DB.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			res = base.ResultFailureMsg(fmt.Sprintf("%s", err))
+			goto rollback
+		}
+		if res.IsSuccess() {
+			_self.DB.Commit()
+			return
+		}
+	rollback:
+		_self.DB.Rollback()
+	}()
+	// 校验资产信息
+	assetBasic := entity.AssetBasic{
+		ModelId:        entity.ModelId{ID: req.ID},
+		AssetName:      req.AssetName,
+		AssetGroupId:   req.GroupId,
+		IP:             req.IP,
+		Port:           req.Port,
+		AssetGatewayId: req.AssetGatewayId,
+		ManagerUserId:  req.ManagerUserId,
+	}
+	res = _self.SimpleSave(&assetBasic, func() error {
+		return dao.AssetBasic.CheckSave(_self.DB, assetBasic)
+
+	})
+	if !res.IsSuccess() {
+		return
+	}
+	//privilegeAccount := req.PrivilegeAccount
+	accountModel := entity.AssetAccount{
+		Account:       req.Account,
+		Password:      req.Password,
+		AccountType:   "0",
+		AccountStatus: "0",
+		AssetId:       assetBasic.ID,
+	}
+	var accountService AssetAccount
+	_self.MakeService(&accountService)
+	res = accountService.Save(&accountModel)
+
+	return
+}
+
+func (_self *AssetInfo) Delete(idsReq *base.IdsReq) (res *base.Result) {
+	if idsReq == nil {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	var ids []uint64
+	if ids = idsReq.GetIds(); len(ids) <= 0 {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	if err := _self.DB.Transaction(func(tx *gorm.DB) (err error) {
+		// 删除资产
+		if err = tx.Delete(&entity.AssetBasic{}, ids).Error; err != nil {
+			return
+		}
+		// 删除从账号
+		err = dao.AssetAccount.DeleteByAssetId(tx, ids)
+		// todo 删除授权
+
+		return
+	}); err != nil {
+		res = base.ResultFailureErr(err)
+
+	}
+
+	return
+}
+
+// Collectors 采集资产信息
+func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collectorsType string) (res *base.Result) {
+	if len(collectorsType) <= 0 || idsReq == nil {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	ids := idsReq.GetIds()
+	if len(ids) <= 0 {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+	}
+
+	var collectorsFunc func(base.IService, []uint64) ([]entity.AssetInfoAccount, error)
+	var ok bool
+	if collectorsFunc, ok = findAssetInfoAccountSliceMap[collectorsType]; !ok {
+		collectorsFunc = func(base.IService, []uint64) ([]entity.AssetInfoAccount, error) {
+			return nil, c_error.ErrParamInvalid
+		}
+	}
+
+	/* 1.0
+	switch collectorsType {
+	case "asset":
+		collectorsFunc = func() (slice []entity.AssetInfoAccount, err error) {
+			err = _self.DB.Joins("Accounts").Find(&slice).Error
+			return
+		}
+	case "account":
+		collectorsFunc = func() ([]entity.AssetInfoAccount, error) {
+			var accountService AssetAccount
+			_self.MakeService(&accountService)
+			return accountService.FindAssetInfoAccountSliceByIds(ids)
+		}
+	default:
+		collectorsFunc = func() ([]entity.AssetInfoAccount, error) {
+			return nil, c_error.ErrParamInvalid
+		}
+	}
+	slice, err := collectorsFunc()
+	*/
+
+	slice, err := collectorsFunc(_self, ids)
+
+	if err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+
+	if slice == nil || len(slice) <= 0 {
+		res = base.ResultFailureMsg("无采集信息")
+		return
+	}
+
+	res = _self.DoCollectors(slice)
+
+	// 添加采集任务
+
+	return
+}
+
+func (_self *AssetInfo) FindAssetInfoAccountSliceByIds(ids []uint64) (slice []entity.AssetInfoAccount, err error) {
+	return findAssetInfoAccountSliceByIds(_self, ids)
+}
+
+func findAssetInfoAccountSliceByIds(_self base.IService, ids []uint64) (slice []entity.AssetInfoAccount, err error) {
+	if ids == nil || len(ids) <= 0 {
+		return
+	}
+	err = _self.GetDB().Joins("AssetGateway").Preload("Account").Find(&slice).Error
+	var accountService AssetAccount
+	_self.MakeService(&accountService)
+	var rootAccMap map[uint64]entity.AssetAccount
+
+	asseIdSlice := utils.SliceToFieldSlice[uint64]("ID", slice)
+	// 继承与面向对象的区别->组合方式继承,无法使用 accountService.FillAssetInfoRootAcc(slice)
+	rootAccMap, err = accountService.FindRootAccMapByAssetIdSlice(asseIdSlice)
+	if len(rootAccMap) <= 0 {
+		return
+	}
+	for i, elem := range slice {
+		(slice)[i].RootAcc, _ = rootAccMap[elem.ID]
+	}
+	return
+}
+
+// DoCollectors 开始采集
+func (_self *AssetInfo) DoCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
+	return _self.syncDoCollectors(slice)
+}
+
+// 同步采集
+func (_self *AssetInfo) syncDoCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
+	if slice == nil || len(slice) <= 0 {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	//var deStr string
+	var err error
+	var cli *ssh.Client
+	cmdFmt := "cat /etc/passwd | grep ^%s  &&  cat /etc/shadow | grep ^%s"
+	var accountCollectorsDTO []dto.AccountAnalysisExtendDTO
+	for _, assetInfo := range slice {
+		if len(assetInfo.Accounts) <= 0 {
+			continue
+		}
+		//if deStr, err = gm.Sm4DecryptCBC(assetInfo.RootAcc.Password); err != nil {
+		//	accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
+		//		AssetId: assetInfo.ID,
+		//		Err:     errors.Join(errors.New("密码解密失败"), err),
+		//	})
+		//	continue
+		//}
+		if cli, err = sshCli.Connect(&sshCli.ConnectDTO{
+			ID:       assetInfo.ID,
+			IP:       assetInfo.IP,
+			Port:     assetInfo.Port,
+			Username: assetInfo.RootAcc.Account,
+			Password: assetInfo.RootAcc.Password,
+			Timeout:  0,
+		}); err != nil {
+			accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
+				AssetId: assetInfo.ID,
+				Err:     errors.Join(errors.New("连接失败"), err),
+			})
+			continue
+		}
+
+		var session *ssh.Session
+		session, err = cli.NewSession()
+		if err != nil {
+			// 保存错误信息
+			accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
+				AssetId: assetInfo.ID,
+				Err:     errors.Join(errors.New("创建会话失败"), err),
+			})
+			continue
+		}
+
+		for _, account := range assetInfo.Accounts {
+			// -1收集从账号,0-特权账号 不采集
+			if account.AccountType == "-1" || account.AccountType == "0" {
+				continue
+			}
+			collectorsDTO := dto.AccountAnalysisExtendDTO{
+				ID:      account.ID,
+				In:      fmt.Sprintf(cmdFmt, account.Account, account.Account),
+				AssetId: assetInfo.ID,
+			}
+			collectorsDTO.Out, collectorsDTO.Err = session.Output(collectorsDTO.In)
+			collectorsDTO.Err = errors.Join(errors.New("执行命令失败"), collectorsDTO.Err)
+			accountCollectorsDTO = append(accountCollectorsDTO, collectorsDTO)
+		}
+	}
+	var accountService AssetAccount
+	_self.MakeService(&accountService)
+
+	return accountService.AnalysisExtend(accountCollectorsDTO)
+}

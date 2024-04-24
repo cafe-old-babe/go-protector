@@ -68,6 +68,8 @@ export default {
           if (data.children && data.children.length > 0) {
             res.data = data.children
             this.deptTreeData = res.data
+          } else {
+            res.data = []
           }
 
           return res

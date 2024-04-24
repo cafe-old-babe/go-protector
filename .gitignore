@@ -26,3 +26,5 @@ GoProtector*
 *.test
 
 
+ssh_test.go
+
