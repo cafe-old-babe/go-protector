@@ -13,10 +13,9 @@ type AssetAccountAccessReq struct {
 
 type AssetAccountPageReq struct {
 	base.Pagination
-	GroupId   []uint64 `json:"groupId,omitempty"`
-	Account   string   `json:"account,omitempty"`
-	AssetName string   `json:"assetName,omitempty"`
-	IP        string   `json:"IP,omitempty"`
+	Account   string `json:"account,omitempty"`
+	AssetName string `json:"assetName,omitempty"`
+	IP        string `json:"ip,omitempty"`
 }
 
 type AccountAnalysisExtendDTO struct {

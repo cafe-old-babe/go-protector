@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"go-protector/server/biz/model/dao"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
@@ -27,17 +28,19 @@ func (_self *AssetAccount) Page(req *dto.AssetAccountPageReq) (res *base.Result)
 		return
 	}
 	var slice []entity.AssetAccount
-	tx := _self.DB.Scopes(
+	tx := _self.DB.Omit(table_name.AssetAccount+".password").Scopes(
 		condition.Paginate(req),
 		condition.Like(table_name.AssetAccount+".account", req.Account),
-		func(db *gorm.DB) *gorm.DB {
-			if len(req.GroupId) > 0 {
-				db = db.Where("AssetBasic.group_id in ?", req.GroupId)
-			}
-			return db
-		},
+		condition.Like("AssetBasic.ip", req.IP),
+		condition.Like("AssetBasic.asset_name", req.AssetName),
 	)
-	count, err := _self.Count(tx.Joins("AssetBasic").Joins("Extend").Find(&slice))
+	count, err := _self.Count(
+		tx.Joins("AssetBasic").
+			Joins("Extend").
+			Order("AssetBasic.created_at desc").
+			Order(table_name.AssetAccount + ".account_status").
+			Order(table_name.AssetAccount + ".account_type").
+			Find(&slice))
 
 	if err != nil {
 		res = base.ResultFailureErr(err)
@@ -264,10 +267,25 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 
 // Save 保存
 func (_self *AssetAccount) Save(model *entity.AssetAccount) (res *base.Result) {
-
 	res = _self.SimpleSave(model, func() error {
 		return dao.AssetAccount.CheckSave(_self.DB, model)
 	})
+	return
+}
 
+// CheckBatchDeleteByIds 批量删除检查
+func (_self *AssetAccount) CheckBatchDeleteByIds(ids []uint64) (err error) {
+	if len(ids) <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	var count int64
+	count, err = _self.Count(_self.DB.Model(&entity.AssetAccount{}).Where("account_type = '0' and id in ?", ids))
+	if err != nil {
+		return
+	}
+	if count > 0 {
+		err = errors.New("选中的从帐号中包括特权帐号,请核对后在操作")
+	}
 	return
 }

@@ -85,6 +85,7 @@
             prop="managerUserId"
           >
             <select-user
+              ref="selectUserRef"
               v-model="localRecord.managerUserId"
               :show-label="localRecord.managerUsername"
               placeholder="请选择资源管理员"/>
@@ -194,6 +195,7 @@ export default {
   },
   methods: {
     onClose() {
+      this.$refs.selectUserRef.removeUser()
       this.$emit('close')
     },
     handleSave() {
