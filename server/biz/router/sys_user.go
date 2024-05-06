@@ -36,7 +36,7 @@ func init() {
 var _sysUser sysUser
 
 type sysUser struct {
-	base.Api
+	base.Router
 }
 
 func (_self sysUser) Login(c *gin.Context) {

@@ -23,7 +23,7 @@ func init() {
 var _assetAccount assetAccount
 
 type assetAccount struct {
-	base.Api
+	base.Router
 }
 
 // Page 分页查询

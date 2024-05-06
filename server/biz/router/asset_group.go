@@ -22,7 +22,7 @@ func init() {
 var _assetGroup assetGroup
 
 type assetGroup struct {
-	base.Api
+	base.Router
 }
 
 func (_self assetGroup) Tree(c *gin.Context) {

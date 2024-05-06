@@ -31,7 +31,7 @@ func init() {
 var _sysDict sysDict
 
 type sysDict struct {
-	base.Api
+	base.Router
 }
 
 // region DictType

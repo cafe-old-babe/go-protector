@@ -25,7 +25,7 @@ func init() {
 var _assetGateway assetGateway
 
 type assetGateway struct {
-	base.Api
+	base.Router
 }
 
 func (_self assetGateway) Page(c *gin.Context) {

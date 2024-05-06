@@ -31,7 +31,7 @@ func init() {
 var _sysRole sysRole
 
 type sysRole struct {
-	base.Api
+	base.Router
 }
 
 // Page 分页查询

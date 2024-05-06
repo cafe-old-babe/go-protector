@@ -20,7 +20,7 @@ func init() {
 var _system system
 
 type system struct {
-	base.Api
+	base.Router
 }
 
 // GenerateCaptcha 获取验证码

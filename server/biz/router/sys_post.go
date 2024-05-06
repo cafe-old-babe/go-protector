@@ -25,7 +25,7 @@ func init() {
 var _sysPost sysPost
 
 type sysPost struct {
-	base.Api
+	base.Router
 }
 
 // Page 分页

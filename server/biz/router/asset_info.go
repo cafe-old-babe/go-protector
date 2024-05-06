@@ -23,7 +23,7 @@ func init() {
 var _assetBasic assetBasic
 
 type assetBasic struct {
-	base.Api
+	base.Router
 }
 
 func (_self assetBasic) Page(c *gin.Context) {

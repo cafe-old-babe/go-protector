@@ -22,7 +22,7 @@ func init() {
 var _sysLoginPolicy sysLoginPolicy
 
 type sysLoginPolicy struct {
-	base.Api
+	base.Router
 }
 
 func (_self sysLoginPolicy) Info(c *gin.Context) {
