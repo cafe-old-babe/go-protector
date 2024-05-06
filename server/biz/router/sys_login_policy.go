@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,7 +8,18 @@ import (
 	"go-protector/server/internal/custom/c_type"
 )
 
-var SysLoginPolicyApi sysLoginPolicy
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("sys-login-policy")
+		{
+			routerGroup.POST("/info", _sysLoginPolicy.Info)
+			routerGroup.POST("/save", _sysLoginPolicy.Save)
+
+		}
+	})
+}
+
+var _sysLoginPolicy sysLoginPolicy
 
 type sysLoginPolicy struct {
 	base.Api

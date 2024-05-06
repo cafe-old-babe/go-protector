@@ -3,8 +3,8 @@ package initialize
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go-protector/server/biz/controller/router"
-	"go-protector/server/biz/controller/router/middleware"
+	"go-protector/server/biz/router"
+	"go-protector/server/biz/router/middleware"
 	"go-protector/server/internal/config"
 	"go-protector/server/internal/consts"
 	"net/http"

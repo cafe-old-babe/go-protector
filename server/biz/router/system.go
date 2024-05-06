@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -7,7 +7,17 @@ import (
 	"go-protector/server/internal/custom/c_result"
 )
 
-var SystemApi system
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("system")
+		{
+			routerGroup.GET("/captcha", _system.GenerateCaptcha)
+			routerGroup.GET("/routes", _system.Routes)
+		}
+	})
+}
+
+var _system system
 
 type system struct {
 	base.Api

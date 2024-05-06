@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -10,7 +10,19 @@ import (
 	"strconv"
 )
 
-var SysPostApi sysPost
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("post")
+		{
+			routerGroup.POST("/page", _sysPost.Page)
+			routerGroup.POST("/list/:deptId", _sysPost.List)
+			routerGroup.POST("/save", _sysPost.Save)
+			routerGroup.POST("/delete", _sysPost.Delete)
+		}
+	})
+}
+
+var _sysPost sysPost
 
 type sysPost struct {
 	base.Api

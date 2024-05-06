@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -9,7 +9,20 @@ import (
 	"go-protector/server/internal/custom/c_result"
 )
 
-var AssetGateway assetGateway
+func init() {
+
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("asset-gateway")
+		{
+			routerGroup.POST("/page", _assetGateway.Page)
+			routerGroup.POST("/save", _assetGateway.Save)
+			routerGroup.POST("/delete", _assetGateway.Delete)
+		}
+	})
+
+}
+
+var _assetGateway assetGateway
 
 type assetGateway struct {
 	base.Api

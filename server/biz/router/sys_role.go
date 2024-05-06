@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,24 @@ import (
 	"strconv"
 )
 
-var SysRoleApi sysRole
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("role")
+		{
+			routerGroup.POST("/page", _sysRole.Page)
+			routerGroup.POST("/list", _sysRole.List)
+			routerGroup.POST("/save", _sysRole.Save)
+			routerGroup.POST("/getPermission/:roleId", _sysRole.GetPermission)
+			routerGroup.POST("/savePermission/:roleId", _sysRole.SavePermission)
+			routerGroup.POST("/setStatus/:roleId/:status", _sysRole.SetStatus)
+			routerGroup.POST("/delete", _sysRole.Delete)
+			//routerGroup.POST("/data/:id/:status", sysDictApi.DictDataUpdateStatus)
+
+		}
+	})
+}
+
+var _sysRole sysRole
 
 type sysRole struct {
 	base.Api

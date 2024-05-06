@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -10,7 +10,25 @@ import (
 	"go-protector/server/internal/custom/c_result"
 )
 
-var SysDictApi sysDict
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("dict")
+		{
+			routerGroup.POST("/type", _sysDict.DictTypePage)
+			routerGroup.POST("/type/save", _sysDict.DictTypeSave)
+			routerGroup.POST("/type/delete", _sysDict.DictTypeDelete)
+
+			routerGroup.POST("/data", _sysDict.DictDataPage)
+			routerGroup.POST("/dataList/:dictType", _sysDict.DictDataList)
+			routerGroup.POST("/data/save", _sysDict.DictDataSave)
+			routerGroup.POST("/data/delete", _sysDict.DictDataDelete)
+			routerGroup.POST("/data/:id/:status", _sysDict.DictDataUpdateStatus)
+
+		}
+	})
+}
+
+var _sysDict sysDict
 
 type sysDict struct {
 	base.Api

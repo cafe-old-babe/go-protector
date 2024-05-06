@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,7 +8,20 @@ import (
 	"go-protector/server/internal/custom/c_result"
 )
 
-var SysMenuApi sysMenu
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("menu")
+		{
+			routerGroup.POST("/list", _sysMenu.ListTree)
+			routerGroup.POST("/save", _sysMenu.Save)
+			routerGroup.POST("/delete", _sysMenu.Delete)
+			//routerGroup.POST("/data/:id/:status", sysDictApi.DictDataUpdateStatus)
+
+		}
+	})
+}
+
+var _sysMenu sysMenu
 
 type sysMenu struct {
 }

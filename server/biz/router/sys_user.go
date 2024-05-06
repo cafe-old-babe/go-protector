@@ -1,4 +1,4 @@
-package api
+package router
 
 import (
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,29 @@ import (
 	"go-protector/server/internal/custom/c_result"
 )
 
-var SysUserApi sysUser
+func init() {
+	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		routerGroup := group.Group("user")
+		{
+			routerGroup.POST("login", _sysUser.Login)
+			routerGroup.GET("info", _sysUser.UserInfo)
+			routerGroup.GET("nav", _sysUser.Nav)
+			routerGroup.POST("logout", _sysUser.Logout)
+			routerGroup.POST("setStatus", _sysUser.SetStatus)
+			routerGroup.POST("page", _sysUser.Page)
+			routerGroup.POST("save", _sysUser.Save)
+			routerGroup.POST("delete", _sysUser.Delete)
+			deptGroup := routerGroup.Group("dept")
+			{
+				deptGroup.POST("tree", _sysUser.DeptTree)
+				deptGroup.POST("save", _sysUser.DeptSave)
+				deptGroup.POST("delete", _sysUser.DeptDelete)
+			}
+		}
+	})
+}
+
+var _sysUser sysUser
 
 type sysUser struct {
 	base.Api
