@@ -11,7 +11,7 @@ type AssetBasic struct {
 	IP             string `gorm:"size:32;comment:ip"  json:"ip" binding:"required,ip"`
 	Port           uint   `gorm:"comment:端口"  json:"port" binding:"required,min=1,max=65535" `
 	ManagerUserId  uint64 `gorm:"comment:资产管理员Id"  json:"managerUserId" binding:"required"`
-	AssetGatewayId uint64 `gorm:"comment:网关ID"  json:"agId"`
+	AssetGatewayId uint64 `gorm:"comment:网关ID"  json:"gatewayId"`
 	ModelControl
 	ModelDelete
 }

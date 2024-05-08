@@ -90,7 +90,25 @@
               :show-label="localRecord.managerUsername"
               placeholder="请选择资源管理员"/>
           </a-form-model-item>
+          <a-form-model-item
+            :label-col="formItemLayout.labelCol"
+            :wrapper-col="formItemLayout.wrapperCol"
+            label="网关"
+            prop="gatewayId"
+          >
+            <a-select
+              v-model="localRecord.gatewayId"
+              :default-value="localRecord.gatewayId"
+              placeholder="请选择网关">
+              循环 gatewayData
+              <a-select-option v-for="elem in gatewayData" :key="elem.id">
+                {{ elem.agName + '('+ elem.agIp+')' }}
+              </a-select-option>
+            </a-select>
+
+          </a-form-model-item>
         </a-form-model>
+
       </a-spin>
       <div
         :style="{
@@ -117,7 +135,7 @@
 </template>
 <script>
 import request from '@/utils/request'
-import { loadGroupTree } from '@/api/asset'
+import { loadGatewayList, loadGroupTree } from '@/api/asset'
 import SelectUser from '@/components/Custom/Select/User/'
 
 export default {
@@ -168,14 +186,18 @@ export default {
         value: 'id',
         title: 'name'
       },
-      groupTreeData: []
+      groupTreeData: [],
+      gatewayData: []
     }
   },
   watch: {
-    record(val) {
+     record(val) {
       this.loadGroupTree()
+      this.loadGateway()
       this.localRecord = Object.assign({}, val)
+       console.log(this.localRecord)
       this.rules.password[0].required = !this.localRecord.id
+
       this.loading = false
     }
   },
@@ -205,7 +227,6 @@ export default {
           this.loading = false
           return false
         }
-        console.log(this.localRecord)
         request.post('/asset-info/save', this.localRecord).then(res => {
           const { code, message } = res
           if (code === 200) {
@@ -224,8 +245,19 @@ export default {
         const { code, data, message } = res
         if (code !== 200) {
           this.$message.error(message)
+          return
         }
         this.groupTreeData = data.children
+      })
+    },
+    async loadGateway() {
+      await loadGatewayList().then(res => {
+        const { code, data, message } = res
+        if (code !== 200) {
+          this.$message.error(message)
+          return
+        }
+        this.gatewayData = data
       })
     }
   }

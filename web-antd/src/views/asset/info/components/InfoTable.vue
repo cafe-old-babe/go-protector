@@ -120,7 +120,8 @@ export default {
         'managerUsername': record.managerUser.username,
         'managerUserId': record.managerUser.id,
         'account': record.rootAcc.account,
-        'password': record.rootAcc.password
+        'password': record.rootAcc.password,
+        'gatewayId': record.gatewayId <= 0 ? null : record.gatewayId
       })
       this.editVisible = true
     },

@@ -68,3 +68,17 @@ func (_self *AssetGateway) GetGatewayDTOById(id uint64) (gatewayDTO *dto.Gateway
 
 	return
 }
+
+func (_self *AssetGateway) List() (res *base.Result) {
+	var slice []entity.AssetGateway
+
+	if err := _self.DB.Find(&slice).Error; err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+	for i := range slice {
+		slice[i].AgPassword = ""
+	}
+	res = base.ResultSuccess(slice)
+	return
+}

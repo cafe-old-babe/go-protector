@@ -15,6 +15,7 @@ func init() {
 		routerGroup := group.Group("asset-gateway")
 		{
 			routerGroup.POST("/page", _assetGateway.Page)
+			routerGroup.POST("/list", _assetGateway.List)
 			routerGroup.POST("/save", _assetGateway.Save)
 			routerGroup.POST("/delete", _assetGateway.Delete)
 		}
@@ -69,6 +70,14 @@ func (_self assetGateway) Delete(c *gin.Context) {
 		// todo 检查使用情况
 		return nil
 	}))
+	return
+
+}
+
+func (_self assetGateway) List(c *gin.Context) {
+	var assetGatewayService service.AssetGateway
+	_self.MakeService(c, &assetGatewayService)
+	c_result.Result(c, assetGatewayService.List())
 	return
 
 }

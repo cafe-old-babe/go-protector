@@ -58,7 +58,7 @@
           <a-form-model-item
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
-            label="从帐号"
+            label="从帐号密码"
             prop="password"
           >
             <a-input-password v-model="localRecord.password" :placeholder="rules.password.message"/>
@@ -160,6 +160,7 @@ export default {
         request.post('/asset-account/save', this.localRecord).then(res => {
           const { code, message } = res
           if (code === 200) {
+            this.$refs.selectAsset.remove()
             this.$emit('ok')
             this.$message.success(message)
             return
