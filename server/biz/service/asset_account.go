@@ -289,3 +289,13 @@ func (_self *AssetAccount) CheckBatchDeleteByIds(ids []uint64) (err error) {
 	}
 	return
 }
+
+// FindAssetAccountInfoSliceByIds 根据ID查询从帐号信息
+func (_self *AssetAccount) FindAssetAccountInfoSliceByIds(ids []uint64) (slice []entity.AssetAccountInfo, err error) {
+	if len(ids) <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	err = _self.DB.Preload("AssetBasic").Find(&slice, ids).Error
+	return
+}

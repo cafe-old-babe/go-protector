@@ -15,7 +15,10 @@ type AssetAccount struct {
 	Password          string             `gorm:"size:256;comment:密码"  json:"password,omitempty" binding:"required_without=ID"`
 	AccountType       string             `gorm:"size:1;comment:从帐号类型,-1-收集后未纳管从帐号,0-特权帐号,1-管理帐号(管理帐号可执行sudo),2-普通帐号(普通帐号不可执行sudo)"  json:"accountType" binding:"oneof=-1 0 1 2" `
 	AccountTypeText   string             `gorm:"-"  json:"accountTypeText" `
-	AccountStatus     string             `gorm:"size:1;comment:从帐号状态,-1-采集失败,0-未采集信息,1-正常,2-即将过期,3-已过期,4-已禁用"  json:"accountStatus" binding:"required_with=ID,oneof=-1 0 1 2 3 4"`
+	AccountStatus     string             `gorm:"size:1;comment:从帐号状态,-1-采集失败,0-未采集信息,1-正常,2-即将过期,3-已过期,4-已禁用"  json:"accountStatus" binding:"required_with=ID,oneof=-1 0 1 2 3 4 5"`
+	DailStatus        string             `gorm:"size:1;comment:拨测状态, 0-拨测失败,1-拨测成功"  json:"dailStatus"`
+	DailStatusText    string             `gorm:"-"  json:"dailStatusText"`
+	DailMsg           string             `gorm:"size:256;comment:拨测结果"  json:"dailMsg"`
 	AccountStatusText string             `gorm:"-"  json:"accountStatusText"`
 	Extend            AssetAccountExtend `gorm:"foreignKey:ID"  json:"extend" binding:"omitempty"`
 	AssetBasic        AssetBasic         `gorm:"foreignKey:AssetId"  json:"assetBasic" binding:"omitempty"`
@@ -65,11 +68,11 @@ func (_self *AssetAccount) AfterFind(db *gorm.DB) (err error) {
 	if len(_self.Password) > 0 {
 		_self.Password, err = gm.Sm4DecryptCBC(_self.Password)
 	}
-	_self.completion()
+	_self.Completion()
 	return
 }
 
-func (_self *AssetAccount) completion() {
+func (_self *AssetAccount) Completion() {
 
 	switch _self.AccountStatus {
 	case "-1":
@@ -79,19 +82,30 @@ func (_self *AssetAccount) completion() {
 	case "1":
 		_self.AccountStatusText = "正常"
 	case "2":
-		_self.AccountStatusText = "已过期"
+		_self.AccountStatusText = "即将过期"
 	case "3":
+		_self.AccountStatusText = "已过期"
+	case "4":
 		_self.AccountStatusText = "已禁用"
 	}
 	switch _self.AccountType {
 	case "-1":
-		_self.AccountTypeText = "采集失败"
+		_self.AccountTypeText = "未接入"
 	case "0":
 		_self.AccountTypeText = "特权帐号"
 	case "1":
 		_self.AccountTypeText = "管理帐号"
 	case "2":
 		_self.AccountTypeText = "普通帐号"
+	}
+
+	switch _self.DailStatus {
+	case "":
+		_self.DailStatusText = "未拨测"
+	case "0":
+		_self.DailStatusText = "拨测失败"
+	case "1":
+		_self.DailStatusText = "拨测成功"
 	}
 
 }
@@ -109,6 +123,8 @@ type AssetAccountExtend struct {
 	Remark        string      `gorm:"size:256;comment:备注"  json:"remark"`
 	CollectTime   c_type.Time `gorm:"size:512;comment:最后采集时间"  json:"collectTime"`
 	CollectMsg    string      `gorm:"size:512;comment:采集结果信息"  json:"collectMsg"`
+	DialTime      c_type.Time `gorm:"size:512;comment:最后拨测时间"  json:"dialTime"`
+	DialMsg       string      `gorm:"size:512;comment:采集拨测信息"  json:"dialMsg"`
 	//RawPasswd     string `gorm:"size:4096;comment:原始记录-/etc/passwd"  json:"rawPasswd"`
 	//RawShadow     string `gorm:"size:4096;comment:原始记录-/etc/shadow"  json:"rawShadow"`
 	//RawGroup      string `gorm:"size:4096;comment:原始记录-/etc/group"  json:"rawGroup"`
@@ -118,4 +134,9 @@ type AssetAccountExtend struct {
 
 func (AssetAccountExtend) TableName() string {
 	return table_name.AssetAccountExtend
+}
+
+type AssetAccountInfo struct {
+	AssetAccount
+	AssetBasic AssetBasic `gorm:"foreignKey:ID;references:AssetId"  json:"assetBasic"`
 }

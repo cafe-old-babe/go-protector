@@ -2,6 +2,7 @@ package entity
 
 import (
 	"go-protector/server/internal/consts/table_name"
+	"gorm.io/gorm"
 )
 
 type AssetBasic struct {
@@ -29,6 +30,12 @@ type AssetInfo struct {
 	AssetGroup   AssetGroup   `json:"assetGroup"`
 	ManagerUser  SysUser      `json:"managerUser"`
 	AssetGateway AssetGateway `gorm:"foreignKey:AssetGatewayId" json:"assetGateway"` // belongs to
+}
+
+func (_self *AssetInfo) AfterFind(db *gorm.DB) (err error) {
+
+	_self.RootAcc.Completion()
+	return
 }
 
 type AssetInfoAccount struct {

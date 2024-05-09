@@ -9,23 +9,39 @@ import (
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/custom/c_error"
+	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/utils"
 	"go-protector/server/internal/utils/sshCli"
 	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
+	"time"
 )
 
-var findAssetInfoAccountSliceMap = map[string]func(base.IService, []uint64) ([]entity.AssetInfoAccount, error){}
+var findAssetInfoAccountSliceMapByCollectors = map[string]func(base.IService, []uint64) ([]entity.AssetInfoAccount, error){}
+var findAssetAccountInfoSliceMapByDial = map[string]func(base.IService, []uint64) ([]entity.AssetAccountInfo, error){}
 
 func init() {
-	findAssetInfoAccountSliceMap["asset"] = func(_self base.IService, ids []uint64) (slice []entity.AssetInfoAccount, err error) {
+	findAssetInfoAccountSliceMapByCollectors["asset"] = func(_self base.IService, ids []uint64) (slice []entity.AssetInfoAccount, err error) {
 		return findAssetInfoAccountSliceByIds(_self, ids)
 	}
-	findAssetInfoAccountSliceMap["account"] = func(_self base.IService, ids []uint64) ([]entity.AssetInfoAccount, error) {
+	findAssetInfoAccountSliceMapByCollectors["account"] = func(_self base.IService, ids []uint64) ([]entity.AssetInfoAccount, error) {
 		var accountService AssetAccount
 		_self.MakeService(&accountService)
 		return accountService.FindAssetInfoAccountSliceByIds(ids)
+	}
+
+	// 拨测资产特权账号
+	findAssetAccountInfoSliceMapByDial["asset"] = func(_self base.IService, ids []uint64) (slice []entity.AssetAccountInfo, err error) {
+
+		return findAssetAccountInfoSliceByIds(_self, ids)
+	}
+
+	// 拨测指定账号
+	findAssetAccountInfoSliceMapByDial["account"] = func(_self base.IService, ids []uint64) (slice []entity.AssetAccountInfo, err error) {
+		var accountService AssetAccount
+		_self.MakeService(&accountService)
+		return accountService.FindAssetAccountInfoSliceByIds(ids)
 	}
 
 }
@@ -161,8 +177,8 @@ func (_self *AssetInfo) Delete(idsReq *base.IdsReq) (res *base.Result) {
 }
 
 // Collectors 采集资产信息
-func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collectorsType string) (res *base.Result) {
-	if len(collectorsType) <= 0 || idsReq == nil {
+func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collType string) (res *base.Result) {
+	if len(collType) <= 0 || idsReq == nil {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
@@ -173,14 +189,14 @@ func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collectorsType string) (
 
 	var collectorsFunc func(base.IService, []uint64) ([]entity.AssetInfoAccount, error)
 	var ok bool
-	if collectorsFunc, ok = findAssetInfoAccountSliceMap[collectorsType]; !ok {
+	if collectorsFunc, ok = findAssetInfoAccountSliceMapByCollectors[collType]; !ok {
 		collectorsFunc = func(base.IService, []uint64) ([]entity.AssetInfoAccount, error) {
 			return nil, c_error.ErrParamInvalid
 		}
 	}
 
 	/* 1.0
-	switch collectorsType {
+	switch collType {
 	case "asset":
 		collectorsFunc = func() (slice []entity.AssetInfoAccount, err error) {
 			err = _self.DB.Joins("Accounts").Find(&slice).Error
@@ -204,11 +220,6 @@ func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collectorsType string) (
 
 	if err != nil {
 		res = base.ResultFailureErr(err)
-		return
-	}
-
-	if slice == nil || len(slice) <= 0 {
-		res = base.ResultFailureMsg("无采集信息")
 		return
 	}
 
@@ -244,12 +255,27 @@ func findAssetInfoAccountSliceByIds(_self base.IService, ids []uint64) (slice []
 	return
 }
 
+func findAssetAccountInfoSliceByIds(self base.IService, ids []uint64) (slice []entity.AssetAccountInfo, err error) {
+	tx := self.GetDB()
+	err = tx.Joins("AssetBasic").
+		//Joins("left join " + table_name.AssetAccount +
+		//	" on " + table_name.AssetBasic + ".id = " + table_name.AssetAccount + ".asset_id and account_type = '0' ").
+		Find(&slice, "asset_account.account_type = '0' and AssetBasic.id in ? ", ids).Error
+
+	return
+}
+
 // DoCollectors 开始采集
 func (_self *AssetInfo) DoCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
+	if slice == nil || len(slice) <= 0 {
+		res = base.ResultFailureMsg("无采集信息")
+		return
+	}
+
 	return _self.syncDoCollectors(slice)
 }
 
-// 同步采集
+// syncDoCollectors 同步采集
 func (_self *AssetInfo) syncDoCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
 	if slice == nil || len(slice) <= 0 {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
@@ -316,4 +342,77 @@ func (_self *AssetInfo) syncDoCollectors(slice []entity.AssetInfoAccount) (res *
 	_self.MakeService(&accountService)
 
 	return accountService.AnalysisExtend(accountCollectorsDTO)
+}
+
+func (_self *AssetInfo) Dial(idsReq *base.IdsReq, dialType string) (res *base.Result) {
+	var f func(base.IService, []uint64) ([]entity.AssetAccountInfo, error)
+	ids := idsReq.GetIds()
+	var ok bool
+	if f, ok = findAssetAccountInfoSliceMapByDial[dialType]; !ok {
+		f = func(base.IService, []uint64) ([]entity.AssetAccountInfo, error) {
+			return nil, c_error.ErrParamInvalid
+		}
+	}
+	var slice []entity.AssetAccountInfo
+	var err error
+	if slice, err = f(_self, ids); err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+
+	return _self.DoBatchDail(slice)
+}
+
+func (_self *AssetInfo) DoBatchDail(slice []entity.AssetAccountInfo) (res *base.Result) {
+
+	if len(slice) <= 0 {
+		res = base.ResultFailureErr(errors.New("无拨测信息"))
+		return
+	}
+
+	for _, elem := range slice {
+		_self.DoDail(elem)
+	}
+
+	return base.ResultSuccessMsg("拨测完成")
+
+}
+
+func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
+
+	var client *ssh.Client
+
+	var err error
+
+	defer func() {
+		if client != nil {
+			_ = client.Close()
+		}
+		dailStatus := "1"
+		nowTime := c_type.NowTime()
+		dailMsg := "[" + nowTime.String() + "]"
+		if err != nil {
+			dailStatus = "0"
+			dailMsg += err.Error()
+		} else {
+			dailMsg += "拨测成功"
+		}
+
+		_self.DB.Updates(&entity.AssetAccount{
+			ModelId:    elem.ModelId,
+			DailStatus: dailStatus,
+			DailMsg:    dailMsg,
+		})
+
+	}()
+
+	client, err = sshCli.Connect(&sshCli.ConnectDTO{
+		IP:       elem.AssetBasic.IP,
+		Port:     elem.AssetBasic.Port,
+		Username: elem.Account,
+		Password: elem.Password,
+		Timeout:  time.Second * 3,
+	})
+
+	return
 }

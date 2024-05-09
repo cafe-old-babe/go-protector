@@ -1,65 +1,83 @@
 <template>
   <div>
-    <a-card :bordered="false" title="从帐号列表" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}">
-      <div class="table-page-search-wrapper">
-        <a-form layout="inline">
-          <a-row :gutter="20">
-            <a-col :md="5" :sm="5">
-              <a-form-item label="资产IP">
-                <a-input v-model="queryParam.ip" placeholder="" />
-              </a-form-item>
-            </a-col>
-            <a-col :md="5" :sm="5">
-              <a-form-item label="资产名称">
-                <a-input v-model="queryParam.assetName" placeholder="" />
-              </a-form-item>
-            </a-col>
-            <a-col :md="5" :sm="5">
-              <a-form-item label="从帐号">
-                <a-input v-model="queryParam.account" placeholder="" />
-              </a-form-item>
-            </a-col>
+    <a-spin :spinning="loading">
+      <a-card :bordered="false" title="从帐号列表" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}">
+        <div class="table-page-search-wrapper">
+          <a-form layout="inline">
+            <a-row :gutter="20">
+              <a-col :md="5" :sm="5">
+                <a-form-item label="资产IP">
+                  <a-input v-model="queryParam.ip" placeholder="" />
+                </a-form-item>
+              </a-col>
+              <a-col :md="5" :sm="5">
+                <a-form-item label="资产名称">
+                  <a-input v-model="queryParam.assetName" placeholder="" />
+                </a-form-item>
+              </a-col>
+              <a-col :md="5" :sm="5">
+                <a-form-item label="从帐号">
+                  <a-input v-model="queryParam.account" placeholder="" />
+                </a-form-item>
+              </a-col>
 
-            <a-col :md="5" :sm="5">
-              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-              <a-button style="margin-left: 8px" @click="() => (this.queryParam = {})">重置</a-button>
-            </a-col>
-          </a-row>
-        </a-form>
-      </div>
-      <div class="table-operator">
-        <a-button
-          type="primary"
-          @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
-        <a-button type="danger" :disabled="disabledDeleteBatch" @click="deleteBatch">批量删除</a-button>
-      </div>
-      <s-table
-        ref="table"
-        rowKey="id"
-        size="default"
-        :show-pagination="true"
-        :showSizeChanger="true"
-        :columns="columns"
-        :data="loadData"
-        :rowSelection="rowSelection"
-      >
-        <span slot="action" slot-scope="text, current">
-          <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="editRecord(current)">
-            <a-icon type="edit" />编辑
-          </a>
-          <a :disabled="current.accountType==='0'" @click="deleteRecord(current.id)">
-            <a-icon type="delete" />删除
-          </a>
-        </span>
-      </s-table>
-    </a-card>
-    <Edit
-      :visible="editVisible"
-      :record="record"
-      @close="editClose"
-      @ok="editOk"
-    />
+              <a-col :md="5" :sm="5">
+                <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
+                <a-button style="margin-left: 8px" @click="() => (this.queryParam = {})">重置</a-button>
+              </a-col>
+            </a-row>
+          </a-form>
+        </div>
+        <div class="table-operator">
+          <a-button
+            type="primary"
+            @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
+          <a-button @click="dailBatch">批量拨测</a-button>
 
+          <a-button type="danger" :disabled="disabledDeleteBatch" @click="deleteBatch">批量删除</a-button>
+        </div>
+        <s-table
+          ref="table"
+          rowKey="id"
+          size="default"
+          :show-pagination="true"
+          :showSizeChanger="true"
+          :columns="columns"
+          :data="loadData"
+          :rowSelection="rowSelection"
+        >
+          <span slot="action" slot-scope="text, current">
+            <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="editRecord(current)">
+              <a-icon type="edit" />编辑
+            </a>
+            <a :disabled="current.accountType==='0'" @click="deleteRecord(current.id)">
+              <a-icon type="delete" />删除
+            </a>
+          </span>
+          <span slot="dailStatus" slot-scope="text,current">
+            <template>
+              <a-tooltip
+                placement="left"
+                :title="current.dailMsg"
+                :get-popup-container="(trigger) => trigger.parentElement">
+                <a-tag
+                  :color="dailColor(current.dailStatus)" >
+                  {{
+                    current.dailStatusText
+                  }}
+                </a-tag>
+              </a-tooltip>
+            </template>
+          </span>
+        </s-table>
+      </a-card>
+      <Edit
+        :visible="editVisible"
+        :record="record"
+        @close="editClose"
+        @ok="editOk"
+      />
+    </a-spin>
   </div>
 </template>
 
@@ -166,6 +184,7 @@ export default {
         this.loading = true
         request.post('/asset-account/delete', param).then(res => {
           const { code, message } = res
+
           if (code === 200) {
             this.$message.success(message ?? '删除成功')
             this.$refs.table.refresh(false)
@@ -196,6 +215,32 @@ export default {
       this.editVisible = false
       this.permissionVisible = false
       this.roleId = 0
+    },
+    dailBatch: function () {
+      const param = { ids: this.selectedRows.map(item => item.id) }
+      this.loading = true
+      request.post('/asset-info/dial/account', param).then(res => {
+        const { code, message } = res
+        if (code === 200) {
+          this.$message.success(message)
+          this.$refs.table.refresh(false)
+        } else {
+          this.$message.error(message)
+        }
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+    dailColor(dailStatus) {
+      switch (dailStatus) {
+        case '0':
+          return 'red'
+        case '1':
+          return 'green'
+        default:
+
+          return 'grey'
+      }
     }
   }
 }

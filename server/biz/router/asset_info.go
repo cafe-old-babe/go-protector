@@ -14,7 +14,8 @@ func init() {
 		{
 			routerGroup.POST("/page", _assetBasic.Page)
 			routerGroup.POST("/save", _assetBasic.Save)
-			routerGroup.POST("/collectors/:collectorsType", _assetBasic.Collectors)
+			routerGroup.POST("/collectors/:collType", _assetBasic.Collectors)
+			routerGroup.POST("/dial/:dialType", _assetBasic.Dial)
 			routerGroup.POST("/delete", _assetBasic.Delete)
 		}
 	})
@@ -65,7 +66,7 @@ func (_self assetBasic) Delete(c *gin.Context) {
 
 // Collectors 采集资产信息
 func (_self assetBasic) Collectors(c *gin.Context) {
-	collectorsType := c.Param("collectorsType")
+	collType := c.Param("collType")
 	var idsReq base.IdsReq
 	if err := c.ShouldBindJSON(&idsReq); err != nil {
 		c_result.Err(c, err)
@@ -73,7 +74,25 @@ func (_self assetBasic) Collectors(c *gin.Context) {
 	}
 	var assetService service.AssetInfo
 	_self.MakeService(c, &assetService)
-	result := assetService.Collectors(&idsReq, collectorsType)
+	result := assetService.Collectors(&idsReq, collType)
 	c_result.Result(c, result)
 	return
+}
+
+// Dial 拨测账号
+func (_self assetBasic) Dial(c *gin.Context) {
+	dialType := c.Param("dialType")
+
+	var idsReq base.IdsReq
+	if err := c.ShouldBindJSON(&idsReq); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+
+	var assetService service.AssetInfo
+	_self.MakeService(c, &assetService)
+	result := assetService.Dial(&idsReq, dialType)
+	c_result.Result(c, result)
+	return
+
 }

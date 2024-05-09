@@ -26,6 +26,10 @@ export const Columns = [
     dataIndex: 'accountStatusText'
   },
   {
+    title: '拨测状态',
+    scopedSlots: { customRender: 'dailStatus' }
+  },
+  {
     title: '操作',
     width: 200,
     scopedSlots: { customRender: 'action' }

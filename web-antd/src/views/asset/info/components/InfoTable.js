@@ -30,6 +30,10 @@ export const columns = [
     customRender: (text, record) => record.managerUser.username
   },
   {
+    title: '拨测状态',
+    scopedSlots: { customRender: 'dailStatus' }
+  },
+  {
     title: '操作',
     width: 200,
     scopedSlots: { customRender: 'action' }

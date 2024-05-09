@@ -1,59 +1,79 @@
 <template>
   <div>
-    <div class="table-page-search-wrapper">
-      <a-form layout="inline">
-        <a-row :gutter="48">
-          <a-col :md="8" :sm="24">
-            <a-form-item label="资源名称">
-              <a-input v-model="queryParam.assetName" placeholder="" />
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="资源IP">
-              <a-input v-model="queryParam.ip" placeholder="" />
-            </a-form-item>
-          </a-col>
+    <a-spin :spinning="loading">
+      <div
+        class="table-page-search-wrapper">
+        <a-form layout="inline">
+          <a-row :gutter="48">
+            <a-col :md="8" :sm="24">
+              <a-form-item label="资源名称">
+                <a-input v-model="queryParam.assetName" placeholder="" />
+              </a-form-item>
+            </a-col>
+            <a-col :md="8" :sm="24">
+              <a-form-item label="资源IP">
+                <a-input v-model="queryParam.ip" placeholder="" />
+              </a-form-item>
+            </a-col>
 
-          <a-col :md="8" :sm="24">
-            <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-            <a-button style="margin-left: 8px" @click="() => (this.queryParam = {})">重置</a-button>
-          </a-col>
-        </a-row>
-      </a-form>
-    </div>
-    <div class="table-operator">
-      <a-button
-        type="primary"
-        @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
-      <a-button type="danger" @click="deleteBatch">批量删除</a-button>
-    </div>
-    <s-table
-      ref="table"
-      rowKey="id"
-      size="default"
-      :showSizeChanger="true"
-      :columns="columns"
-      :autoLoad="false"
-      :data="loadData"
-      :rowSelection="rowSelection"
-    >
-      <span slot="serial" slot-scope="{index}">
-        {{ index + 1 }}
-      </span>
-      <span slot="action" slot-scope="text, current">
-        <a style="margin-right: 8px" @click="editRecord(current)"> <a-icon type="edit" />编辑 </a>
-        <a @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
-      </span>
-    </s-table>
+            <a-col :md="8" :sm="24">
+              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
+              <a-button style="margin-left: 8px" @click="() => (this.queryParam = {})">重置</a-button>
+            </a-col>
+          </a-row>
+        </a-form>
+        </sp></div>
+      <div class="table-operator">
+        <a-button
+          type="primary"
+          @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
+        <a-button @click="dailBatch">批量拨测</a-button>
+        <a-button type="danger" @click="deleteBatch">批量删除</a-button>
+      </div>
+      <s-table
+        ref="table"
+        rowKey="id"
+        size="default"
+        :showSizeChanger="true"
+        :columns="columns"
+        :autoLoad="false"
+        :data="loadData"
+        :rowSelection="rowSelection"
+      >
+        <span slot="serial" slot-scope="{index}">
+          {{ index + 1 }}
+        </span>
+        <span slot="action" slot-scope="text, current">
+          <a style="margin-right: 8px" @click="editRecord(current)"> <a-icon type="edit" />编辑 </a>
+          <a @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
+        </span>
+        <span slot="dailStatus" slot-scope="text,current">
+          <template>
+            <a-tooltip
+              placement="left"
+              :title="current.rootAcc.dailMsg"
+              :get-popup-container="(trigger) => trigger.parentElement">
+              <a-tag
+                :color="dailColor(current.rootAcc.dailStatus)" >
+                {{
+                  current.rootAcc.dailStatusText
+                }}
+              </a-tag>
+            </a-tooltip>
+          </template>
+        </span>
+      </s-table>
 
-    <EditInfo
-      :visible="editVisible"
-      :record="record"
-      @close="editClose"
-      @ok="editOk"
-    />
+      <EditInfo
+        :visible="editVisible"
+        :record="record"
+        @close="editClose"
+        @ok="editOk"
+      />
 
-  </div></template>
+    </a-spin>
+  </div>
+</template>
 
 <script>
 import STable from '@/components/Table'
@@ -174,6 +194,34 @@ export default {
     loadInfo: function (groupIds = [], bool = true) {
       this.queryParam.groupIds = groupIds
       this.$refs.table.refresh(bool)
+    },
+    dailBatch: function () {
+      const param = { ids: this.selectedRows.map(item => item.id) }
+      this.loading = true
+      request.post('/asset-info/dial/asset', param).then(res => {
+        const { code, message } = res
+        if (code === 200) {
+          this.$message.success(message)
+          this.$refs.table.refresh(false)
+          this.selectedRowKeys = []
+          this.selectedRows = []
+        } else {
+          this.$message.error(message)
+        }
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+    dailColor(dailStatus) {
+      switch (dailStatus) {
+        case '0':
+          return 'red'
+        case '1':
+          return 'green'
+        default:
+
+          return 'grey'
+      }
     }
   }
 }
