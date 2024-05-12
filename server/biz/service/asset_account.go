@@ -68,7 +68,9 @@ func (_self *AssetAccount) FindAssetInfoAccountSliceByIds(ids []uint64) (slice [
 		accountMapByAssetId[account.AssetId] = append(accountMapByAssetId[account.AssetId], account)
 	}
 
-	if err = _self.DB.Joins("AssetGateway").Find(&slice, assetIdSlice).Error; err != nil || len(slice) <= 0 {
+	if err = _self.DB.Joins("AssetGateway").
+		Joins("RootAcc", _self.DB.Where("account_type = ?", "0")).
+		Find(&slice, assetIdSlice).Error; err != nil || len(slice) <= 0 {
 		return
 	}
 
@@ -128,15 +130,12 @@ func (_self *AssetAccount) FillAssetInfoRootAcc(assetInfoSlice []*entity.AssetIn
 func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDTO) (res *base.Result) {
 
 	var err error
-	db := _self.DB.Begin()
 	defer func() {
 		if err != nil {
-			db.Rollback()
 			if res == nil {
 				res = base.ResultFailureErr(err)
 			}
 		} else {
-			db.Commit()
 			if res == nil {
 				res = base.ResultSuccessMsg("解析成功")
 			}
@@ -154,25 +153,28 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 	//-1-采集失败,0-未采集信息,1-正常,2-即将过期,3-已过期,4-已禁用
 	var accountStatus string
 	for _, elem := range dtoSlice {
-		if elem.Err != nil {
-			if err = db.Model(&extend).Where("id in (?)",
-				_self.DB.Model(&account).Select("id").
-					Where("asset_id = ? and asset_type <> '0'"),
-			).Updates(entity.AssetAccountExtend{
-				CollectMsg:  elem.Err.Error(),
-				CollectTime: nowTime,
-			}).Error; err != nil {
-				return
-			}
-			continue
-		}
-
 		if elem.ID <= 0 {
 			continue
 		}
-		extend = entity.AssetAccountExtend{}
-		extend.ID = elem.ID
-		extend.CollectTime = nowTime
+		modelId := entity.ModelId{
+			ID: elem.ID,
+		}
+		extend = entity.AssetAccountExtend{
+			ModelId:     modelId,
+			CollectTime: nowTime,
+		}
+		account = entity.AssetAccount{
+			ModelId:       modelId,
+			AccountStatus: "-1",
+		}
+
+		if elem.Err != nil {
+			extend.CollectMsg = elem.Err.Error()
+			account.AccountStatus = "-1"
+			goto saveLabel
+
+		}
+
 		outSlice = strings.Split(string(elem.Out), "\n")
 		//redis:x:986:985:Redis Database Server:/var/lib/redis:/sbin/nologin
 		//0-用户名（redis）：这是用户的登录名。
@@ -249,14 +251,13 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 		}
 
 	saveLabel:
-		err = db.Transaction(func(tx *gorm.DB) (err error) {
+		err = _self.DB.Transaction(func(tx *gorm.DB) (err error) {
 			// 保存从账号信息
-			if err = tx.Where("id = ?", elem.ID).Updates(entity.AssetAccount{
-				AccountStatus: accountStatus,
-			}).Error; err != nil {
+			account.AccountStatus = accountStatus
+			if err = tx.Updates(&account).Error; err != nil {
 				return
 			}
-			err = tx.Where("id = ?", elem.ID).Updates(extend).Error
+			err = tx.Omit("created_by", "created_at").Save(&extend).Error
 			return
 		})
 

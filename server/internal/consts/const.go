@@ -66,3 +66,8 @@ const (
 	// LoginIntruderCacheKeyFmt 防爆破策略 -> login:intruder:{day}:{登录名}
 	LoginIntruderCacheKeyFmt = CachePrefix + ":login:intruder:%d:%s"
 )
+
+const (
+	// CollFmt 采集脚本
+	CollFmt = "cat /etc/passwd | grep ^%s  &&  cat /etc/shadow | grep ^%s"
+)

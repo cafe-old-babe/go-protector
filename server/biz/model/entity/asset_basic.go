@@ -34,8 +34,7 @@ type AssetInfo struct {
 
 func (_self *AssetInfo) AfterFind(db *gorm.DB) (err error) {
 
-	_self.RootAcc.Completion()
-	return
+	return _self.RootAcc.AfterFind(db)
 }
 
 type AssetInfoAccount struct {

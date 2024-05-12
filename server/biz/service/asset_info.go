@@ -7,11 +7,11 @@ import (
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/base"
+	"go-protector/server/internal/consts"
 	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
-	"go-protector/server/internal/utils"
 	"go-protector/server/internal/utils/sshCli"
 	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
@@ -223,7 +223,7 @@ func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collType string) (res *b
 		return
 	}
 
-	res = _self.DoCollectors(slice)
+	res = _self.DoBatchCollectors(slice)
 
 	// 添加采集任务
 
@@ -238,20 +238,10 @@ func findAssetInfoAccountSliceByIds(_self base.IService, ids []uint64) (slice []
 	if ids == nil || len(ids) <= 0 {
 		return
 	}
-	err = _self.GetDB().Joins("AssetGateway").Preload("Account").Find(&slice).Error
-	var accountService AssetAccount
-	_self.MakeService(&accountService)
-	var rootAccMap map[uint64]entity.AssetAccount
-
-	asseIdSlice := utils.SliceToFieldSlice[uint64]("ID", slice)
-	// 继承与面向对象的区别->组合方式继承,无法使用 accountService.FillAssetInfoRootAcc(slice)
-	rootAccMap, err = accountService.FindRootAccMapByAssetIdSlice(asseIdSlice)
-	if len(rootAccMap) <= 0 {
-		return
-	}
-	for i, elem := range slice {
-		(slice)[i].RootAcc, _ = rootAccMap[elem.ID]
-	}
+	err = _self.GetDB().Joins("AssetGateway").
+		Joins("RootAcc", _self.GetDB().Where("RootAcc.account_type = ?", "0")).
+		Preload("Accounts", _self.GetDB().Where("account_type <> ?", "0")).
+		Find(&slice, ids).Error
 	return
 }
 
@@ -265,83 +255,22 @@ func findAssetAccountInfoSliceByIds(self base.IService, ids []uint64) (slice []e
 	return
 }
 
-// DoCollectors 开始采集
-func (_self *AssetInfo) DoCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
+// DoBatchCollectors 开始采集
+func (_self *AssetInfo) DoBatchCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
 	if slice == nil || len(slice) <= 0 {
 		res = base.ResultFailureMsg("无采集信息")
 		return
 	}
-
-	return _self.syncDoCollectors(slice)
-}
-
-// syncDoCollectors 同步采集
-func (_self *AssetInfo) syncDoCollectors(slice []entity.AssetInfoAccount) (res *base.Result) {
 	if slice == nil || len(slice) <= 0 {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
-	//var deStr string
-	var err error
-	var cli *ssh.Client
-	cmdFmt := "cat /etc/passwd | grep ^%s  &&  cat /etc/shadow | grep ^%s"
-	var accountCollectorsDTO []dto.AccountAnalysisExtendDTO
 	for _, assetInfo := range slice {
-		if len(assetInfo.Accounts) <= 0 {
-			continue
-		}
-		//if deStr, err = gm.Sm4DecryptCBC(assetInfo.RootAcc.Password); err != nil {
-		//	accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
-		//		AssetId: assetInfo.ID,
-		//		Err:     errors.Join(errors.New("密码解密失败"), err),
-		//	})
-		//	continue
-		//}
-		if cli, err = sshCli.Connect(&sshCli.ConnectDTO{
-			ID:       assetInfo.ID,
-			IP:       assetInfo.IP,
-			Port:     assetInfo.Port,
-			Username: assetInfo.RootAcc.Account,
-			Password: assetInfo.RootAcc.Password,
-			Timeout:  0,
-		}); err != nil {
-			accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
-				AssetId: assetInfo.ID,
-				Err:     errors.Join(errors.New("连接失败"), err),
-			})
-			continue
-		}
+		_self.DoCollectors(assetInfo)
 
-		var session *ssh.Session
-		session, err = cli.NewSession()
-		if err != nil {
-			// 保存错误信息
-			accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
-				AssetId: assetInfo.ID,
-				Err:     errors.Join(errors.New("创建会话失败"), err),
-			})
-			continue
-		}
-
-		for _, account := range assetInfo.Accounts {
-			// -1收集从账号,0-特权账号 不采集
-			if account.AccountType == "-1" || account.AccountType == "0" {
-				continue
-			}
-			collectorsDTO := dto.AccountAnalysisExtendDTO{
-				ID:      account.ID,
-				In:      fmt.Sprintf(cmdFmt, account.Account, account.Account),
-				AssetId: assetInfo.ID,
-			}
-			collectorsDTO.Out, collectorsDTO.Err = session.Output(collectorsDTO.In)
-			collectorsDTO.Err = errors.Join(errors.New("执行命令失败"), collectorsDTO.Err)
-			accountCollectorsDTO = append(accountCollectorsDTO, collectorsDTO)
-		}
 	}
-	var accountService AssetAccount
-	_self.MakeService(&accountService)
+	return base.ResultSuccessMsg("采集完成")
 
-	return accountService.AnalysisExtend(accountCollectorsDTO)
 }
 
 func (_self *AssetInfo) Dial(idsReq *base.IdsReq, dialType string) (res *base.Result) {
@@ -414,5 +343,86 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 		Timeout:  time.Second * 3,
 	})
 
+	return
+}
+
+// DoCollectors 采集
+func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
+
+	var err error
+	var cli *ssh.Client
+	defer func() {
+		if cli != nil {
+			_ = cli.Close()
+		}
+
+	}()
+	if len(assetInfo.Accounts) <= 0 {
+		return
+	}
+	//if deStr, err = gm.Sm4DecryptCBC(assetInfo.RootAcc.Password); err != nil {
+	//	accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
+	//		AssetId: assetInfo.ID,
+	//		Err:     errors.Join(errors.New("密码解密失败"), err),
+	//	})
+	//	continue
+	//}
+
+	var accountCollectorsDTO []dto.AccountAnalysisExtendDTO
+	if cli, err = sshCli.Connect(&sshCli.ConnectDTO{
+		ID:       assetInfo.ID,
+		IP:       assetInfo.IP,
+		Port:     assetInfo.Port,
+		Username: assetInfo.RootAcc.Account,
+		Password: assetInfo.RootAcc.Password,
+		Timeout:  0,
+	}); err != nil {
+		accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
+			AssetId: assetInfo.ID,
+			Err:     errors.Join(errors.New("连接失败"), err),
+		})
+		goto saveLabel
+	}
+
+	if err != nil {
+		// 保存错误信息
+		accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
+			AssetId: assetInfo.ID,
+			Err:     errors.Join(errors.New("创建会话失败"), err),
+		})
+		goto saveLabel
+	}
+
+	for _, account := range assetInfo.Accounts {
+		// -1收集从账号,0-特权账号 不采集
+		if account.AccountType == "-1" || account.AccountType == "0" {
+			continue
+		}
+		collectorsDTO := collectorsAccount(account, cli)
+		collectorsDTO.AssetId = assetInfo.ID
+		accountCollectorsDTO = append(accountCollectorsDTO, collectorsDTO)
+	}
+saveLabel:
+	var accountService AssetAccount
+	_self.MakeService(&accountService)
+
+	accountService.AnalysisExtend(accountCollectorsDTO)
+}
+
+// collectorsAccount 采集从帐号
+func collectorsAccount(account entity.AssetAccount, cli *ssh.Client) (collectorsDTO dto.AccountAnalysisExtendDTO) {
+	collectorsDTO.ID = account.ID
+	collectorsDTO.In = fmt.Sprintf(consts.CollFmt, account.Account, account.Account)
+
+	var session *ssh.Session
+	var err error
+	if session, err = cli.NewSession(); err != nil {
+		collectorsDTO.Err = err
+		return
+	}
+
+	if collectorsDTO.Out, collectorsDTO.Err = session.Output(collectorsDTO.In); collectorsDTO.Err != nil {
+		collectorsDTO.Err = errors.Join(errors.New("执行命令失败"), collectorsDTO.Err)
+	}
 	return
 }

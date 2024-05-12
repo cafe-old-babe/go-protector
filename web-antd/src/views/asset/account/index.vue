@@ -32,9 +32,9 @@
           <a-button
             type="primary"
             @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
-          <a-button @click="dailBatch">批量拨测</a-button>
-
           <a-button type="danger" :disabled="disabledDeleteBatch" @click="deleteBatch">批量删除</a-button>
+          <a-button @click="dailBatch"> <a-icon type="bell" />批量拨测</a-button>
+          <a-button :disabled="disabledCollBatch" @click="collBatch"> <a-icon type="code" />批量采集</a-button>
         </div>
         <s-table
           ref="table"
@@ -139,6 +139,9 @@ export default {
     },
     disabledDeleteBatch() {
        return this.selectedRows.some(item => item.accountType === '0')
+    },
+    disabledCollBatch() {
+      return this.selectedRows.some(item => item.dailStatus !== '1')
     }
   },
   mounted() {
@@ -223,6 +226,8 @@ export default {
         const { code, message } = res
         if (code === 200) {
           this.$message.success(message)
+          this.selectedRowKeys = []
+          this.selectedRows = []
           this.$refs.table.refresh(false)
         } else {
           this.$message.error(message)
@@ -241,6 +246,23 @@ export default {
 
           return 'grey'
       }
+    },
+    collBatch: function () {
+      const param = { ids: this.selectedRows.map(item => item.id) }
+      this.loading = true
+      request.post('/asset-info/collectors/account', param).then(res => {
+        const { code, message } = res
+        if (code === 200) {
+          this.$message.success(message)
+          this.selectedRowKeys = []
+          this.selectedRows = []
+          this.$refs.table.refresh(false)
+        } else {
+          this.$message.error(message)
+        }
+      }).finally(() => {
+        this.loading = false
+      })
     }
   }
 }
