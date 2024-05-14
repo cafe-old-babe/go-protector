@@ -59,12 +59,13 @@ func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
 	if ok {
 		return
 	}
-	log = &SelfLogger{
-		zapLog: _log.zapLog.With(),
-		ctx:    ctx,
-	}
-	if traceId, ok := ctx.Value(consts.CtxKeyTraceId).(string); ok {
-		log.zapLog.Named(traceId)
+	log = &SelfLogger{}
+	var traceId string
+	if traceId, ok = ctx.Value(consts.CtxKeyTraceId).(string); ok {
+		log.zapLog = _log.zapLog.Named(traceId)
+	} else {
+		log.zapLog = _log.zapLog.Named("temp-name")
+
 	}
 
 	log.ctx = context.WithValue(ctx, consts.CtxKeyLog, log)
