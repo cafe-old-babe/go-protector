@@ -7,6 +7,7 @@ import (
 	"go-protector/server/internal/consts"
 	"go-protector/server/internal/utils"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"strconv"
 	"sync"
 )
@@ -83,7 +84,7 @@ func (_self *SelfLogger) Debug(msg string, data ...any) {
 }
 
 func (_self *SelfLogger) DebugZap(msg string, fields ...zap.Field) {
-	_self.zapLog.Debug(msg, fields...)
+	_self.zapLog.Log(zapcore.DebugLevel, msg, fields...)
 }
 
 func (_self *SelfLogger) Info(msg string, data ...any) {
@@ -91,7 +92,7 @@ func (_self *SelfLogger) Info(msg string, data ...any) {
 }
 
 func (_self *SelfLogger) InfoZap(msg string, fields ...zap.Field) {
-	_self.zapLog.Info(msg, fields...)
+	_self.zapLog.Log(zapcore.InfoLevel, msg, fields...)
 }
 
 func (_self *SelfLogger) Warn(msg string, data ...any) {
@@ -107,4 +108,38 @@ func (_self *SelfLogger) Fatal(msg string, data ...any) {
 }
 func (_self *SelfLogger) Panic(msg string, data ...any) {
 	_self.zapLog.Panic(fmt.Sprintf(msg, data...))
+}
+
+func Debug(msg string, data ...any) {
+	_log.Debug(fmt.Sprintf(msg, data...))
+}
+
+func DebugZap(msg string, fields ...zap.Field) {
+	_log.DebugZap(msg, fields...)
+}
+
+func Info(msg string, data ...any) {
+	_log.Info(fmt.Sprintf(msg, data...))
+}
+
+func InfoZap(msg string, fields ...zap.Field) {
+	_log.InfoZap(msg, fields...)
+}
+
+func Warn(msg string, data ...any) {
+	_log.Warn(fmt.Sprintf(msg, data...))
+}
+
+func Error(msg string, data ...any) {
+	_log.Error(fmt.Sprintf(msg, data...))
+}
+func ErrorZap(msg string, fields ...zap.Field) {
+	_log.zapLog.Error(msg, fields...)
+}
+
+func Fatal(msg string, data ...any) {
+	_log.Fatal(fmt.Sprintf(msg, data...))
+}
+func Panic(msg string, data ...any) {
+	_log.Panic(fmt.Sprintf(msg, data...))
 }

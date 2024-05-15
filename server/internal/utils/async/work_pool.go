@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 )
 
+var CommonWorkPool *WorkPool
+
 var num atomic.Int32
 
 const workNameFmt = "%s-%d-%d"

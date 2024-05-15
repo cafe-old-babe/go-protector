@@ -12,6 +12,7 @@ import (
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
+	"go-protector/server/internal/utils/async"
 	"go-protector/server/internal/utils/sshCli"
 	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
@@ -266,10 +267,15 @@ func (_self *AssetInfo) DoBatchCollectors(slice []entity.AssetInfoAccount) (res 
 		return
 	}
 	for _, assetInfo := range slice {
-		_self.DoCollectors(assetInfo)
+		//async.CommonWork.Submit(func() {
+		//	_self.DoCollectors(assetInfo)
+		//})
+		async.CommonWorkPool.Submit(func() {
+			_self.DoCollectors(assetInfo)
+		})
 
 	}
-	return base.ResultSuccessMsg("采集完成")
+	return base.ResultSuccessMsg("采集任务下发完成")
 
 }
 
@@ -300,10 +306,13 @@ func (_self *AssetInfo) DoBatchDail(slice []entity.AssetAccountInfo) (res *base.
 	}
 
 	for _, elem := range slice {
-		_self.DoDail(elem)
+		async.CommonWorkPool.Submit(func() {
+
+			_self.DoDail(elem)
+		})
 	}
 
-	return base.ResultSuccessMsg("拨测完成")
+	return base.ResultSuccessMsg("拨测任务下发完成")
 
 }
 

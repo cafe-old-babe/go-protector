@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"go-protector/server/internal/consts"
 	"go-protector/server/internal/current"
 	"gorm.io/gorm"
@@ -98,8 +97,8 @@ func updateByFunc(db *gorm.DB) {
 
 	} else {
 		if field, ok := db.Statement.Schema.FieldsByName["UpdatedBy"]; ok {
-			value, zero := field.ValueOf(db.Statement.Context, db.Statement.ReflectValue)
-			fmt.Printf("field: %v, value: %v, zero: %v\n", field.Name, value, zero)
+			_, zero := field.ValueOf(db.Statement.Context, db.Statement.ReflectValue)
+			//fmt.Printf("field: %v, value: %v, zero: %v\n", field.Name, value, zero)
 			if !zero {
 				return
 			}

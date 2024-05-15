@@ -5,18 +5,18 @@ import (
 	"go-protector/server/internal/consts"
 	"go-protector/server/internal/custom/c_logger"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"sync"
 )
 
+var CommonWork *Work
+
 func init() {
-	c_logger.SetLogger(zap.New(zapcore.NewNopCore()))
+	//c_logger.SetLogger(zap.New(zapcore.NewNopCore()))
 }
 
 type Work struct {
 	queue     chan func()
 	c         context.Context
-	log       *c_logger.SelfLogger
 	wait      sync.WaitGroup
 	closeOnce sync.Once
 }
@@ -29,7 +29,6 @@ func NewWork(name string, limit int) *Work {
 	_self := &Work{
 		queue: make(chan func(), limit),
 		c:     ctx,
-		log:   c_logger.GetLoggerByCtx(ctx),
 	}
 	_self.wait.Add(1)
 	go _self.start()
@@ -48,6 +47,7 @@ func (_self *Work) start() {
 		return
 	}
 
+	workName := _self.c.Value(consts.CtxKeyTraceId).(string)
 	for {
 		f, ok := <-_self.queue
 		if !ok {
@@ -60,12 +60,9 @@ func (_self *Work) start() {
 			}
 			defer func() {
 				if err := recover(); err != nil {
-					_self.log.Error("发生异常, %+v", err)
+					c_logger.ErrorZap("发生异常", zap.String("workName", workName), zap.Any("err", err))
 				}
-				_self.log.Debug("执行结束")
 			}()
-			_self.log.Debug("执行开始")
-
 			f()
 		}()
 

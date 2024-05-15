@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"go-protector/server/internal/consts"
+	"go-protector/server/internal/utils/async"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -17,6 +18,8 @@ func StartServer() (err error) {
 	if server, err = GetServer(); err != nil {
 		return err
 	}
+	async.CommonWorkPool = async.NewWorkPool("common-work-pool", 0, 0)
+	async.CommonWork = async.NewWork("common-work", 0)
 
 	go func() {
 		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -46,7 +49,8 @@ func StartServer() (err error) {
 	if err := server.Shutdown(ctx); err != nil {
 		zap.L().Error("server Shutdown failure ", zap.Error(err))
 	}
-
+	async.CommonWork.Wait()
+	async.CommonWorkPool.Wait()
 	return
 }
 
