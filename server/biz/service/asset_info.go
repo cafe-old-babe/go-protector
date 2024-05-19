@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"go-protector/server/biz/model/dao"
@@ -13,7 +14,7 @@ import (
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/utils/async"
-	"go-protector/server/internal/utils/sshCli"
+	"go-protector/server/internal/utils/sshUtil"
 	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
 	"time"
@@ -266,6 +267,9 @@ func (_self *AssetInfo) DoBatchCollectors(slice []entity.AssetInfoAccount) (res 
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
+
+	//_self.DB = _self.DB.WithContext(context.Background())
+	_self.WithGoroutineDB()
 	for _, assetInfo := range slice {
 		//async.CommonWork.Submit(func() {
 		//	_self.DoCollectors(assetInfo)
@@ -304,10 +308,9 @@ func (_self *AssetInfo) DoBatchDail(slice []entity.AssetAccountInfo) (res *base.
 		res = base.ResultFailureErr(errors.New("无拨测信息"))
 		return
 	}
-
+	_self.DB = _self.DB.WithContext(context.Background())
 	for _, elem := range slice {
 		async.CommonWorkPool.Submit(func() {
-
 			_self.DoDail(elem)
 		})
 	}
@@ -318,13 +321,15 @@ func (_self *AssetInfo) DoBatchDail(slice []entity.AssetAccountInfo) (res *base.
 
 func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 
-	var client *ssh.Client
+	var client *sshUtil.Client
 
 	var err error
 
 	defer func() {
 		if client != nil {
-			_ = client.Close()
+			if closeErr := client.Close(); closeErr != nil {
+				_self.Logger.Error("close err: %v", closeErr)
+			}
 		}
 		dailStatus := "1"
 		nowTime := c_type.NowTime()
@@ -336,20 +341,22 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 			dailMsg += "拨测成功"
 		}
 
-		_self.DB.Updates(&entity.AssetAccount{
+		if err = _self.DB.Updates(&entity.AssetAccount{
 			ModelId:    elem.ModelId,
 			DailStatus: dailStatus,
 			DailMsg:    dailMsg,
-		})
-
+		}).Error; err != nil {
+			_self.Logger.Error("update dial result failure: %v", err)
+		}
 	}()
 
-	client, err = sshCli.Connect(&sshCli.ConnectDTO{
-		IP:       elem.AssetBasic.IP,
-		Port:     elem.AssetBasic.Port,
-		Username: elem.Account,
-		Password: elem.Password,
-		Timeout:  time.Second * 3,
+	client, err = sshUtil.Connect(&sshUtil.ConnectParam{
+		IP:        elem.AssetBasic.IP,
+		GatewayId: elem.AssetBasic.AssetGatewayId,
+		Port:      elem.AssetBasic.Port,
+		Username:  elem.Account,
+		Password:  elem.Password,
+		Timeout:   time.Second * 3,
 	})
 
 	return
@@ -359,7 +366,7 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 
 	var err error
-	var cli *ssh.Client
+	var cli *sshUtil.Client
 	defer func() {
 		if cli != nil {
 			_ = cli.Close()
@@ -378,13 +385,14 @@ func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 	//}
 
 	var accountCollectorsDTO []dto.AccountAnalysisExtendDTO
-	if cli, err = sshCli.Connect(&sshCli.ConnectDTO{
-		ID:       assetInfo.ID,
-		IP:       assetInfo.IP,
-		Port:     assetInfo.Port,
-		Username: assetInfo.RootAcc.Account,
-		Password: assetInfo.RootAcc.Password,
-		Timeout:  0,
+	if cli, err = sshUtil.Connect(&sshUtil.ConnectParam{
+		ID:        assetInfo.ID,
+		GatewayId: assetInfo.AssetGatewayId,
+		IP:        assetInfo.IP,
+		Port:      assetInfo.Port,
+		Username:  assetInfo.RootAcc.Account,
+		Password:  assetInfo.RootAcc.Password,
+		Timeout:   0,
 	}); err != nil {
 		accountCollectorsDTO = append(accountCollectorsDTO, dto.AccountAnalysisExtendDTO{
 			AssetId: assetInfo.ID,
@@ -404,16 +412,17 @@ func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 
 	for _, account := range assetInfo.Accounts {
 		// -1收集从账号,0-特权账号 不采集
-		if account.AccountType == "-1" || account.AccountType == "0" {
+		if account.AccountType == "-1" {
 			continue
 		}
-		collectorsDTO := collectorsAccount(account, cli)
+		collectorsDTO := collectorsAccount(account, cli.SSHClient)
 		collectorsDTO.AssetId = assetInfo.ID
 		accountCollectorsDTO = append(accountCollectorsDTO, collectorsDTO)
 	}
 saveLabel:
 	var accountService AssetAccount
 	_self.MakeService(&accountService)
+	accountService.DB = _self.DB
 
 	accountService.AnalysisExtend(accountCollectorsDTO)
 }

@@ -10,7 +10,7 @@ type AssetBasic struct {
 	AssetName      string `gorm:"size:32;comment:资产名称"  json:"assetName" binding:"required" `
 	AssetGroupId   uint64 `gorm:"comment:资源组ID"  json:"groupId" binding:"required"`
 	IP             string `gorm:"size:32;comment:ip"  json:"ip" binding:"required,ip"`
-	Port           uint   `gorm:"comment:端口"  json:"port" binding:"required,min=1,max=65535" `
+	Port           int    `gorm:"comment:端口"  json:"port" binding:"required,min=1,max=65535" `
 	ManagerUserId  uint64 `gorm:"comment:资产管理员Id"  json:"managerUserId" binding:"required"`
 	AssetGatewayId uint64 `gorm:"comment:网关ID"  json:"gatewayId"`
 	ModelControl
@@ -26,10 +26,10 @@ type AssetInfo struct {
 	AssetBasic //`gorm:"embedded"`
 	//RootAcc      string       `json:"rootAcc"`
 	//RootPwd      string       `json:"-"`
-	RootAcc      AssetAccount `gorm:"foreignKey:ID;references:AssetId" json:"rootAcc"`
-	AssetGroup   AssetGroup   `json:"assetGroup"`
-	ManagerUser  SysUser      `json:"managerUser"`
-	AssetGateway AssetGateway `gorm:"foreignKey:AssetGatewayId" json:"assetGateway"` // belongs to
+	RootAcc      AssetAccount  `gorm:"foreignKey:ID;references:AssetId" json:"rootAcc"`
+	AssetGroup   AssetGroup    `json:"assetGroup"`
+	ManagerUser  SysUser       `json:"managerUser"`
+	AssetGateway *AssetGateway `gorm:"foreignKey:AssetGatewayId" json:"assetGateway"` // belongs to
 }
 
 func (_self *AssetInfo) AfterFind(db *gorm.DB) (err error) {

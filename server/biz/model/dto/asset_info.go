@@ -14,7 +14,7 @@ type AssetInfoSaveReq struct {
 	AssetName      string `json:"assetName" binding:"required" `
 	GroupId        uint64 `json:"groupId" binding:"required"`
 	IP             string `json:"ip" binding:"required,ip"`
-	Port           uint   `json:"port" binding:"required,min=1,max=65535"`
+	Port           int    `json:"port" binding:"required,min=1,max=65535"`
 	AssetGatewayId uint64 `json:"gatewayId"`
 	ManagerUserId  uint64 `json:"managerUserId" binding:"required"`
 	Account        string `json:"account" binding:"required"`

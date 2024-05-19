@@ -18,6 +18,7 @@ func StartServer() (err error) {
 	if server, err = GetServer(); err != nil {
 		return err
 	}
+	async.MainWork = async.NewMain()
 	async.CommonWorkPool = async.NewWorkPool("common-work-pool", 0, 0)
 	async.CommonWork = async.NewWork("common-work", 0)
 

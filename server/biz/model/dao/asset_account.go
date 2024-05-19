@@ -14,7 +14,7 @@ type assetAccount struct {
 }
 
 func (_self assetAccount) CheckSave(db *gorm.DB, model *entity.AssetAccount) (err error) {
-	if model.AccountType == "0" && model.ID <= 0 && len(model.Password) <= 0 {
+	if model.AccountType == "0" && model.ID <= 0 {
 		// 特权帐号特殊处理,保证特权帐号只有一个
 		err = db.Model(&entity.AssetAccount{}).Scopes(func(db *gorm.DB) *gorm.DB {
 			if model.AssetId > 0 {

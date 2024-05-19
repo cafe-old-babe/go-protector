@@ -8,14 +8,11 @@ import (
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/database/condition"
 	"gorm.io/gorm"
-	"sync"
 )
 
 type AssetGateway struct {
 	base.Service
 }
-
-var gateWayDTOCache sync.Map
 
 func (_self *AssetGateway) Page(req *dto.AssetGatewayPageReq) (res *base.Result) {
 	if req == nil {
@@ -54,19 +51,6 @@ func (_self *AssetGateway) Check(model *entity.AssetGateway) (err error) {
 	}
 	return
 
-}
-
-func (_self *AssetGateway) GetGatewayDTOById(id uint64) (gatewayDTO *dto.GatewayDTO, err error) {
-	if id <= 0 {
-		err = c_error.ErrParamInvalid
-		return
-	}
-	if value, ok := gateWayDTOCache.Load(id); ok {
-		gatewayDTO = value.(*dto.GatewayDTO)
-		return
-	}
-
-	return
 }
 
 func (_self *AssetGateway) List() (res *base.Result) {

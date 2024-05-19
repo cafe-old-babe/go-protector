@@ -1,7 +1,9 @@
 package base
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
+	"go-protector/server/internal/consts"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_logger"
 	"go-protector/server/internal/database"
@@ -14,6 +16,7 @@ type IService interface {
 	Make(ctx *gin.Context)
 	MakeService(service ...IService)
 	GetDB() *gorm.DB
+	WithGoroutineDB()
 }
 
 type Service struct {
@@ -38,6 +41,14 @@ func (_self *Service) MakeService(service ...IService) {
 }
 func (_self *Service) GetDB() *gorm.DB {
 	return _self.DB
+}
+
+// WithGoroutineDB 开启协程 处理数据库连接 防止 context canceled
+func (_self *Service) WithGoroutineDB() {
+	_self.Context = _self.Context.Copy()
+	_self.DB = _self.DB.WithContext(context.Background())
+	_self.Context.Set(consts.CtxKeyDB, _self.DB)
+
 }
 
 // SimpleSave 通用保存 会保存所有的字段，即使字段是零值 简单

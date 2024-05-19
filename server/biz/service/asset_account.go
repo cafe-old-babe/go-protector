@@ -251,7 +251,7 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 		}
 
 	saveLabel:
-		err = _self.DB.Transaction(func(tx *gorm.DB) (err error) {
+		if err = _self.DB.Transaction(func(tx *gorm.DB) (err error) {
 			// 保存从账号信息
 			account.AccountStatus = accountStatus
 			if err = tx.Updates(&account).Error; err != nil {
@@ -259,7 +259,9 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 			}
 			err = tx.Omit("created_by", "created_at").Save(&extend).Error
 			return
-		})
+		}); err != nil {
+			_self.Logger.Error("save account extend err: %v", err)
+		}
 
 	}
 	return
