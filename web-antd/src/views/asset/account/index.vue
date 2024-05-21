@@ -69,6 +69,9 @@
               </a-tooltip>
             </template>
           </span>
+          <p slot="expandedRowRender" slot-scope="record" style="margin: 0">
+            UID: [{{ record.extend.uid }}]; 主目录: [{{ record.extend.homePath }}]; shell: [{{ record.extend.shell }}]; 最后修改密码时间: [{{ record.extend.lastUpPwdTime }}]
+          </p>
         </s-table>
       </a-card>
       <Edit
