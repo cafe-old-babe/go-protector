@@ -17,4 +17,5 @@ const (
 	AssetBasic                = "asset_basic"
 	AssetAccount              = "asset_account"
 	AssetAccountExtend        = "asset_account_extend"
+	AssetAuth                 = "asset_auth"
 )
