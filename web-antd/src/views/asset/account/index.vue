@@ -46,33 +46,40 @@
           :data="loadData"
           :rowSelection="rowSelection"
         >
-          <span slot="action" slot-scope="text, current">
+          <!--          <span slot="action" slot-scope="text, current">-->
+          <template v-slot:action="text,current">
+
             <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="editRecord(current)">
               <a-icon type="edit" />编辑
             </a>
             <a :disabled="current.accountType==='0'" @click="deleteRecord(current.id)">
               <a-icon type="delete" />删除
             </a>
-          </span>
-          <span slot="dailStatus" slot-scope="text,current">
-            <template>
-              <a-tooltip
-                placement="left"
-                :title="current.dailMsg"
-                :get-popup-container="(trigger) => trigger.parentElement">
-                <a-tag
-                  :color="dailColor(current.dailStatus)" >
-                  {{
-                    current.dailStatusText
-                  }}
-                </a-tag>
-              </a-tooltip>
-            </template>
-          </span>
-          <p slot="expandedRowRender" slot-scope="record" style="margin: 0">
+            <!--          </span>-->
+          </template>
+          <!--          <span slot="dailStatus" slot-scope="text,current">-->
+          <template v-slot:dailStatus="text,current">
+            <a-tooltip
+              placement="left"
+              :title="current.dailMsg"
+              :get-popup-container="(trigger) => trigger.parentElement">
+              <a-tag
+                :color="dailColor(current.dailStatus)" >
+                {{
+                  current.dailStatusText
+                }}
+              </a-tag>
+            </a-tooltip>
+          </template>
+          <!--          </span>-->
+          <!--          <p slot="expandedRowRender" slot-scope="record" style="margin: 0">-->
+          <template v-slot:expandedRowRender="record" style="margin: 0">
             UID: [{{ record.extend.uid }}]; 主目录: [{{ record.extend.homePath }}]; shell: [{{ record.extend.shell }}]; 最后修改密码时间: [{{ record.extend.lastUpPwdTime }}]
-          </p>
-        </s-table>
+          </template>
+            <!--          <p v-slot:expandedRowRender="record" style="margin: 0">-->
+            <!--            UID: [{{ record.extend.uid }}]; 主目录: [{{ record.extend.homePath }}]; shell: [{{ record.extend.shell }}]; 最后修改密码时间: [{{ record.extend.lastUpPwdTime }}]-->
+            <!--          </p>-->
+          </span></s-table>
       </a-card>
       <Edit
         :visible="editVisible"
