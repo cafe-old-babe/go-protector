@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+type SliceCondition string
+
 type RelationType string
 type LoginPolicyCode string
 

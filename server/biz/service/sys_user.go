@@ -300,6 +300,13 @@ func (_self *SysUser) DeleteByIds(req *base.IdsReq) (result *base.Result) {
 		return
 	}
 
+	// 删除授权
+	var auth entity.AssetAuth
+	if err := auth.DeleteRedundancy(db, req.GetIds(), entity.TypeSysUser); err != nil {
+		result = base.ResultFailureErr(err)
+		return
+	}
+
 	return base.ResultSuccessMsg("删除成功")
 }
 

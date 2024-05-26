@@ -61,10 +61,11 @@ func (_self assetAccount) Delete(c *gin.Context) {
 	}
 	var accountService service.AssetAccount
 	_self.MakeService(c, &accountService)
-	idsReq.Value = &entity.AssetAccount{}
-	result := accountService.SimpleDelByIds(&idsReq, func() (err error) {
-		return accountService.CheckBatchDeleteByIds(idsReq.GetIds())
-	})
+	//idsReq.Value = &entity.AssetAccount{}
+	//result := accountService.SimpleDelByIds(&idsReq, func() (err error) {
+	//	return accountService.CheckBatchDeleteByIds(idsReq.GetIds())
+	//})
+	result := accountService.Delete(&idsReq)
 	c_result.Result(c, result)
 
 }

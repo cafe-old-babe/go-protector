@@ -166,8 +166,12 @@ func (_self *AssetInfo) Delete(idsReq *base.IdsReq) (res *base.Result) {
 			return
 		}
 		// 删除从账号
-		err = dao.AssetAccount.DeleteByAssetId(tx, ids)
-		// todo 删除授权
+		if err = dao.AssetAccount.DeleteByAssetId(tx, ids); err != nil {
+			return
+		}
+		// 删除授权
+		var auth entity.AssetAuth
+		err = auth.DeleteRedundancy(tx, ids, entity.TypeAssetBasic)
 
 		return
 	}); err != nil {

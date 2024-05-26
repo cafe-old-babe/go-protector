@@ -64,6 +64,11 @@ func (_self *AssetAccount) BeforeUpdate(db *gorm.DB) (err error) {
 	return
 }
 
+func (_self *AssetAccount) AfterUpdate(db *gorm.DB) error {
+	var auth AssetAuth
+	return auth.UpdateRedundancy(db, _self)
+}
+
 func (_self *AssetAccount) AfterFind(db *gorm.DB) (err error) {
 	if len(_self.Password) > 0 {
 		_self.Password, err = gm.Sm4DecryptCBC(_self.Password)

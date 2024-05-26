@@ -32,6 +32,7 @@ func (_self *AssetAuth) Page(req *dto.AssetAuthPageReq) (res *base.Result) {
 	return
 }
 
+// SaveCheck 保存前更新
 func (_self *AssetAuth) SaveCheck(data *entity.AssetAuth) (err error) {
 	if err = binding.Validator.ValidateStruct(data); err != nil {
 		return err

@@ -71,3 +71,8 @@ const (
 	// CollFmt 采集脚本
 	CollFmt = "cat /etc/passwd | grep ^%s  &&  cat /etc/shadow | grep ^%s"
 )
+
+const (
+	SliceIn    c_type.SliceCondition = "in"
+	SliceNotIn c_type.SliceCondition = "in"
+)

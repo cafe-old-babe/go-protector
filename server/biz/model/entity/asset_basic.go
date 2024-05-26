@@ -17,6 +17,11 @@ type AssetBasic struct {
 	ModelDelete
 }
 
+func (_self AssetBasic) AfterUpdate(db *gorm.DB) error {
+	var auth AssetAuth
+	return auth.UpdateRedundancy(db, _self)
+}
+
 func (_self AssetBasic) TableName() string {
 	return table_name.AssetBasic
 }

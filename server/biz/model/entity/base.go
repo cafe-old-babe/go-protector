@@ -3,6 +3,7 @@ package entity
 import (
 	"database/sql"
 	"gorm.io/gorm"
+	"reflect"
 )
 
 // ModelId https://gorm.io/zh_CN/docs/models.html
@@ -23,3 +24,9 @@ type ModelControl struct {
 type ModelDelete struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index;comment:删除"`
 }
+
+var (
+	TypeSysUser      = reflect.TypeOf(SysUser{})
+	TypeAssetBasic   = reflect.TypeOf(AssetBasic{})
+	TypeAssetAccount = reflect.TypeOf(AssetAccount{})
+)

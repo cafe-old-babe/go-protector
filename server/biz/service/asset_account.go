@@ -302,3 +302,27 @@ func (_self *AssetAccount) FindAssetAccountInfoSliceByIds(ids []uint64) (slice [
 	err = _self.DB.Preload("AssetBasic").Find(&slice, ids).Error
 	return
 }
+
+// Delete 删除
+func (_self *AssetAccount) Delete(req *base.IdsReq) (res *base.Result) {
+	err := _self.CheckBatchDeleteByIds(req.GetIds())
+	if err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+	if err = _self.DB.Transaction(func(tx *gorm.DB) (err error) {
+		var auth entity.AssetAuth
+
+		if err = auth.DeleteRedundancy(tx, req.GetIds(), entity.TypeAssetAccount); err != nil {
+			return err
+		}
+
+		return tx.Scopes(condition.In[uint64]("id", req.Ids)).
+			Delete(&entity.AssetAccount{}).Error
+	}); err != nil {
+		res = base.ResultFailureErr(err)
+	} else {
+		res = base.ResultSuccessMsg("删除成功")
+	}
+	return
+}

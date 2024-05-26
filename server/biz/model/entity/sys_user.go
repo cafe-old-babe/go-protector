@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/custom/c_type"
+	"gorm.io/gorm"
 )
 
 type SysUser struct {
@@ -26,6 +27,11 @@ type SysUser struct {
 	SessionId     string         `json:"sessionId,omitempty" gorm:"-"`
 	ModelDelete
 	ModelControl
+}
+
+func (_self SysUser) AfterUpdate(db *gorm.DB) error {
+	var auth AssetAuth
+	return auth.UpdateRedundancy(db, _self)
 }
 
 func (_self SysUser) TableName() string {
