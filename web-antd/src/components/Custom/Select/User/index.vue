@@ -23,6 +23,10 @@ export default {
       type: String,
       required: false,
       default: '请选择用户'
+    },
+    showOperate: {
+      type: Boolean,
+      default: true
     }
   },
   watch: {
@@ -34,6 +38,11 @@ export default {
     return {
       localValue: this.value,
       localShowLabel: this.showLabel
+    }
+  },
+  computed: {
+    calcWidth() {
+      return this.showOperate ? 'calc(100% - 68px)' : 'calc(100% + 0px)'
     }
   },
   methods: {
@@ -75,8 +84,8 @@ export default {
       disabled
       v-model="localShowLabel"
       :placeholder="placeholder"
-      :style="{width:`calc(100% - 68px)`,marginRight: `2px`}"/>
-    <template>
+      :style="{width:`${calcWidth}`,marginRight: `2px`}"/>
+    <template v-if="showOperate">
       <a-tooltip placement="top" title="选择用户" :style="{marginRight: `2px`}">
         <a-button @click="showSelectUser" type="primary" icon="select"></a-button>
       </a-tooltip>

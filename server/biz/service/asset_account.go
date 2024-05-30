@@ -33,6 +33,15 @@ func (_self *AssetAccount) Page(req *dto.AssetAccountPageReq) (res *base.Result)
 		condition.Like(table_name.AssetAccount+".account", req.Account),
 		condition.Like("AssetBasic.ip", req.IP),
 		condition.Like("AssetBasic.asset_name", req.AssetName),
+		func(db *gorm.DB) *gorm.DB {
+			if req.ExcludeUserId > 0 {
+				db = db.Where(table_name.AssetAccount+".id not in (?)",
+					_self.DB.Table(table_name.AssetAuth).
+						Where("user_id <> ?", req.ExcludeUserId).
+						Select("asset_acc_id"))
+			}
+			return db
+		},
 	)
 	count, err := _self.Count(
 		tx.Joins("AssetBasic").

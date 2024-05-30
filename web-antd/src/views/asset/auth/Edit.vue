@@ -19,49 +19,44 @@
           <a-form-model-item
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
-            label="所属资源"
-            prop="assetId"
+            label="主帐号"
+            prop="userId"
           >
-            <select-asset
-              ref="selectAsset"
-              v-model="localRecord.assetId"
-              :show-label="localRecord.assetInfoName"
+            <select-user
+              ref="selectUserRef"
+              v-model="localRecord.userId"
+              :show-label="localRecord.userAcc"
               :show-operate="!localRecord.id"
-              :placeholder="rules.assetId.message"/>
-          </a-form-model-item>
-          <a-form-model-item
-            :label-col="formItemLayout.labelCol"
-            :wrapper-col="formItemLayout.wrapperCol"
-            label="从帐号类型"
-            prop="accountType"
-          >
-            <a-radio-group
-              v-model="localRecord.accountType"
-              :default-value="localRecord.accountType"
-            >
-              <a-radio-button value="1">
-                管理从帐号
-              </a-radio-button>
-              <a-radio-button value="2">
-                普通从帐号
-              </a-radio-button>
-            </a-radio-group>
+              @callback="selectUser"
+              placeholder="请选择主帐号"/>
           </a-form-model-item>
           <a-form-model-item
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
             label="从帐号"
-            prop="account"
+            prop="assetAccId"
           >
-            <a-input v-model="localRecord.account" :placeholder="rules.account.message"/>
+            <select-asset-acc
+              ref="selectAssetAcc"
+              v-model="localRecord.assetAccId"
+              :show-label="localRecord.accountLabel"
+              :show-operate="!localRecord.id"
+              :user-id="localRecord.userId"
+              :placeholder="rules.assetAccId.message"
+              @callback="(data) => bindAssetAcc(data[0])"
+            />
           </a-form-model-item>
           <a-form-model-item
             :label-col="formItemLayout.labelCol"
             :wrapper-col="formItemLayout.wrapperCol"
-            label="从帐号"
-            prop="password"
+            label="授权生效时间"
+            prop="takeEffectDate"
           >
-            <a-input-password v-model="localRecord.password" :placeholder="rules.password.message"/>
+            <a-range-picker
+              v-model="localRecord.takeEffectDate"
+              :placeholder="rules.takeEffectDate.message"
+              @change="changeTakeEffect"/>
+
           </a-form-model-item>
         </a-form-model>
       </a-spin>
@@ -90,10 +85,12 @@
 </template>
 <script>
 import request from '@/utils/request'
-import SelectAsset from '@/components/Custom/Select/Asset'
-
+import SelectAssetAcc from '@/components/Custom/Select/AssetAcc'
+import SelectUser from '@/components/Custom/Select/User/index.vue'
+import TagSelectOption from '@/components/TagSelect/TagSelectOption'
+import moment from 'moment'
 export default {
-  components: { SelectAsset },
+  components: { TagSelectOption, SelectUser, SelectAssetAcc },
   props: {
     visible: {
       type: Boolean,
@@ -108,18 +105,16 @@ export default {
     return {
       loading: false,
       localRecord: {},
+      assetAccList: [],
       rules: {
-        assetId: [
-          { required: true, message: '请输入从帐号名称' }
+        userId: [
+          { required: true, message: '请选择主帐号' }
         ],
-        account: [
-          { required: true, message: '请输入从帐号' }
+        assetAccId: [
+          { required: true, message: '请选择从帐号' }
         ],
-        accountType: [
-          { required: true, message: '请选择从帐号类型' }
-        ],
-        password: [
-          { required: true, message: '请输入从帐号名称' }
+        takeEffectDate: [
+          { required: false, message: '请选择生效时间' }
         ]
       }
     }
@@ -127,7 +122,12 @@ export default {
   watch: {
     record(val) {
       this.localRecord = Object.assign({}, val)
-      this.rules.password[0].required = !this.localRecord.id
+      if (this.localRecord.id) {
+        this.localRecord.accountLabel = `${this.localRecord.assetAcc}[${this.localRecord.assetName}(${this.localRecord.assetIp})]`
+        if (this.localRecord.startDate && this.localRecord.endDate) {
+          this.localRecord.takeEffectDate = [moment(this.localRecord.startDate), moment(this.localRecord.endDate)]
+        }
+      }
       this.loading = false
     }
   },
@@ -144,7 +144,8 @@ export default {
   },
   methods: {
     onClose() {
-      this.$refs.selectAsset.remove()
+      this.$refs.selectAssetAcc.remove()
+      this.localRecord = {}
       this.$emit('close')
     },
     handleSave() {
@@ -154,10 +155,9 @@ export default {
           this.loading = false
           return false
         }
-        if (!this.localRecord.accountStatus) {
-          this.localRecord.accountStatus = '0'
-        }
-        request.post('/asset-account/save', this.localRecord).then(res => {
+        const saveObj = Object.assign({}, this.localRecord)
+        delete saveObj.takeEffectDate
+        request.post('/asset-auth/save', saveObj).then(res => {
           const { code, message } = res
           if (code === 200) {
             this.$emit('ok')
@@ -169,7 +169,25 @@ export default {
           this.loading = false
         })
       })
+    },
+    changeTakeEffect: function (date, dateString) {
+      this.localRecord.startDate = dateString[0]
+      this.localRecord.endDate = dateString[1]
+    },
+    bindAssetAcc: function (data) {
+      this.localRecord.assetAccId = data?.id
+      this.localRecord.assetAcc = data?.account
+      this.localRecord.assetId = data?.assetBasic?.id
+      this.localRecord.assetName = data?.assetBasic?.assetName
+      this.localRecord.assetIp = data?.assetBasic?.ip
+    },
+    selectUser(data) {
+      this.localRecord.userAcc = data[0].loginName
+      this.localRecord.userId = data[0].id
+      this.$refs.selectAssetAcc.remove()
+      this.bindAssetAcc({})
     }
+
   }
 }
 </script>

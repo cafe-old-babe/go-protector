@@ -100,7 +100,6 @@
               v-model="localRecord.gatewayId"
               :default-value="localRecord.gatewayId"
               placeholder="请选择网关">
-              循环 gatewayData
               <a-select-option v-for="elem in gatewayData" :key="elem.id">
                 {{ elem.agName + '('+ elem.agIp+')' }}
               </a-select-option>

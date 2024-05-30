@@ -1,22 +1,22 @@
 <template>
   <div>
-    <a-card :bordered="false" title="授权列表" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}">
+    <a-card :bordered="false" title="授权列表" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
       <div class="table-page-search-wrapper">
         <a-form layout="inline">
           <a-row :gutter="20">
             <a-col :md="5" :sm="5">
               <a-form-item label="主帐号">
-                <a-input v-model="queryParam.loginName" placeholder="" />
+                <a-input v-model="queryParam.userAcc" placeholder="" />
               </a-form-item>
             </a-col>
             <a-col :md="5" :sm="5">
               <a-form-item label="从帐号">
-                <a-input v-model="queryParam.account" placeholder="" />
+                <a-input v-model="queryParam.assetAcc" placeholder="" />
               </a-form-item>
             </a-col>
             <a-col :md="5" :sm="5">
               <a-form-item label="资产IP">
-                <a-input v-model="queryParam.ip" placeholder="" />
+                <a-input v-model="queryParam.assetIp" placeholder="" />
               </a-form-item>
             </a-col>
 
@@ -44,10 +44,10 @@
         :rowSelection="rowSelection"
       >
         <span slot="action" slot-scope="text, current">
-          <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="editRecord(current)">
+          <a style="margin-right: 8px" @click="editRecord(current)">
             <a-icon type="edit" />编辑
           </a>
-          <a :disabled="current.accountType==='0'" @click="deleteRecord(current.id)">
+          <a @click="deleteRecord(current.id)">
             <a-icon type="delete" />删除
           </a>
         </span>
@@ -86,7 +86,7 @@ export default {
       windowHeight: 0,
       roleId: 0,
       loadData: (parameter) => {
-        const promise = request.post('/asset-account/page', Object.assign(parameter, this.queryParam)).then((res) => {
+        const promise = request.post('/asset-auth/page', Object.assign(parameter, this.queryParam)).then((res) => {
           const { code, data, message } = res
           if (code === 200) {
             return data
@@ -139,14 +139,7 @@ export default {
       this.selectedRows = selectedRows
     },
     editRecord: function (record) {
-      this.record = Object.assign({}, {
-        'id': record.id,
-        'assetId': record.assetBasic.id,
-        'assetInfoName': `${record.assetBasic.assetName}(${record.assetBasic.ip})`,
-        'accountType': record.accountType,
-        'account': record.account,
-        'password': record.password
-      })
+      this.record = record
       this.editVisible = true
     },
     deleteRecord: function (id) {
@@ -164,7 +157,7 @@ export default {
 
       if (!confirm) {
         this.loading = true
-        request.post('/asset-account/delete', param).then(res => {
+        request.post('/asset-auth/delete', param).then(res => {
           const { code, message } = res
           if (code === 200) {
             this.$message.success(message ?? '删除成功')

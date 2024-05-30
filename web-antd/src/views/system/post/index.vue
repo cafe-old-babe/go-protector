@@ -4,7 +4,7 @@
     <a-layout-sider width="280">
       <a-card
         :bordered="false"
-        :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}"
+        :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}"
         title="部门">
         <c-tree
           :loading="loading"
@@ -25,7 +25,7 @@
       <a-layout-content>
         <a-card
           :bordered="false"
-          :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}"
+          :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}"
           :title="`[${currentDeptName??'全部'}]岗位列表`">
           <PostTable ref="postTable"/>
         </a-card>

@@ -2,7 +2,7 @@
   <div>
     <a-layout>
       <a-layout-sider width="280">
-        <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'auto'}" title="资源组">
+        <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}" title="资源组">
           <c-tree
             :loading="loading"
             ref="groupTree"
@@ -21,7 +21,7 @@
       </a-layout-sider>
       <a-layout>
         <a-layout-content>
-          <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'auto'}" title="资源列表">
+          <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}" title="资源列表">
             <InfoTable ref="infoTable"/>
           </a-card>
         </a-layout-content>

@@ -2,7 +2,7 @@
   <div>
     <a-layout>
       <a-layout-sider width="280">
-        <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}" title="部门">
+        <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}" title="部门">
           <c-tree
             :loading="loading"
             ref="deptTree"
@@ -21,7 +21,7 @@
       </a-layout-sider>
       <a-layout>
         <a-layout-content>
-          <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}" title="用户列表">
+          <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}" title="用户列表">
             <UserList ref="userList"/>
           </a-card>
         </a-layout-content>

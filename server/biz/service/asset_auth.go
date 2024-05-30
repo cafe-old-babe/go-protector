@@ -7,6 +7,7 @@ import (
 	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/database/condition"
+	"gorm.io/gorm"
 )
 
 type AssetAuth struct {
@@ -39,9 +40,13 @@ func (_self *AssetAuth) SaveCheck(data *entity.AssetAuth) (err error) {
 	}
 
 	count, err := _self.Count(
-		_self.DB.Model(data).
-			Where("asset_id = ? and asset_acc_id = ? and user_id",
-				data.AssetId, data.AssetAccId, data.UserId),
+		_self.DB.Model(data).Scopes(func(db *gorm.DB) *gorm.DB {
+			if data.ID > 0 {
+				db = db.Where("id <> ?", data.ID)
+			}
+			return db
+		}).Where("asset_id = ? and asset_acc_id = ? and user_id = ?",
+			data.AssetId, data.AssetAccId, data.UserId),
 	)
 	if err != nil {
 		return err

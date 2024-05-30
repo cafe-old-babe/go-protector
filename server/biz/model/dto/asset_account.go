@@ -13,9 +13,10 @@ type AssetAccountAccessReq struct {
 
 type AssetAccountPageReq struct {
 	base.Pagination
-	Account   string `json:"account,omitempty"`
-	AssetName string `json:"assetName,omitempty"`
-	IP        string `json:"ip,omitempty"`
+	Account       string `json:"account,omitempty"`
+	AssetName     string `json:"assetName,omitempty"`
+	IP            string `json:"ip,omitempty"`
+	ExcludeUserId uint64 `json:"excludeUserId,omitempty"`
 }
 
 type AccountAnalysisExtendDTO struct {
@@ -24,4 +25,8 @@ type AccountAnalysisExtendDTO struct {
 	In      string
 	Out     []byte
 	Err     error
+}
+
+type AssetAccountPageByAuthReq struct {
+	UserId uint64 `json:"userId,omitempty" binding:"required"`
 }

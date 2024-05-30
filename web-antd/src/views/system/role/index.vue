@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-card :bordered="false" title="角色列表" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'hidden'}">
+    <a-card :bordered="false" title="角色列表" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
       <div class="table-page-search-wrapper">
         <a-form layout="inline">
           <a-row :gutter="48">

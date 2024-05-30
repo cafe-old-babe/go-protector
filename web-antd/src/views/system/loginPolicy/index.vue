@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 210px)`,overflow:'auto'}">
+    <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
       <a-skeleton :loading="skeleton">
         <a-spin :spinning="loading">
           <a-tabs type="card" :default-active-key="activeKey" @change="(key) => activeKey = key">

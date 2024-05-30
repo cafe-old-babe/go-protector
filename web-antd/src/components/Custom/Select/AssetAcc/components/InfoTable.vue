@@ -29,12 +29,6 @@
           </a-form>
         </div>
         <div class="table-operator">
-          <a-button
-            type="primary"
-            @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
-          <a-button type="danger" :disabled="disabledDeleteBatch" @click="deleteBatch">批量删除</a-button>
-          <a-button @click="dailBatch"> <a-icon type="bell" />批量拨测</a-button>
-          <a-button :disabled="disabledCollBatch" @click="collBatch"> <a-icon type="code" />批量采集</a-button>
         </div>
         <s-table
           ref="table"
@@ -46,17 +40,7 @@
           :data="loadData"
           :rowSelection="rowSelection"
         >
-          <!--          <span slot="action" slot-scope="text, current">-->
-          <template v-slot:action="text,current">
 
-            <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="editRecord(current)">
-              <a-icon type="edit" />编辑
-            </a>
-            <a :disabled="current.accountType==='0'" @click="deleteRecord(current.id)">
-              <a-icon type="delete" />删除
-            </a>
-            <!--          </span>-->
-          </template>
           <!--          <span slot="dailStatus" slot-scope="text,current">-->
           <template v-slot:dailStatus="text,current">
             <a-tooltip
@@ -81,26 +65,26 @@
           <!--          </p>-->
         </s-table>
       </a-card>
-      <Edit
-        :visible="editVisible"
-        :record="record"
-        @close="editClose"
-        @ok="editOk"
-      />
     </a-spin>
   </div>
 </template>
 
 <script>
 import STable from '@/components/Table'
-import { Columns } from './column'
+import { Columns } from './InfoTable.js'
 import request from '@/utils/request'
-import Edit from './Edit'
 // import Permission from './Permission.vue'
 
 export default {
   name: 'Account',
-  components: { Edit, STable },
+  components: { STable },
+  props: {
+    userId: {
+      type: [Number],
+      required: false,
+      default: 0
+    }
+  },
   data() {
     return {
       loading: false,
@@ -114,6 +98,7 @@ export default {
       windowHeight: 0,
       roleId: 0,
       loadData: (parameter) => {
+        this.queryParam.excludeUserId = this.userId
         const promise = request.post('/asset-account/page', Object.assign(parameter, this.queryParam)).then((res) => {
           const { code, data, message } = res
           if (code === 200) {
@@ -139,6 +124,7 @@ export default {
       return {
         selectedRowKeys: this.selectedRowKeys,
         onChange: this.onSelectChange,
+        type: 'radio',
         getCheckboxProps: record => ({
           props: {
             // disabled: record.accountType === '0', // Column configuration not to be checked
@@ -148,7 +134,7 @@ export default {
       }
     },
     disabledDeleteBatch() {
-       return this.selectedRows.some(item => item.accountType === '0')
+      return this.selectedRows.some(item => item.accountType === '0')
     },
     disabledCollBatch() {
       return this.selectedRows.some(item => item.dailStatus !== '1')
@@ -168,6 +154,7 @@ export default {
     onSelectChange(selectedRowKeys, selectedRows) {
       this.selectedRowKeys = selectedRowKeys
       this.selectedRows = selectedRows
+      this.$emit('change', selectedRowKeys, selectedRows)
     },
     editRecord: function (record) {
       this.record = Object.assign({}, {

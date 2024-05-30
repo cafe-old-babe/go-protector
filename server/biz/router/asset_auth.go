@@ -12,7 +12,7 @@ import (
 func init() {
 
 	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
-		routerGroup := group.Group("asset-gateway")
+		routerGroup := group.Group("asset-auth")
 		{
 			routerGroup.POST("/page", _assetAuth.Page)
 			routerGroup.POST("/save", _assetAuth.Save)
@@ -64,6 +64,7 @@ func (_self assetAuth) Delete(c *gin.Context) {
 	}
 	var assetAuthService service.AssetAuth
 	_self.MakeService(c, &assetAuthService)
+	idsReq.Value = &entity.AssetAuth{}
 	result := assetAuthService.SimpleDelByIds(&idsReq)
 	c_result.Result(c, result)
 }

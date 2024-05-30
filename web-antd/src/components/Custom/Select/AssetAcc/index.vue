@@ -19,6 +19,11 @@ export default {
       required: false,
       default: ''
     },
+    userId: {
+      type: [Number],
+      required: false,
+      default: 0
+    },
     showOperate: {
       type: Boolean,
       default: true
@@ -26,7 +31,7 @@ export default {
     placeholder: {
       type: String,
       required: false,
-      default: '请选择资源'
+      default: '请选择资源从帐号'
     }
   },
   watch: {
@@ -49,6 +54,7 @@ export default {
     showSelect: function () {
       const innerSelf = this
       this.$dialog(selectIndex, {
+        userId: this.userId,
         on: {
           select (rowIds, rowData) {
             innerSelf.selectChange(rowIds, rowData)
@@ -68,7 +74,7 @@ export default {
     },
     selectChange: function (rowIds, rowData) {
       this.$emit('change.value', rowIds[0])
-      this.localShowLabel = `${rowData[0].assetName} (${rowData[0].ip})`
+      this.localShowLabel = `${rowData[0].account} [${rowData[0].assetBasic.assetName}(${rowData[0].assetBasic.ip})]`
       this.$emit('callback', rowData)
     }
   }
@@ -86,10 +92,10 @@ export default {
       :placeholder="placeholder"
       :style="{width:`${calcWidth}`,marginRight: `2px`}"/>
     <template v-if="showOperate">
-      <a-tooltip placement="top" title="选择资源" :style="{marginRight: `2px`}">
+      <a-tooltip placement="top" title="选择从帐号" :style="{marginRight: `2px`}">
         <a-button @click="showSelect" type="primary" icon="select"></a-button>
       </a-tooltip>
-      <a-tooltip placement="top" title="清除资源">
+      <a-tooltip placement="top" title="清除从帐号">
         <a-button @click="remove" type="danger" icon="delete"></a-button>
       </a-tooltip>
     </template>
