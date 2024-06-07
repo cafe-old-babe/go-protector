@@ -3,6 +3,7 @@
 .vscode
 .DS_Store
 .git
+temp/
 log/
 *.log
 

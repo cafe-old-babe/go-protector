@@ -17,7 +17,7 @@ func (_self *SysUser) DoLogin(loginDTO dto.LoginDTO) (res *base.Result) {
 		}
 	}
 
-	res = _self.FindUserByDTO(&dto.FindUser{
+	res = _self.FindUserByDTO(&dto.FindUserDTO{
 		LoginName: loginDTO.LoginName,
 	})
 	if !res.IsSuccess() {

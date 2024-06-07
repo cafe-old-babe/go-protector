@@ -32,6 +32,25 @@
           type="primary"
           @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
         <a-button type="danger" :disabled="disabledDeleteBatch" @click="deleteBatch">批量删除</a-button>
+        <a-dropdown>
+          <a-menu slot="overlay" @click="handleMenuClick">
+            <a-menu-item key="template"> <a-icon type="download" />导出模板 </a-menu-item>
+            <a-menu-item key="import">
+              <a-upload
+                name="file"
+                :multiple="true"
+                :customRequest="importData"
+                accept=".xlsx"
+                :showUploadList="false"
+              >
+                <a-icon
+                  type="cloud-upload" /> 导入授权
+              </a-upload>
+            </a-menu-item>
+            <a-menu-item key="data"> <a-icon type="cloud-download" />导出授权 </a-menu-item>
+          </a-menu>
+          <a-button type="primary" style="margin-left: 8px"> 导入导出 <a-icon type="down" /> </a-button>
+        </a-dropdown>
       </div>
       <s-table
         ref="table"
@@ -189,6 +208,73 @@ export default {
       this.editVisible = false
       this.permissionVisible = false
       this.roleId = 0
+    },
+    handleMenuClick: function (e) {
+      if (e.key === 'import') {
+        // 上传
+        return
+      }
+      // 下载
+      this.loading = true
+      request.post('/asset-auth/excel/' + e.key, this.queryParam, { responseType: 'blob' })
+      .then(this.processRes).finally(() => {
+        this.loading = false
+      })
+    },
+    importData: function (data) {
+      this.loading = true
+      // console.log(data)
+      const formData = new FormData()
+      // const fileList = {}
+      formData.append('file', data.file)
+      request.post('/asset-auth/excel/import', formData, {
+        responseType: 'blob',
+        timeout: 1000 * 60 * 5,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(this.processRes).catch(() => {
+        this.$message.error('导入失败！')
+      }).finally(() => {
+        this.$refs.table.refresh(false)
+        this.loading = false
+      })
+    },
+    processRes: function (res) {
+      if (res?.type === 'application/json') {
+        const reader = new FileReader()
+        const self = this
+        reader.onload = function (event) {
+          const content = JSON.parse(reader.result)
+          if (content && content.code !== 200) {
+            self.$message.error(content.message)
+          }
+        }
+        reader.readAsText(res)
+
+        return
+      }
+      const element = res.headers['content-disposition'].split('=')[1]
+        .replaceAll('"', '')
+        .replaceAll("UTF-8''", '')
+      const fileName = decodeURI(element)
+      const blob = res.data
+
+      // 创建新的URL并指向File对象或者Blob对象的地址
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      // 创建a标签，用于跳转至下载链接
+      const link = document.createElement('a')
+      link.style.display = 'none'
+      link.href = url
+      link.setAttribute('download', fileName)
+      // 挂载a标签
+      document.body.appendChild(link)
+      // 点击
+      link.click()
+      // 删除
+      document.body.removeChild(link)
+      // 释放blob URL地址
+      window.URL.revokeObjectURL(url)
     }
   }
 }

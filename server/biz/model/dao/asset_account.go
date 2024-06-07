@@ -3,8 +3,10 @@ package dao
 import (
 	"errors"
 	"github.com/gin-gonic/gin/binding"
+	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/custom/c_error"
+	"go-protector/server/internal/database/condition"
 	"gorm.io/gorm"
 )
 
@@ -81,4 +83,23 @@ func (_self assetAccount) DeleteByAssetId(db *gorm.DB, ids []uint64) error {
 		return
 	})
 
+}
+
+// FindAssetAccountByDTO 查询从账号
+func (_self assetAccount) FindAssetAccountByDTO(db *gorm.DB, param dto.FindAssetAccountDTO) (
+	model entity.AssetAccount, err error) {
+
+	if err = binding.Validator.ValidateStruct(param); err != nil {
+		return
+	}
+	if err = db.Scopes(
+		condition.Eq("asset_id", param.AssetId),
+		condition.Eq("account", param.Account),
+	).First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = errors.New("未查询到从账号信息")
+		}
+	}
+
+	return
 }

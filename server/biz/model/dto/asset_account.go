@@ -30,3 +30,8 @@ type AccountAnalysisExtendDTO struct {
 type AssetAccountPageByAuthReq struct {
 	UserId uint64 `json:"userId,omitempty" binding:"required"`
 }
+
+type FindAssetAccountDTO struct {
+	AssetId uint64 `binding:"required"`
+	Account string `binding:"required"`
+}

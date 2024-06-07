@@ -29,12 +29,12 @@ type SysUser struct {
 }
 
 // FindUserByDTO 查询用户信息,如果没查到 返回失败结果
-func (_self *SysUser) FindUserByDTO(findDTO *dto.FindUser) (res *base.Result) {
+func (_self *SysUser) FindUserByDTO(findDTO *dto.FindUserDTO) (res *base.Result) {
 	var sysUser *entity.SysUser
 	var err error
-	sysUser, err = dao.SysUser.FindUserByDTO(_self.DB, findDTO)
+	sysUser, err = dao.SysUser.FindUserInfoByDTO(_self.DB, findDTO)
 	if err != nil {
-		_self.Logger.Error("FindUserByDTO err: %v", err)
+		_self.Logger.Error("FindUserInfoByDTO err: %v", err)
 		//if errors.Is(c_error.ErrRecordNotFoundSysUser, err) {
 		//	res = base.ResultFailureMsg(c_error.ErrRecordNotFoundSysUser.Error())
 		//}

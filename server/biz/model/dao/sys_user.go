@@ -10,7 +10,9 @@ import (
 	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
+	"go-protector/server/internal/database/condition"
 	"gorm.io/gorm"
+	"reflect"
 	"time"
 )
 
@@ -19,8 +21,8 @@ var SysUser sysUser
 type sysUser struct {
 }
 
-// FindUserByDTO 根据条件查询用户信息
-func (_self *sysUser) FindUserByDTO(db *gorm.DB, dto *dto.FindUser) (
+// FindUserInfoByDTO 根据条件查询用户信息
+func (_self *sysUser) FindUserInfoByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
 	sysUser *entity.SysUser, err error) {
 
 	if dto == nil || (len(dto.LoginName) <= 0 && dto.ID <= 0) {
@@ -213,6 +215,26 @@ func (_self *sysUser) Save(db *gorm.DB, req *dto.UserSaveReq) (err error) {
 	}
 	// 绑定岗位
 	err = SysPost.UserBindPostIds(tx, model.ID, req.PostIds)
+
+	return
+}
+
+// FindUserByDTO 查询用户信息
+func (_self *sysUser) FindUserByDTO(db *gorm.DB, param dto.FindUserDTO) (
+	model entity.SysUser, err error) {
+	if reflect.ValueOf(param).IsZero() {
+		err = c_error.ErrParamInvalid
+		return
+	}
+
+	if err = db.Scopes(
+		condition.Eq("login_name", param.LoginName),
+		condition.Eq("id", param.ID),
+	).First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = errors.New("未查询到用户信息")
+		}
+	}
 
 	return
 }

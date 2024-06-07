@@ -126,7 +126,7 @@ var (
 			return
 		}
 		var err error
-		if sysUser, err = dao.SysUser.FindUserByDTO(_self.DB, &dto.FindUser{
+		if sysUser, err = dao.SysUser.FindUserInfoByDTO(_self.DB, &dto.FindUserDTO{
 			ID: sysUser.ID,
 		}); err != nil {
 			res = base.ResultFailureErr(err)

@@ -39,6 +39,7 @@ func TestSliceReflect(t *testing.T) {
 	fmt.Printf("valueOfTypeKindString: %v\n", valueOfTypeKindString)
 	println("========================")
 	fmt.Printf("isSlice %v\n", reflect.Slice == reflect.Indirect(valueOf).Type().Kind())
+	fmt.Printf("isSlice %v\n", reflect.Slice == reflect.Indirect(valueOf).Kind())
 
 }
 

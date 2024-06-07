@@ -21,3 +21,9 @@ type AssetInfoSaveReq struct {
 	Password       string `json:"password" binding:"required_without=ID"`
 	//PrivilegeAccount *AssetAccountAccessReq `json:"privilegeAccount" binding:"required"`
 }
+
+type FindAssetDTO struct {
+	ID        uint64 `json:"id"`
+	AssetName string `json:"assetName"`
+	IP        string `json:"ip"`
+}

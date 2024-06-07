@@ -6,6 +6,7 @@ import (
 	"go-protector/server/internal/custom/c_logger"
 	"go-protector/server/internal/custom/c_translator"
 	"net/http"
+	"os"
 )
 
 // Success 返回200
@@ -32,4 +33,14 @@ func Custom(c *gin.Context, code int, data any, msg ...string) {
 // Result 返回200
 func Result(c *gin.Context, result interface{}) {
 	c.AbortWithStatusJSON(http.StatusOK, result)
+}
+
+// ExportFile 导出文件
+func ExportFile(c *gin.Context, filePath, fileName string) {
+
+	//c.Data(http.StatusOK, "application/octet-stream", excelData.Bytes())
+	c.FileAttachment(filePath, fileName)
+	//下载完成后清除filePath
+	os.Remove(filePath)
+
 }

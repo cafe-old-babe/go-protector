@@ -6,4 +6,5 @@ type server struct {
 	Env        string `yaml:"env" json:"env,omitempty"`
 	Sm4Key     string `yaml:"sm4Key" json:"sm4Key,omitempty"`
 	RecordPath string `yaml:"recordPath" json:"recordPath,omitempty"`
+	TempPath   string `yaml:"tempPath" json:"tempPath,omitempty"`
 }

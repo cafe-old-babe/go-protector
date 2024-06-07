@@ -94,10 +94,10 @@ func formatLikeLeft(arg string) string {
 	return fmt.Sprintf("%s%%", arg)
 }
 
-func EqStr(column, arg string) func(db *gorm.DB) *gorm.DB {
+func Eq(column string, arg interface{}) func(db *gorm.DB) *gorm.DB {
 
 	return func(db *gorm.DB) *gorm.DB {
-		if len(column) <= 0 || len(arg) <= 0 {
+		if len(column) <= 0 || reflect.Indirect(reflect.ValueOf(arg)).IsZero() {
 			return db
 		}
 		return db.Where(column+" = ?", arg)

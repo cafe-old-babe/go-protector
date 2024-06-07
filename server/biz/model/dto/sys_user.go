@@ -5,7 +5,7 @@ import (
 	"go-protector/server/internal/custom/c_type"
 )
 
-type FindUser struct {
+type FindUserDTO struct {
 	ID         uint64
 	LoginName  string
 	IsUnscoped bool

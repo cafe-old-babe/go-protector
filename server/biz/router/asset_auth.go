@@ -17,6 +17,9 @@ func init() {
 			routerGroup.POST("/page", _assetAuth.Page)
 			routerGroup.POST("/save", _assetAuth.Save)
 			routerGroup.POST("/delete", _assetAuth.Delete)
+			routerGroup.POST("/excel/import", _assetAuth.Import)
+			routerGroup.POST("/excel/template", _assetAuth.ExportTemplate)
+			routerGroup.POST("/excel/data", _assetAuth.ExportData)
 		}
 	})
 
@@ -67,4 +70,48 @@ func (_self assetAuth) Delete(c *gin.Context) {
 	idsReq.Value = &entity.AssetAuth{}
 	result := assetAuthService.SimpleDelByIds(&idsReq)
 	c_result.Result(c, result)
+}
+
+func (_self assetAuth) Import(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c_result.Err(c, err)
+		return
+	}
+
+	var assetAuthService service.AssetAuth
+	_self.MakeService(c, &assetAuthService)
+
+	if err = assetAuthService.Import(file); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+
+	return
+}
+
+func (_self assetAuth) ExportTemplate(c *gin.Context) {
+
+	var assetAuthService service.AssetAuth
+	_self.MakeService(c, &assetAuthService)
+	if err := assetAuthService.ExportTemplate(); err != nil {
+		c_result.Err(c, err)
+	}
+	return
+}
+
+func (_self assetAuth) ExportData(c *gin.Context) {
+	var pageReq dto.AssetAuthPageReq
+	if err := c.ShouldBindJSON(&pageReq); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	var assetAuthService service.AssetAuth
+	_self.MakeService(c, &assetAuthService)
+	if err := assetAuthService.ExportData(&pageReq); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+
+	return
 }

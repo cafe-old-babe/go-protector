@@ -38,6 +38,25 @@ func init() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterTagNameFunc(func(fld reflect.StructField) string {
 			name := fld.Tag.Get("json")
+			if len(name) <= 0 {
+				val := fld.Tag.Get("excel")
+				if len(val) <= 0 {
+					return ""
+				}
+				var elemSlice []string
+				var kv []string
+				if elemSlice = strings.Split(val, ";"); len(elemSlice) <= 0 {
+					return ""
+				}
+				for _, elem := range elemSlice {
+					if kv = strings.Split(elem, ":"); len(kv) > 0 {
+						if kv[0] == "title" {
+							name = kv[1]
+							return name
+						}
+					}
+				}
+			}
 			return name
 		})
 		zhT := zh.New()

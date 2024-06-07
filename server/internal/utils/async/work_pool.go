@@ -19,6 +19,8 @@ type WorkPool struct {
 }
 
 // NewWorkPool create
+// workSize work个数
+// 每个work的workLimit
 func NewWorkPool(name string, workSize, workLimit int) *WorkPool {
 
 	if workSize <= 0 {

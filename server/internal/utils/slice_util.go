@@ -58,23 +58,24 @@ func SliceSubN[T uint64 | int64](v1, v2 []T) (sub []T) {
 func SliceToFieldSlice[T interface{ uint64 | string }](field string, slice interface{}) (fieldSlice []T) {
 	fieldSlice = make([]T, 0)
 	//循环slice
-	sliceValue := reflect.ValueOf(slice)
+	sliceValue := reflect.Indirect(reflect.ValueOf(slice))
+
 	if sliceValue.Kind() != reflect.Slice {
 		return
 	}
 
 	for i := 0; i < sliceValue.Len(); i++ {
 
-		elem := sliceValue.Index(i).Interface()
+		elem := sliceValue.Index(i)
 
-		if reflect.ValueOf(elem).Kind() != reflect.Struct {
+		if elem.Kind() != reflect.Struct {
 			continue
 		}
-		if reflect.ValueOf(elem).FieldByName(field).IsValid() {
+		value := elem.FieldByName(field)
+		if value.IsZero() {
 			continue
 		}
-
-		if val, ok := reflect.Indirect(reflect.ValueOf(elem)).FieldByName(field).Interface().(T); ok {
+		if val, ok := value.Interface().(T); ok {
 			fieldSlice = append(fieldSlice, val)
 		}
 	}
