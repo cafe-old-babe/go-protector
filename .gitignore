@@ -5,6 +5,7 @@
 .git
 temp/
 log/
+data/
 *.log
 
 config.yml
