@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -38,7 +39,7 @@ func (_self *SysMenuService) ListTree() (result *base.Result) {
 			Name:       menu.Name,
 			MenuType:   menu.MenuType,
 			Permission: menu.Permission,
-			Hidden:     menu.Hidden,
+			Hidden:     menu.Hidden.Int16,
 			Component:  menu.Component,
 			Children:   []vo.SysMenuVO{},
 		})
@@ -54,7 +55,7 @@ func (_self *SysMenuService) ListTree() (result *base.Result) {
 			Name:       menu.Name,
 			MenuType:   menu.MenuType,
 			Permission: menu.Permission,
-			Hidden:     menu.Hidden,
+			Hidden:     menu.Hidden.Int16,
 			Component:  menu.Component,
 			Children:   []vo.SysMenuVO{},
 		}
@@ -90,9 +91,12 @@ func (_self *SysMenuService) Save(req *dto.SysMenuSaveReq) (result *base.Result)
 		MenuType:   req.MenuType,
 		PID:        req.PID,
 		Permission: req.Permission,
-		Hidden:     req.Hidden,
-		Path:       req.Path,
-		Component:  req.Component,
+		Hidden: sql.NullInt16{
+			Int16: req.Hidden,
+			Valid: true,
+		},
+		Path:      req.Path,
+		Component: req.Component,
 	}
 	var res *gorm.DB
 	if req.ID <= 0 {

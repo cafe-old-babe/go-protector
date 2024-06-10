@@ -35,3 +35,8 @@ type FindAssetAccountDTO struct {
 	AssetId uint64 `binding:"required"`
 	Account string `binding:"required"`
 }
+
+type AuthAssetAccount struct {
+	AuthId  uint64
+	Account string
+}

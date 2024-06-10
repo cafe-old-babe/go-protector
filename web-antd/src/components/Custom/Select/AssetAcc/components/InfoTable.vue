@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-spin :spinning="loading">
-      <a-card :bordered="false" title="从帐号列表" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
+      <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
         <div class="table-page-search-wrapper">
           <a-form layout="inline">
             <a-row :gutter="20">

@@ -8,7 +8,7 @@ type SysMenuVO struct {
 	MenuType     int8        `json:"menuType"`
 	MenuTypeName string      `json:"menuTypeName"`
 	Permission   string      `json:"permission"`
-	Hidden       int8        `json:"hidden"`
+	Hidden       int16       `json:"hidden"`
 	Component    string      `json:"component"`
 	Children     []SysMenuVO `json:"children"`
 }

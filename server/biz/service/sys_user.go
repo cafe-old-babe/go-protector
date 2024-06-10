@@ -205,7 +205,7 @@ func (_self *SysUser) Nav() (res *base.Result) {
 			Redirect:  nil,
 			Meta: dto.MetaInfo{
 				Title: menu.Name,
-				Show:  menu.Hidden != 1,
+				Show:  menu.Hidden.Int16 != 1,
 			},
 		})
 	}

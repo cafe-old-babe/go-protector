@@ -6,6 +6,7 @@ import (
 	"go-protector/server/biz/service"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_result"
+	"strings"
 )
 
 func init() {
@@ -17,6 +18,7 @@ func init() {
 			routerGroup.POST("/collectors/:collType", _assetBasic.Collectors)
 			routerGroup.POST("/dial/:dialType", _assetBasic.Dial)
 			routerGroup.POST("/delete", _assetBasic.Delete)
+			routerGroup.POST("/auth/page", _assetBasic.Page)
 		}
 	})
 }
@@ -35,6 +37,7 @@ func (_self assetBasic) Page(c *gin.Context) {
 	}
 	var assetService service.AssetInfo
 	_self.MakeService(c, &assetService)
+	pageReq.Auth = strings.HasSuffix(c.Request.RequestURI, "/auth/page")
 	result := assetService.Page(&pageReq)
 	c_result.Result(c, result)
 }

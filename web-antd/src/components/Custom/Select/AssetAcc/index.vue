@@ -61,7 +61,7 @@ export default {
           }
         }
       }, {
-        title: '请选择资源',
+        title: '选择从帐号',
         okText: '确认',
         cancelText: '取消',
         width: '70%',

@@ -74,5 +74,5 @@ const (
 
 const (
 	SliceIn    c_type.SliceCondition = "in"
-	SliceNotIn c_type.SliceCondition = "in"
+	SliceNotIn c_type.SliceCondition = "not in"
 )

@@ -24,7 +24,7 @@ func init() {
 		}
 		return db.Or(fmt.Sprintf("%s %s ?", column, consts.SliceIn), slice)
 	}
-	subSliceCondMap[consts.SliceIn] = func(db *gorm.DB, column string, slice interface{}) *gorm.DB {
+	subSliceCondMap[consts.SliceNotIn] = func(db *gorm.DB, column string, slice interface{}) *gorm.DB {
 		if slice == nil {
 			return db
 		}
@@ -101,6 +101,16 @@ func Eq(column string, arg interface{}) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where(column+" = ?", arg)
+	}
+}
+
+func NEq(column string, arg interface{}) func(db *gorm.DB) *gorm.DB {
+
+	return func(db *gorm.DB) *gorm.DB {
+		if len(column) <= 0 || reflect.Indirect(reflect.ValueOf(arg)).IsZero() {
+			return db
+		}
+		return db.Where(column+" <> ?", arg)
 	}
 }
 

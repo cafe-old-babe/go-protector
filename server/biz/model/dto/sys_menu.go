@@ -7,6 +7,6 @@ type SysMenuSaveReq struct {
 	Path       string `json:"path" binding:"max=64"`
 	MenuType   int8   `json:"menuType" binding:"oneof=0 1 2"`
 	Permission string `json:"permission" binding:"required,max=64"`
-	Hidden     int8   `json:"hidden"`
+	Hidden     int16  `json:"hidden"`
 	Component  string `json:"component"`
 }

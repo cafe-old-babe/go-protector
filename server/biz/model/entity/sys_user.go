@@ -29,7 +29,7 @@ type SysUser struct {
 	ModelControl
 }
 
-func (_self SysUser) AfterUpdate(db *gorm.DB) error {
+func (_self SysUser) BeforeUpdate(db *gorm.DB) error {
 	var auth AssetAuth
 	return auth.UpdateRedundancy(db, _self)
 }

@@ -35,6 +35,7 @@ func (_self *Service) MakeService(service ...IService) {
 	if len(service) <= 0 {
 		return
 	}
+	_self.Context.Set(consts.CtxKeyDB, _self.DB)
 	for i := range service {
 		service[i].Make(_self.Context)
 	}

@@ -7,6 +7,7 @@ import (
 	"go-protector/server/biz/service"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_result"
+	"strconv"
 )
 
 func init() {
@@ -16,6 +17,7 @@ func init() {
 			routerGroup.POST("/page", _assetAccount.Page)
 			routerGroup.POST("/save", _assetAccount.Save)
 			routerGroup.POST("/delete", _assetAccount.Delete)
+			routerGroup.POST("/auth/:assetId", _assetAccount.ListByAuth)
 		}
 	})
 }
@@ -68,4 +70,19 @@ func (_self assetAccount) Delete(c *gin.Context) {
 	result := accountService.Delete(&idsReq)
 	c_result.Result(c, result)
 
+}
+
+func (_self assetAccount) ListByAuth(c *gin.Context) {
+	var assetIdStr string
+	assetIdStr = c.Param("assetId")
+	assetId, err := strconv.ParseUint(assetIdStr, 10, 64)
+	if err != nil {
+		c_result.Err(c, err)
+		return
+	}
+
+	var accountService service.AssetAccount
+	_self.MakeService(c, &accountService)
+	result := accountService.ListByAuth(assetId)
+	c_result.Result(c, result)
 }

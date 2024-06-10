@@ -18,4 +18,5 @@ const (
 	AssetAccount              = "asset_account"
 	AssetAccountExtend        = "asset_account_extend"
 	AssetAuth                 = "asset_auth"
+	SsoSession                = "sso_session"
 )

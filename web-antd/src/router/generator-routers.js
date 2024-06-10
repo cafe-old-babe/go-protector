@@ -71,7 +71,7 @@ const rootRouter = {
   name: 'index',
   path: '',
   component: 'BasicLayout',
-  redirect: '/dashboard/analysis',
+  redirect: '/dashboard/myAsset',
   meta: {
     title: '首页'
   },

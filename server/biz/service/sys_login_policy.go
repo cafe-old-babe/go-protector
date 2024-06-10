@@ -51,7 +51,7 @@ var (
 	}
 	defaultIntruderPolicy = entity.SysLoginPolicy{
 		PolicyCode: consts.LoginPolicyIntruder,
-		PolicyName: "放爆破登录策略",
+		PolicyName: "防爆破登录策略",
 		Enable:     "0",
 	}
 )

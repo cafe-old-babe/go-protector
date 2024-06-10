@@ -7,6 +7,7 @@ import (
 	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts/table_name"
+	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
@@ -36,9 +37,7 @@ func (_self *AssetAccount) Page(req *dto.AssetAccountPageReq) (res *base.Result)
 		func(db *gorm.DB) *gorm.DB {
 			if req.ExcludeUserId > 0 {
 				db = db.Where(table_name.AssetAccount+".id not in (?)",
-					_self.DB.Table(table_name.AssetAuth).
-						Where("user_id <> ?", req.ExcludeUserId).
-						Select("asset_acc_id"))
+					dao.AssetAuth.GenerateSubQueryForAssetAccId(db, req.ExcludeUserId, false))
 			}
 			return db
 		},
@@ -333,5 +332,29 @@ func (_self *AssetAccount) Delete(req *base.IdsReq) (res *base.Result) {
 	} else {
 		res = base.ResultSuccessMsg("删除成功")
 	}
+	return
+}
+
+func (_self *AssetAccount) ListByAuth(assetId uint64) (res *base.Result) {
+	if assetId <= 0 {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	userId := current.GetUserId(_self.Context)
+	if userId <= 0 {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	var slice []entity.AssetAuth
+
+	if err := _self.DB.Omit(table_name.AssetAccount+".password").Joins("AssetAccount").
+		Where(table_name.AssetAuth+".asset_id = ? ", assetId).
+		Where(table_name.AssetAuth+".user_id = ? ", userId).
+		Where(" sysdate() between IFNULL(start_date,sysdate()) and IFNULL(end_date,sysdate()) ").
+		Find(&slice).Error; err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+	res = base.ResultSuccess(slice)
 	return
 }

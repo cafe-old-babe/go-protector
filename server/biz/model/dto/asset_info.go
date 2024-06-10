@@ -7,6 +7,7 @@ type AssetInfoPageReq struct {
 	GroupIds  []uint64 `json:"groupIds,omitempty"`
 	AssetName string   `json:"assetName,omitempty"`
 	IP        string   `json:"IP,omitempty"`
+	Auth      bool     `json:"-"`
 }
 
 type AssetInfoSaveReq struct {

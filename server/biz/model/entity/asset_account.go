@@ -61,12 +61,9 @@ func (_self *AssetAccount) BeforeUpdate(db *gorm.DB) (err error) {
 			_self.Password = ""
 		}
 	}
-	return
-}
-
-func (_self *AssetAccount) AfterUpdate(db *gorm.DB) error {
 	var auth AssetAuth
 	return auth.UpdateRedundancy(db, _self)
+
 }
 
 func (_self *AssetAccount) AfterFind(db *gorm.DB) (err error) {

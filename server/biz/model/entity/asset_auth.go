@@ -13,18 +13,19 @@ import (
 // AssetAuth 授权表
 type AssetAuth struct {
 	ModelId
-	AssetId    uint64      `gorm:"comment:资产id;uniqueIndex:auth_unique_i"  json:"assetId" binding:"required"`
-	AssetName  string      `gorm:"size:32;comment:资产名称" json:"assetName" binding:"required"  excel:"title:资产名称" `
-	AssetIp    string      `gorm:"size:32;comment:资产IP" json:"assetIp" binding:"required" excel:"title:资产IP"`
-	AssetAccId uint64      `gorm:"comment:资产从帐号ID;uniqueIndex:auth_unique_i"  json:"assetAccId" binding:"required"`
-	AssetAcc   string      `gorm:"size:32;comment:资产从帐号" json:"assetAcc" binding:"required" excel:"title:资产从帐号"`
-	UserId     uint64      `gorm:"comment:主帐号ID;uniqueIndex:auth_unique_i"  json:"userId" binding:"required"`
-	UserAcc    string      `gorm:"size:32;comment:主帐号"  json:"userAcc" binding:"required" excel:"title:主帐号"`
-	StartDate  c_type.Time `gorm:"type:date;comment:授权开始时间"  json:"startDate" excel:"title:授权开始时间"`
-	EndDate    c_type.Time `gorm:"type:date;comment:授权结束时间"  json:"endDate" excel:"title:授权结束时间"`
+	AssetId      uint64       `gorm:"comment:资产id;uniqueIndex:auth_unique_i"  json:"assetId" binding:"required"`
+	AssetName    string       `gorm:"size:32;comment:资产名称" json:"assetName" binding:"required"  excel:"title:资产名称" `
+	AssetIp      string       `gorm:"size:32;comment:资产IP" json:"assetIp" binding:"required" excel:"title:资产IP"`
+	AssetAccId   uint64       `gorm:"comment:资产从帐号ID;uniqueIndex:auth_unique_i"  json:"assetAccId" binding:"required"`
+	AssetAcc     string       `gorm:"size:32;comment:资产从帐号" json:"assetAcc" binding:"required" excel:"title:资产从帐号"`
+	UserId       uint64       `gorm:"comment:主帐号ID;uniqueIndex:auth_unique_i"  json:"userId" binding:"required"`
+	UserAcc      string       `gorm:"size:32;comment:主帐号"  json:"userAcc" binding:"required" excel:"title:主帐号"`
+	StartDate    c_type.Time  `gorm:"type:date;comment:授权开始时间"  json:"startDate" excel:"title:授权开始时间"`
+	EndDate      c_type.Time  `gorm:"type:date;comment:授权结束时间"  json:"endDate" excel:"title:授权结束时间"`
+	AssetAccount AssetAccount `gorm:"foreignKey:AssetAccId;references:ID"  json:"assetAccount,omitempty" binding:"-"`
 	ModelControl
 	ModelDelete
-	excel.StdRow
+	excel.StdRow `gorm:"-" json:"-"`
 }
 
 func (*AssetAuth) TableName() string {
@@ -49,65 +50,63 @@ func (_self *AssetAuth) UpdateRedundancy(db *gorm.DB, data interface{}) (err err
 		err = c_error.ErrParamInvalid
 		return
 	}
-	tx := db.Session(&gorm.Session{NewDB: true})
+	return db.Transaction(func(tx *gorm.DB) (err error) {
 
-	if indirect.CanConvert(TypeSysUser) {
-		if !db.Statement.Changed("LoginName") {
-			return
-		}
-		convert := indirect.Convert(TypeSysUser)
-		id := convert.FieldByName("ID")
-		if id.IsZero() {
-			return
-		}
-		userAcc := convert.FieldByName("LoginName")
-		_self.UserId = id.Uint()
-		_self.UserAcc = userAcc.String()
-		tx = tx.Select("user_acc").Where("user_id = ? ", _self.UserId)
-	} else if indirect.CanConvert(TypeAssetBasic) {
-		if !db.Statement.Changed("IP", "AssetName") {
-			return
-		}
-		convert := indirect.Convert(TypeAssetBasic)
-		id := convert.FieldByName("ID")
-		if id.IsZero() {
-			return
-		}
-		ip := convert.FieldByName("IP")
-		assetName := convert.FieldByName("AssetName")
-		_self.AssetId = id.Uint()
-		_self.AssetIp = ip.String()
-		_self.AssetName = assetName.String()
+		if indirect.CanConvert(TypeSysUser) {
 
-		tx = tx.Select("ip", "asset_name").
-			Where("asset_id = ? ", _self.AssetId)
+			convert := indirect.Convert(TypeSysUser)
+			id := convert.FieldByName("ID")
+			if id.IsZero() {
+				return
+			}
+			userAcc := convert.FieldByName("LoginName")
+			_self.UserId = id.Uint()
+			_self.UserAcc = userAcc.String()
+			tx = tx.Select("user_acc").Where("user_id = ? ", _self.UserId)
+		} else if indirect.CanConvert(TypeAssetBasic) {
 
-	} else if indirect.CanConvert(TypeAssetAccount) {
-		if !db.Statement.Changed("Account") {
+			var selectSlice []string
+			convert := indirect.Convert(TypeAssetBasic)
+			id := convert.FieldByName("ID")
+			if id.IsZero() {
+				return
+			}
+
+			if ip := convert.FieldByName("IP"); !ip.IsZero() {
+				_self.AssetIp = ip.String()
+				selectSlice = append(selectSlice, "asset_ip")
+			}
+			if assetName := convert.FieldByName("AssetName"); !assetName.IsZero() {
+				_self.AssetName = assetName.String()
+				selectSlice = append(selectSlice, "asset_name")
+			}
+			if len(selectSlice) <= 0 {
+				return
+			}
+			tx = tx.Select(selectSlice).
+				Where("asset_id = ? ", id.Interface())
+
+		} else if indirect.CanConvert(TypeAssetAccount) {
+
+			convert := indirect.Convert(TypeAssetAccount)
+			id := convert.FieldByName("ID")
+			if id.IsZero() {
+				return
+			}
+			assetAcc := convert.FieldByName("Account")
+			_self.AssetAcc = assetAcc.String()
+			tx = tx.Select("asset_acc").
+				Where("asset_acc_id = ? ", id.Interface())
+
+		} else {
+			err = c_error.ErrParamInvalid
 			return
 		}
+		// https://gorm.io/zh_CN/docs/update.html#%E4%B8%8D%E4%BD%BF%E7%94%A8-Hook-%E5%92%8C%E6%97%B6%E9%97%B4%E8%BF%BD%E8%B8%AA
 
-		convert := indirect.Convert(TypeAssetAccount)
-		id := convert.FieldByName("ID")
-		if id.IsZero() {
-			return
-		}
-		assetAcc := convert.FieldByName("Account")
-		_self.AssetAccId = id.Uint()
-		_self.AssetAcc = assetAcc.String()
-		tx = tx.Select("asset_acc").
-			Where("asset_acc_id = ? ", _self.AssetAccId)
-
-	} else {
-		err = c_error.ErrParamInvalid
+		err = tx.Model(_self).UpdateColumns(_self).Error
 		return
-	}
-	// https://gorm.io/zh_CN/docs/update.html#%E4%B8%8D%E4%BD%BF%E7%94%A8-Hook-%E5%92%8C%E6%97%B6%E9%97%B4%E8%BF%BD%E8%B8%AA
-	if err = tx.UpdateColumns(_self).Error; err != nil {
-		return
-	}
-
-	return
+	})
 }
 
 // DeleteRedundancy 删除冗余数据
@@ -131,5 +130,16 @@ func (_self *AssetAuth) DeleteRedundancy(db *gorm.DB, ids []uint64, dateType ref
 	default:
 		err = c_error.ErrParamInvalid
 	}
+	if err != nil {
+		return
+	}
 	return tx.Scopes(scope).Delete(_self).Error
+}
+
+func (_self *AssetAuth) AfterFind(db *gorm.DB) error {
+	if err := _self.AssetAccount.AfterFind(db); err != nil {
+		return err
+	}
+	_self.AssetAccount.Password = ""
+	return nil
 }

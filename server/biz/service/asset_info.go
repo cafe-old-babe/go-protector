@@ -10,6 +10,7 @@ import (
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts"
 	"go-protector/server/internal/consts/table_name"
+	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
@@ -81,11 +82,19 @@ func (_self *AssetInfo) Page(req *dto.AssetInfoPageReq) (res *base.Result) {
 			}
 			return db
 		},
+		func(db *gorm.DB) *gorm.DB {
+			if !req.Auth {
+				return db.Joins("RootAcc", _self.DB.Where("account_type = ?", "0"))
+			}
+			return db.Where(table_name.AssetBasic+".id in (?)",
+				dao.AssetAuth.GenerateSubQueryForAssetId(db, current.GetUserId(_self.Context)))
+
+		},
 	)
+
 	err = tx.Joins("AssetGateway").
 		Joins("ManagerUser").
 		Joins("AssetGroup").
-		Joins("RootAcc", _self.DB.Where("account_type = ?", "0")).
 		//Joins("left join " + table_name.AssetAccount +
 		//	" on " + table_name.AssetBasic + ".id = " + table_name.AssetAccount + ".asset_id and account_type = '0' ").
 		Find(&assetInfoSlice).
@@ -128,6 +137,8 @@ func (_self *AssetInfo) Save(req *dto.AssetInfoSaveReq) (res *base.Result) {
 		AssetGatewayId: req.AssetGatewayId,
 		ManagerUserId:  req.ManagerUserId,
 	}
+	//_self.Context.Request = _self.Context.Request.WithContext(context.WithValue(_self.Context.Request.Context(), "mutex", assetBasic))
+	//_self.DB.WithContext(context.WithValue(_self.DB.Statement.Context, "mutex", assetBasic))
 	res = _self.SimpleSave(&assetBasic, func() error {
 		return dao.AssetBasic.CheckSave(_self.DB, assetBasic)
 
