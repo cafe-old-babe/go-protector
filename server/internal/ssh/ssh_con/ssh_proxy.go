@@ -1,4 +1,4 @@
-package sshUtil
+package ssh_con
 
 import (
 	"context"

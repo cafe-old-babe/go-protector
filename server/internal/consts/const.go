@@ -76,3 +76,22 @@ const (
 	SliceIn    c_type.SliceCondition = "in"
 	SliceNotIn c_type.SliceCondition = "not in"
 )
+
+const (
+	MsgConnected c_type.MsgType = iota
+	// MsgClose 关闭
+	MsgClose
+	// MsgData 正常消息
+	MsgData
+)
+
+const (
+	// SessionWaiting 等待连接
+	SessionWaiting c_type.SessionStatus = "0"
+	// SessionConnecting 连接中
+	SessionConnecting = "1"
+	// SessionConnected 已连接
+	SessionConnected = "2"
+	// SessionClose 已关闭
+	SessionClose = "3"
+)

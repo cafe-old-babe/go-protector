@@ -370,6 +370,12 @@ export const constantRouterMap = [
         path: 'recover',
         name: 'recover',
         component: undefined
+      },
+      {
+        path: '/sso-terminal',
+        name: 'Terminal',
+        hidden: true,
+        component: () => import(/* webpackChunkName: "user" */ '@/views/session/terminal')
       }
     ]
   },

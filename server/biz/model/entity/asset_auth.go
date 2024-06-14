@@ -94,6 +94,9 @@ func (_self *AssetAuth) UpdateRedundancy(db *gorm.DB, data interface{}) (err err
 				return
 			}
 			assetAcc := convert.FieldByName("Account")
+			if assetAcc.IsZero() {
+				return
+			}
 			_self.AssetAcc = assetAcc.String()
 			tx = tx.Select("asset_acc").
 				Where("asset_acc_id = ? ", id.Interface())

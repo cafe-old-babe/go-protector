@@ -14,8 +14,8 @@ import (
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
+	"go-protector/server/internal/ssh/ssh_con"
 	"go-protector/server/internal/utils/async"
-	"go-protector/server/internal/utils/sshUtil"
 	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
 	"time"
@@ -336,7 +336,7 @@ func (_self *AssetInfo) DoBatchDail(slice []entity.AssetAccountInfo) (res *base.
 
 func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 
-	var client *sshUtil.Client
+	var client *ssh_con.Client
 
 	var err error
 
@@ -365,7 +365,7 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 		}
 	}()
 
-	client, err = sshUtil.Connect(&sshUtil.ConnectParam{
+	client, err = ssh_con.Connect(&ssh_con.ConnectParam{
 		IP:        elem.AssetBasic.IP,
 		GatewayId: elem.AssetBasic.AssetGatewayId,
 		Port:      elem.AssetBasic.Port,
@@ -381,7 +381,7 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 
 	var err error
-	var cli *sshUtil.Client
+	var cli *ssh_con.Client
 	defer func() {
 		if cli != nil {
 			_ = cli.Close()
@@ -400,7 +400,7 @@ func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 	//}
 
 	var accountCollectorsDTO []dto.AccountAnalysisExtendDTO
-	if cli, err = sshUtil.Connect(&sshUtil.ConnectParam{
+	if cli, err = ssh_con.Connect(&ssh_con.ConnectParam{
 		ID:        assetInfo.ID,
 		GatewayId: assetInfo.AssetGatewayId,
 		IP:        assetInfo.IP,

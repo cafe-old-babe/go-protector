@@ -143,6 +143,7 @@ export default {
         const { code, message, data } = res
         if (code === 200) {
           console.log(data)
+          window.open(`/sso-terminal?id=${data.id}`)
           return
         }
         this.$message.error(message)

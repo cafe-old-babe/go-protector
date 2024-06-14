@@ -6,9 +6,12 @@ import (
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/base"
+	"go-protector/server/internal/consts"
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
+	"go-protector/server/internal/ssh/ssh_con"
+	"go-protector/server/internal/ssh/ssh_term"
 )
 
 type SsoSession struct {
@@ -74,7 +77,7 @@ func (_self *SsoSession) CreateSession(authId uint64) (res *base.Result) {
 	session.UserId = auth.UserId
 	session.UserAcc = auth.UserAcc
 
-	session.Status = "0"
+	session.Status = consts.SessionWaiting
 
 	if err = _self.DB.Create(&session).Error; err != nil {
 		res = base.ResultFailureErr(err)
@@ -83,7 +86,81 @@ func (_self *SsoSession) CreateSession(authId uint64) (res *base.Result) {
 	return base.ResultSuccess(map[string]uint64{"id": session.ID}, "创建成功")
 }
 
-func (_self *SsoSession) ConnectSession(req *dto.ConnectSessionReq) (err error) {
+// ConnectBySession
+func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err error) {
+	if req == nil || req.Id <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	var ws *base.WsContext
+	// 校验会话信息
+	var model entity.SsoSession
+
+	var term *ssh_term.Terminal
+	var forward *ssh_term.TermForward
+
+	// websocket
+	if ws, err = base.Upgrade(&_self.Service); err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			_ = ws.Write(base.NewWsMsg(consts.MsgClose, err.Error()))
+		}
+		if model.ID > 0 {
+			model.Status = consts.SessionClose
+			_self.DB.Updates(&model)
+		}
+		if term != nil {
+			_ = term.Close()
+		}
+
+		if forward != nil {
+			forward.Stop()
+		} else {
+			if ws != nil {
+				_ = ws.Close()
+			}
+		}
+	}()
+	if err = _self.DB.First(&model, req.Id).Error; err != nil {
+		return
+	}
+	assetAccPwd := model.AssetAccPwd
+	//if model.Status != consts.SessionWaiting {
+	//	err = c_error.ErrIllegalAccess
+	//	return
+	//}
+	if model.UserId != current.GetUserId(_self.Context) {
+		err = c_error.ErrIllegalAccess
+		return
+	}
+	model.Status = consts.SessionConnecting
+	if err = _self.DB.Updates(&model).Error; err != nil {
+		return err
+	}
+	// 启动shell
+	if term, err = ssh_term.NewTerminal(req, &ssh_con.ConnectParam{
+		ID:        model.AssetId,
+		IP:        model.AssetIp,
+		Port:      model.AssetPort,
+		Username:  model.AssetAcc,
+		Password:  assetAccPwd,
+		GatewayId: model.AssetGatewayId,
+	}); err != nil {
+		return
+	}
+	// 更新连接状态
+	model.Status = consts.SessionConnected
+	model.ConnectAt = c_type.NowTime()
+	if err = _self.DB.Updates(&model).Error; err != nil {
+		return err
+	}
+	// 启动转发
+	forward = ssh_term.NewTermForward(ws, term)
+	forward.Start()
+
+	_ = forward.ReadWsToWriteTerm()
 
 	return
 }

@@ -45,7 +45,7 @@ func JwtAuth() gin.HandlerFunc {
 				return
 			}
 		}
-		if split := strings.Split(tokenStr, " "); len(split) >= 1 {
+		if split := strings.Split(tokenStr, " "); len(split) >= 2 {
 			tokenStr = split[1]
 		}
 		oldTokenStr := tokenStr

@@ -13,6 +13,10 @@ type SliceCondition string
 type RelationType string
 type LoginPolicyCode string
 
+type MsgType int
+
+type SessionStatus string
+
 type Time sql.NullTime
 
 func (_self *Time) UnmarshalJSON(data []byte) (err error) {

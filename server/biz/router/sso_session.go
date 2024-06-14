@@ -5,6 +5,7 @@ import (
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/service"
 	"go-protector/server/internal/base"
+	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_result"
 	"strconv"
 )
@@ -12,10 +13,11 @@ import (
 func init() {
 
 	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		group.GET("/ws/sso-session/connect/:ssoSessionId", _ssoSession.ConnectBySession)
+
 		routerGroup := group.Group("sso-session")
 		{
 			routerGroup.POST("/create/:authId", _ssoSession.CreateSession)
-			routerGroup.GET("/connect/:ssoSessionId", _ssoSession.ConnectSession)
 		}
 	})
 
@@ -41,15 +43,26 @@ func (_self ssoSession) CreateSession(c *gin.Context) {
 	c_result.Result(c, result)
 }
 
-func (_self ssoSession) ConnectSession(c *gin.Context) {
-	var req dto.ConnectSessionReq
-	if err := c.ShouldBind(&req); err != nil {
+func (_self ssoSession) ConnectBySession(c *gin.Context) {
+	var req dto.ConnectBySessionReq
+	var err error
+	if err = c.ShouldBind(&req); err != nil {
 		c_result.Err(c, err)
 		return
 	}
+	if str := c.Param("ssoSessionId"); len(str) <= 0 {
+		c_result.Err(c, c_error.ErrParamInvalid)
+		return
+	} else {
+		if req.Id, err = strconv.ParseUint(str, 10, 64); err != nil {
+			c_result.Err(c, c_error.ErrParamInvalid)
+			return
+		}
+	}
+
 	var ssoSessionService service.SsoSession
 	_self.MakeService(c, &ssoSessionService)
-	if err := ssoSessionService.ConnectSession(&req); err != nil {
+	if err = ssoSessionService.ConnectBySession(&req); err != nil {
 		c_result.Err(c, err)
 		return
 	}

@@ -128,7 +128,7 @@ const vueConfig = {
     proxy: {
       '/api/': {
         target: 'http://localhost:8888/',
-        ws: false,
+        ws: true,
         changeOrigin: true
       }
     }

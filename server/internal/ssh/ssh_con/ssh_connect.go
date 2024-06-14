@@ -1,4 +1,4 @@
-package sshUtil
+package ssh_con
 
 import (
 	"errors"
@@ -25,8 +25,6 @@ type ConnectParam struct {
 	Password  string
 	Timeout   time.Duration
 	GatewayId uint64
-
-	sshProxy *SSHProxy
 }
 
 // Connect 连接ssh
@@ -38,7 +36,7 @@ func Connect(param *ConnectParam) (cli *Client, err error) {
 	// 配置SSH连接
 	timeout := param.Timeout
 	if timeout <= 0 {
-		timeout = 3 * time.Second
+		timeout = 5 * time.Second
 	}
 	config := &ssh.ClientConfig{
 		Timeout: timeout,
@@ -48,8 +46,9 @@ func Connect(param *ConnectParam) (cli *Client, err error) {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
+	var sshProxy *SSHProxy
 	if param.GatewayId > 0 {
-		if param.sshProxy, err = GetSSHProxyById(param.GatewayId); err != nil {
+		if sshProxy, err = GetSSHProxyById(param.GatewayId); err != nil {
 			return
 		}
 	}
@@ -57,17 +56,17 @@ func Connect(param *ConnectParam) (cli *Client, err error) {
 	// 连接到SSH主机
 	addr := fmt.Sprintf("%s:%d", param.IP, param.Port)
 	cli = new(Client)
-	if param.sshProxy == nil {
+	if sshProxy == nil {
 		cli.SSHClient, err = ssh.Dial("tcp", addr, config)
 		return
 	}
 	// 通过网关连接 必须加锁
-	param.sshProxy.proxyMutex.Lock()
-	defer param.sshProxy.proxyMutex.Unlock()
+	sshProxy.proxyMutex.Lock()
+	defer sshProxy.proxyMutex.Unlock()
 
 	var conn net.Conn
 	// 连接本地监听端口
-	localListenerAddr := param.sshProxy.Listener.Addr().String()
+	localListenerAddr := sshProxy.Listener.Addr().String()
 	c_logger.Debug("connect sshProxy listen: %s, target: %s", localListenerAddr, addr)
 	if conn, err = net.DialTimeout("tcp",
 		localListenerAddr, config.Timeout); err != nil {
@@ -75,7 +74,7 @@ func Connect(param *ConnectParam) (cli *Client, err error) {
 		return
 	}
 
-	if cli.SSHChannel, err = param.sshProxy.createChannel(conn, addr); err != nil {
+	if cli.SSHChannel, err = sshProxy.createChannel(conn, addr); err != nil {
 		c_logger.Error("createChannel err: %v ", localListenerAddr, err)
 		return
 

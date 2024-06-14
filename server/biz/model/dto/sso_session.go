@@ -1,7 +1,7 @@
 package dto
 
-type ConnectSessionReq struct {
-	Id   uint64
-	Cols int
-	Rows int
+type ConnectBySessionReq struct {
+	Id uint64
+	H  int `form:"h"`
+	W  int `form:"w"`
 }

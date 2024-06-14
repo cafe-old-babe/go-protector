@@ -17,6 +17,8 @@ type IService interface {
 	MakeService(service ...IService)
 	GetDB() *gorm.DB
 	WithGoroutineDB()
+	GetContext() *gin.Context
+	GetLogger() *c_logger.SelfLogger
 }
 
 type Service struct {
@@ -37,6 +39,9 @@ func (_self *Service) MakeService(service ...IService) {
 	}
 	_self.Context.Set(consts.CtxKeyDB, _self.DB)
 	for i := range service {
+		if service[i] == nil {
+			service[i] = new(Service)
+		}
 		service[i].Make(_self.Context)
 	}
 }
@@ -50,6 +55,17 @@ func (_self *Service) WithGoroutineDB() {
 	_self.DB = _self.DB.WithContext(context.Background())
 	_self.Context.Set(consts.CtxKeyDB, _self.DB)
 
+}
+
+func (_self *Service) GetContext() *gin.Context {
+	return _self.Context
+}
+
+func (_self *Service) GetLogger() *c_logger.SelfLogger {
+	if _self.Logger == nil {
+		_self.Logger = c_logger.GetLogger(_self.GetContext())
+	}
+	return _self.Logger
 }
 
 // SimpleSave 通用保存 会保存所有的字段，即使字段是零值 简单
