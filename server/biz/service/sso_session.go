@@ -10,6 +10,7 @@ import (
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
+	"go-protector/server/internal/ssh/cmd"
 	"go-protector/server/internal/ssh/ssh_con"
 	"go-protector/server/internal/ssh/ssh_term"
 )
@@ -157,7 +158,7 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 		return err
 	}
 	// 启动转发
-	forward = ssh_term.NewTermForward(ws, term)
+	forward = ssh_term.NewTermForward(ws, term, cmd.NewParserHandler(_self.GetContext(), req.Id))
 	forward.Start()
 
 	_ = forward.ReadWsToWriteTerm()
