@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"github.com/gin-gonic/gin"
+	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_ascii"
 	"go-protector/server/internal/custom/c_structure"
+	"go-protector/server/internal/custom/c_type"
+	"go-protector/server/internal/utils/async"
 	"math"
 	"strconv"
 	"strings"
@@ -17,17 +20,19 @@ var (
 )
 
 type ParserSSHCharHandler struct {
-	id             uint64                      // id
-	lastPS1        string                      // lastPS1
-	ps1Row         []string                    // ps1Row 每行的PS1
-	recordPS1      bool                        // recordPS1 是否记录PS1
-	quoteStack     c_structure.SafeStack[rune] // quoteStack 引号栈
-	recordState    bool                        // recordState true 记录, false 不记录
-	currentFirstIn bool                        // currentFirstIn 第一次输入命令
-	cmd            [][]rune                    // cmd 记录的命令行
-	mutex          sync.Mutex                  // mutex 互斥锁
-	escCtl         EscCtl                      // escCtl 控制字符
-	cursor                                     // cursor 光标所在位置
+	id              uint64                      // id
+	lastPS1         string                      // lastPS1
+	ps1Row          []string                    // ps1Row 每行的PS1
+	recordPS1       bool                        // recordPS1 是否记录PS1
+	quoteStack      c_structure.SafeStack[rune] // quoteStack 引号栈
+	recordState     bool                        // recordState true 记录, false 不记录
+	currentFirstIn  bool                        // currentFirstIn 第一次输入命令
+	cmd             [][]rune                    // cmd 记录的命令行
+	mutex           sync.Mutex                  // mutex 互斥锁
+	escCtl          EscCtl                      // escCtl 控制字符
+	operationEntity *entity.SsoOperation        // operationEntity 操作记录
+	cmdSort         int                         // cmdSort 操作记录顺序
+	cursor                                      // cursor 光标所在位置
 	base.Service
 }
 
@@ -64,8 +69,6 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 		len(_self.ps1Row[_self.GetY()]) <= 0) && // 如果没有记录PS1
 		// 如果开启记录PS1
 		_self.recordPS1 {
-		//_self.GetY() > len(_self.ps1Row)-1 || // 如果最新行没有ps1
-		//	(len(_self.ps1Row) > _self.GetY() && len(_self.ps1Row[_self.GetY()]) <= 0)
 		_self.recordPs1(_self.getCmdByLine(_self.GetY()))
 
 	}
@@ -108,6 +111,7 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 			break
 
 		}
+		_self.doSave()
 		_self.ResetCmd()
 
 	}
@@ -144,6 +148,7 @@ func (_self *ParserSSHCharHandler) ResetCmd() {
 	_self.currentFirstIn = true
 	_self.ResetCursor()
 	_self.quoteStack.Clear()
+	_self.operationEntity = new(entity.SsoOperation)
 }
 
 func (_self *ParserSSHCharHandler) printCmdInfo() {
@@ -248,6 +253,8 @@ func (_self *ParserSSHCharHandler) recordPs1(ps1 string) {
 		_self.cmd = _self.cmd[_self.GetY():]
 		_self.ResetY()
 		_self.currentFirstIn = false
+		_self.operationEntity.PS1 = ps1
+		_self.operationEntity.CmdStartAt = c_type.NowTime()
 	}
 	//if len(_self.ps1Row) <= 0 {
 	//	_self.cmd = _self.cmd[len(_self.cmd)-1:]
@@ -279,4 +286,17 @@ func (_self *ParserSSHCharHandler) forEachCmd(x, y int, runeFunc func(r rune), n
 		rowIndex++
 	}
 
+}
+
+// doSave 保存
+func (_self *ParserSSHCharHandler) doSave() {
+	_self.operationEntity.Cmd = _self.getCmd()
+	_self.operationEntity.CmdExecAt = c_type.NowTime()
+	_self.operationEntity.Sort = _self.cmdSort
+	_self.cmdSort++
+	_self.operationEntity.SsoSessionId = _self.GetId()
+	ssoOperation := _self.operationEntity
+	async.CommonWorkPool.Submit(func() {
+		_self.SimpleSave(ssoOperation)
+	})
 }

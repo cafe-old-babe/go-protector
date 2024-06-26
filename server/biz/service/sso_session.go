@@ -10,6 +10,7 @@ import (
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_type"
+	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/ssh/cmd"
 	"go-protector/server/internal/ssh/ssh_con"
 	"go-protector/server/internal/ssh/ssh_term"
@@ -164,4 +165,28 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 	_ = forward.ReadWsToWriteTerm()
 
 	return
+}
+
+func (_self *SsoSession) Page(req *dto.SsoSessionPageReq) (res *base.Result) {
+
+	if req == nil {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	var slice []entity.SsoSession
+	count, err := _self.Count(
+		_self.GetDB().Scopes(
+			condition.Paginate(req),
+			condition.Eq("user_acc ", req.UserAcc),
+			condition.Eq("asset_ip ", req.AssetIp),
+			condition.Eq("asset_id ", req.AssetName),
+		).Order("created_at").
+			Find(&slice))
+	if err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+	res = base.ResultPage(slice, req, count)
+	return
+
 }

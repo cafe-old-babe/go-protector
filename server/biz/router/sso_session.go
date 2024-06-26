@@ -18,6 +18,7 @@ func init() {
 		routerGroup := group.Group("sso-session")
 		{
 			routerGroup.POST("/create/:authId", _ssoSession.CreateSession)
+			routerGroup.POST("/page", _ssoSession.Page)
 		}
 	})
 
@@ -67,4 +68,16 @@ func (_self ssoSession) ConnectBySession(c *gin.Context) {
 		return
 	}
 
+}
+
+func (_self ssoSession) Page(c *gin.Context) {
+	var req dto.SsoOperationPageReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	var operationService service.SsoOperation
+	_self.MakeService(c, &operationService)
+
+	c_result.Result(c, operationService.Page(&req))
 }
