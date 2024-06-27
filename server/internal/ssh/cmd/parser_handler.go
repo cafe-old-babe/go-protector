@@ -53,7 +53,9 @@ func (_self *ParserSSHCharHandler) GetId() uint64 {
 }
 
 func (_self *ParserSSHCharHandler) PassToClient(r rune) bool {
-	_self.GetLogger().Debug("passToClient: %s\t%v", strconv.QuoteRune(r), r)
+	if _self.recordState {
+		_self.GetLogger().Debug("passToClient: %s\t%v", strconv.QuoteRune(r), r)
+	}
 	_self.mutex.Lock()
 	defer _self.mutex.Unlock()
 	_self.RecordServerWrite(r)
@@ -61,6 +63,9 @@ func (_self *ParserSSHCharHandler) PassToClient(r rune) bool {
 }
 
 func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
+	if !_self.recordState {
+		return true
+	}
 	_self.GetLogger().Debug("passToServer: %s\t%v", strconv.QuoteRune(r), r)
 	_self.mutex.Lock()
 	defer _self.mutex.Unlock()
@@ -77,7 +82,10 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 		_self.ResetCmd()
 	case 0x0d: // \r
 		_self.recordPS1 = true
-		_self.printCmdInfo()
+		if _self.recordState {
+
+			_self.printCmdInfo()
+		}
 
 		// \ ' " '
 		lastRow := len(_self.cmd) - 1

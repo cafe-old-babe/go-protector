@@ -129,10 +129,11 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 		return
 	}
 	assetAccPwd := model.AssetAccPwd
-	//if model.Status != consts.SessionWaiting {
-	//	err = c_error.ErrIllegalAccess
-	//	return
-	//}
+	// test
+	if model.Status != consts.SessionWaiting {
+		err = c_error.ErrIllegalAccess
+		return
+	}
 	if model.UserId != current.GetUserId(_self.Context) {
 		err = c_error.ErrIllegalAccess
 		return

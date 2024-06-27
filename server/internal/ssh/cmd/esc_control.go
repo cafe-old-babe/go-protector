@@ -50,7 +50,7 @@ func init() {
 			if ctl.temp = lastLine; len(ctl.temp) <= 0 {
 				ctl.temp = append(ctl.temp, 0)
 			}
-		case "?47", "?1047", "?1048", "?1049": // 开启缓存区
+		case "?1", "?1049": // 开启缓存区
 			handler.recordState = false
 			fallthrough
 		default:
@@ -95,7 +95,7 @@ func init() {
 			if ctl.temp = lastLine; len(ctl.temp) <= 0 {
 				ctl.temp = append(ctl.temp, 0)
 			}
-		case "?47", "?1047", "?1048", "?1049": // 关闭缓存区
+		case "?1", "?1049": // 关闭缓存区
 			handler.recordState = true
 			fallthrough
 		default:
@@ -259,7 +259,9 @@ func init() {
 			// 删除光标前面及上面的字符
 			handler.cmd[handler.GetY()] = handler.cmd[handler.GetY()][handler.GetX():]
 		default:
+			state := handler.recordState
 			handler.ResetCmd()
+			handler.recordState = state
 
 		}
 
