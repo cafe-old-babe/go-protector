@@ -178,11 +178,11 @@ func (_self *SsoSession) Page(req *dto.SsoSessionPageReq) (res *base.Result) {
 	count, err := _self.Count(
 		_self.GetDB().Scopes(
 			condition.Paginate(req),
-			condition.Eq("user_acc ", req.UserAcc),
-			condition.Eq("asset_ip ", req.AssetIp),
-			condition.Eq("asset_id ", req.AssetName),
-		).Order("created_at").
-			Find(&slice))
+			condition.Like("user_acc ", req.UserAcc),
+			condition.Like("asset_ip ", req.AssetIp),
+			condition.Like("asset_name ", req.AssetName),
+			condition.Like("asset_acc ", req.AssetAcc),
+		).Order("created_at desc").Find(&slice))
 	if err != nil {
 		res = base.ResultFailureErr(err)
 		return

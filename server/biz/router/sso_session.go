@@ -71,13 +71,13 @@ func (_self ssoSession) ConnectBySession(c *gin.Context) {
 }
 
 func (_self ssoSession) Page(c *gin.Context) {
-	var req dto.SsoOperationPageReq
+	var req dto.SsoSessionPageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)
 		return
 	}
-	var operationService service.SsoOperation
-	_self.MakeService(c, &operationService)
+	var sessionService service.SsoSession
+	_self.MakeService(c, &sessionService)
 
-	c_result.Result(c, operationService.Page(&req))
+	c_result.Result(c, sessionService.Page(&req))
 }

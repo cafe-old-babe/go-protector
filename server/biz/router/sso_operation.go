@@ -27,13 +27,13 @@ type ssoOperation struct {
 }
 
 func (_self ssoOperation) Page(c *gin.Context) {
-	var req dto.SsoSessionPageReq
+	var req dto.SsoOperationPageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c_result.Err(c, err)
 		return
 	}
-	var sessionService service.SsoSession
-	_self.MakeService(c, &sessionService)
+	var operationService service.SsoOperation
+	_self.MakeService(c, &operationService)
 
-	c_result.Result(c, sessionService.Page(&req))
+	c_result.Result(c, operationService.Page(&req))
 }

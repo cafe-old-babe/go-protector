@@ -375,7 +375,7 @@ export const constantRouterMap = [
         path: '/sso-terminal',
         name: 'Terminal',
         hidden: true,
-        component: () => import(/* webpackChunkName: "user" */ '@/views/session/terminal')
+        component: () => import(/* webpackChunkName: "user" */ '@/views/sso/terminal')
       }
     ]
   },

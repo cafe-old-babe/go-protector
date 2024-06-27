@@ -23,12 +23,12 @@ func (_self SsoOperation) Page(req *dto.SsoOperationPageReq) (res *base.Result) 
 	count, err := _self.Count(
 		_self.GetDB().Scopes(
 			condition.Paginate(req),
-			condition.Eq(table_name.SsoSession+".sso_session_id ", req.SsoSessionId),
-			condition.Eq(table_name.SsoSession+".asset_ip ", req.AssetIp),
-			condition.Eq(table_name.SsoSession+".asset_name ", req.AssetName),
+			condition.Like("SsoSession.asset_acc ", req.AssetAcc),
+			condition.Like("SsoSession.asset_ip ", req.AssetIp),
+			condition.Like("SsoSession.asset_name ", req.AssetName),
 			condition.Like("cmd ", req.Cmd),
-		).Order(table_name.SsoSession + ".created_at").
-			Order(clause.OrderByColumn{Column: clause.Column{Name: "sort"}, Desc: false}).
+		).Order("SsoSession.created_at desc").
+			Order(clause.OrderByColumn{Column: clause.Column{Name: table_name.SsoOperation + ".sort"}, Desc: false}).
 			Joins("SsoSession").Find(&slice))
 	if err != nil {
 		res = base.ResultFailureErr(err)

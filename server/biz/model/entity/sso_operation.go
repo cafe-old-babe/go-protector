@@ -3,6 +3,7 @@ package entity
 import (
 	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/custom/c_type"
+	"gorm.io/gorm"
 )
 
 type SsoOperation struct {
@@ -13,11 +14,17 @@ type SsoOperation struct {
 	Cmd          string      `gorm:"size:4096;comment:执行命令" json:"cmd"`
 	CmdStartAt   c_type.Time `gorm:"comment:命令开始时间" json:"cmdStartAt"`
 	CmdExecAt    c_type.Time `gorm:"comment:命令执行时间" json:"cmdExecAt"`
-	SsoSession   SsoSession  `gorm:"foreignKey:SsoSessionId;references:ID"  json:"SsoSession,omitempty" binding:"-"`
+	SsoSession   SsoSession  `gorm:"foreignKey:SsoSessionId"  json:"ssoSession,omitempty" binding:"-"`
 	ModelControl
 	ModelDelete
 }
 
 func (_self *SsoOperation) TableName() string {
 	return table_name.SsoOperation
+}
+
+func (_self *SsoOperation) AfterFind(db *gorm.DB) (err error) {
+
+	_self.SsoSession.Completion()
+	return
 }

@@ -13,4 +13,5 @@ type SsoSessionPageReq struct {
 	AssetName string `json:"assetName,omitempty"`
 	AssetIp   string `json:"assetIp,omitempty"`
 	UserAcc   string `json:"userAcc"`
+	AssetAcc  string `json:"assetAcc"`
 }
