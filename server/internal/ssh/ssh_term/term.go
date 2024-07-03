@@ -7,6 +7,7 @@ import (
 	"go-protector/server/internal/ssh/ssh_con"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"time"
 )
 
 type Terminal struct {
@@ -15,17 +16,20 @@ type Terminal struct {
 	sshSession   *ssh.Session
 	in           io.WriteCloser
 	out          *bufio.Reader
+	h, w         int
+	term         string
+	ConnectAt    time.Time
 }
 
-func NewTerminal(req *dto.ConnectBySessionReq, param *ssh_con.ConnectParam) (term *Terminal, err error) {
+func NewTerminal(req *dto.ConnectBySessionReq, param *ssh_con.ConnectParam) (_self *Terminal, err error) {
 	var sshCli *ssh_con.Client
 	var sshSession *ssh.Session
 	defer func() {
 		if err == nil {
 			return
 		}
-		if term != nil {
-			_ = term.Close()
+		if _self != nil {
+			_ = _self.Close()
 		}
 
 	}()
@@ -51,20 +55,23 @@ func NewTerminal(req *dto.ConnectBySessionReq, param *ssh_con.ConnectParam) (ter
 	if inPipe, err = sshSession.StdinPipe(); err != nil {
 		return
 	}
-	term = &Terminal{
+	_self = &Terminal{
 		ssoSessionId: req.Id,
 		sshCli:       sshCli,
 		sshSession:   sshSession,
 		in:           inPipe,
 		out:          out,
 	}
+	_self.term = "xterm-256color"
+	_self.h = req.H
+	_self.w = req.W
 
-	err = term.sshSession.RequestPty("xterm-256color", req.H, req.W, ssh.TerminalModes{
+	err = _self.sshSession.RequestPty(_self.term, _self.h, _self.w, ssh.TerminalModes{
 		ssh.ECHO:          1,     // 是否需要回显输入
 		ssh.TTY_OP_ISPEED: 14400, // 速率
 		ssh.TTY_OP_OSPEED: 14400, // 速率
 	})
-	if err = term.sshSession.Shell(); err != nil {
+	if err = _self.sshSession.Shell(); err != nil {
 		return
 	}
 

@@ -159,8 +159,11 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 	if err = _self.DB.Updates(&model).Error; err != nil {
 		return err
 	}
+	term.ConnectAt = model.ConnectAt.Time
 	// 启动转发
-	forward = ssh_term.NewTermForward(ws, term, cmd.NewParserHandler(_self.GetContext(), req.Id))
+	if forward, err = ssh_term.NewTermForward(ws, term, cmd.NewParserHandler(_self.GetContext(), req.Id)); err != nil {
+		return
+	}
 	forward.Start()
 
 	_ = forward.ReadWsToWriteTerm()

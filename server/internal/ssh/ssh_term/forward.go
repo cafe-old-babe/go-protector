@@ -19,9 +19,10 @@ type TermForward struct {
 	ctxCancel  context.CancelFunc
 	timeTicker *time.Ticker
 	chain      []cmd.Handler
+	record     *Record
 }
 
-func NewTermForward(ws *base.WsContext, term *Terminal, chain ...cmd.Handler) *TermForward {
+func NewTermForward(ws *base.WsContext, term *Terminal, chain ...cmd.Handler) (_self *TermForward, err error) {
 	ctx, ctxCancel := context.WithCancel(ws.GetContext())
 	if chain == nil {
 		chain = make([]cmd.Handler, 0)
@@ -29,7 +30,7 @@ func NewTermForward(ws *base.WsContext, term *Terminal, chain ...cmd.Handler) *T
 	slices.SortFunc(chain, func(a, b cmd.Handler) int {
 		return a.GetIndex() - b.GetIndex()
 	})
-	forward := &TermForward{
+	_self = &TermForward{
 		ws:         ws,
 		term:       term,
 		dataChan:   make(chan rune),
@@ -38,8 +39,9 @@ func NewTermForward(ws *base.WsContext, term *Terminal, chain ...cmd.Handler) *T
 		timeTicker: time.NewTicker(time.Millisecond * 60),
 		chain:      chain,
 	}
+	_self.record, err = NewRecord(term)
 
-	return forward
+	return
 }
 
 func (_self *TermForward) Start() {
@@ -96,6 +98,9 @@ func (_self *TermForward) readChanToWriteWs() {
 				continue
 			}
 			if err = _self.ws.Write(base.NewWsMsg(consts.MsgData, dataStr)); err != nil {
+				return
+			}
+			if err = _self.record.write(&dataStr); err != nil {
 				return
 			}
 			buf.Reset()

@@ -38,10 +38,5 @@ export const Columns = [
   {
     title: '执行的命令',
     dataIndex: 'cmd'
-  },
-  {
-    title: '操作',
-    width: 200,
-    scopedSlots: { customRender: 'action' }
   }
 ]
