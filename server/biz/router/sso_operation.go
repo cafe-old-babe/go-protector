@@ -6,6 +6,7 @@ import (
 	"go-protector/server/biz/service"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_result"
+	"strconv"
 )
 
 func init() {
@@ -15,6 +16,7 @@ func init() {
 		routerGroup := group.Group("sso-operation")
 		{
 			routerGroup.POST("/page", _ssoOperation.Page)
+			routerGroup.POST("/page/:ssoSessionId", _ssoOperation.PageBySsoId)
 		}
 	})
 
@@ -36,4 +38,26 @@ func (_self ssoOperation) Page(c *gin.Context) {
 	_self.MakeService(c, &operationService)
 
 	c_result.Result(c, operationService.Page(&req))
+}
+
+func (_self ssoOperation) PageBySsoId(c *gin.Context) {
+
+	params := c.Param("ssoSessionId")
+	ssoSessionId, err := strconv.ParseUint(params, 10, 64)
+	if err != nil {
+		c_result.Err(c, err)
+
+		return
+	}
+	var req dto.SsoOperationPageReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	req.SsoSessionId = ssoSessionId
+
+	var operateService service.SsoOperation
+	_self.MakeService(c, &operateService)
+	c_result.Result(c, operateService.PageBySsoId(&req))
+
 }

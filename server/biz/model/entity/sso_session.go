@@ -23,6 +23,7 @@ type SsoSession struct {
 	ConnectAt      c_type.Time          `gorm:"comment:连接时间" json:"connectAt" `
 	Status         c_type.SessionStatus `gorm:"size:1;comment:会话状态,0-等待连接,1-正在连接,2-已连接,3-会话结束" json:"status"  binding:"required"`
 	StatusText     string               `gorm:"-" json:"statusText"`
+	CastPath       string               `gorm:"size:2048;comment:录像文件存放位置" json:"castPath"`
 	ModelControl
 	ModelDelete
 }

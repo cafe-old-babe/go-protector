@@ -14,6 +14,9 @@ import (
 	"go-protector/server/internal/ssh/cmd"
 	"go-protector/server/internal/ssh/ssh_con"
 	"go-protector/server/internal/ssh/ssh_term"
+	"io"
+	"os"
+	"path"
 )
 
 type SsoSession struct {
@@ -156,13 +159,19 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 	// 更新连接状态
 	model.Status = consts.SessionConnected
 	model.ConnectAt = c_type.NowTime()
-	if err = _self.DB.Updates(&model).Error; err != nil {
-		return err
-	}
 	term.ConnectAt = model.ConnectAt.Time
 	// 启动转发
 	if forward, err = ssh_term.NewTermForward(ws, term, cmd.NewParserHandler(_self.GetContext(), req.Id)); err != nil {
 		return
+	}
+
+	var castPath string
+	if castPath, err = forward.GetCastPath(); err != nil {
+		return
+	}
+	model.CastPath = castPath
+	if err = _self.DB.Updates(&model).Error; err != nil {
+		return err
 	}
 	forward.Start()
 
@@ -191,6 +200,45 @@ func (_self *SsoSession) Page(req *dto.SsoSessionPageReq) (res *base.Result) {
 		return
 	}
 	res = base.ResultPage(slice, req, count)
+	return
+
+}
+
+func (_self *SsoSession) GetCast(ssoSessionId uint64) (res *base.Result) {
+	var err error
+
+	var castFile string
+	if err = _self.DB.Table("sso_session").
+		Where("id = ?", ssoSessionId).
+		Pluck("COALESCE(cast_path,'') as cast_path", &castFile).Error; err != nil {
+		res = base.ResultFailureErr(err)
+
+		return
+	}
+
+	if len(castFile) <= 0 {
+		err = errors.New("无法查看回放,请联系管理员")
+	}
+
+	if path.Ext(castFile) != ".cast" {
+		err = errors.New("回放文件格式不正确,请联系管理员")
+	}
+	if err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+	file, err := os.Open(castFile)
+	if err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
+	defer file.Close()
+	all, err := io.ReadAll(file)
+	if err != nil {
+		res = base.ResultFailureErr(err)
+	}
+	res = base.ResultSuccess(string(all))
+
 	return
 
 }

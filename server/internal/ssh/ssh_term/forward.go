@@ -3,6 +3,7 @@ package ssh_term
 import (
 	"bytes"
 	"context"
+	"errors"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts"
 	"go-protector/server/internal/ssh/cmd"
@@ -174,4 +175,14 @@ func (_self *TermForward) runeToByte(r rune, write func([]byte) error) error {
 	temp := make([]byte, utf8.RuneLen(r))
 	utf8.EncodeRune(temp, r)
 	return write(temp)
+}
+
+func (_self *TermForward) GetCastPath() (castPath string, err error) {
+	if _self.record == nil || _self.record.file == nil {
+		err = errors.New("无录像文件地址")
+		return
+	}
+	castPath = _self.record.file.Name()
+	return
+
 }

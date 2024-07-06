@@ -19,6 +19,7 @@ func init() {
 		{
 			routerGroup.POST("/create/:authId", _ssoSession.CreateSession)
 			routerGroup.POST("/page", _ssoSession.Page)
+			routerGroup.POST("/cast/:ssoSessionId", _ssoSession.GetCast)
 		}
 	})
 
@@ -80,4 +81,17 @@ func (_self ssoSession) Page(c *gin.Context) {
 	_self.MakeService(c, &sessionService)
 
 	c_result.Result(c, sessionService.Page(&req))
+}
+
+func (_self ssoSession) GetCast(c *gin.Context) {
+	param := c.Param("ssoSessionId")
+	ssoSessionId, err := strconv.ParseUint(param, 10, 64)
+	if err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	var sessionService service.SsoSession
+	_self.MakeService(c, &sessionService)
+	c_result.Result(c, sessionService.GetCast(ssoSessionId))
+
 }

@@ -52,7 +52,8 @@ func (_self *Record) write(data *string) (err error) {
 	// [4.343478, "o", "l"]
 
 	// 计算差值
-	var sub = float64(time.Now().Sub(_self.timestamp).Microseconds()) / float64(time.Millisecond)
+	//var sub = float64(time.Now().Sub(_self.timestamp).Microseconds()) / float64(time.Millisecond)
+	var sub = float32(time.Now().Sub(_self.timestamp).Seconds())
 	var row []any
 	row = append(row, sub, "o")
 	row = append(row, data)

@@ -54,7 +54,7 @@ func (_self *ParserSSHCharHandler) GetId() uint64 {
 
 func (_self *ParserSSHCharHandler) PassToClient(r rune) bool {
 	if _self.recordState {
-		_self.GetLogger().Debug("passToClient: %s\t%v", strconv.QuoteRune(r), r)
+		//_self.GetLogger().Debug("passToClient: %s\t%v", strconv.QuoteRune(r), r)
 	}
 	_self.mutex.Lock()
 	defer _self.mutex.Unlock()
@@ -163,12 +163,12 @@ func (_self *ParserSSHCharHandler) printCmdInfo() {
 	if len(_self.ps1Row) <= 0 {
 		return
 	}
-	_self.GetLogger().Debug("-------------current cmd------------------")
-
-	_self.GetLogger().Debug("firstPs1: %s,x: %d,y %d\n%s\n↓↓↓↓↓↓↓↓onlyCmd↓↓↓↓↓↓↓↓\n%s\n↑↑↑↑↑↑↑onlyCmd↑↑↑↑↑↑↑",
-		_self.ps1Row[0], _self.GetX(), _self.GetY(), _self.getPs1AndCmd(), _self.getCmd())
-
-	_self.GetLogger().Debug("-------------current cmd------------------")
+	//_self.GetLogger().Debug("-------------current cmd------------------")
+	//
+	//_self.GetLogger().Debug("firstPs1: %s,x: %d,y %d\n%s\n↓↓↓↓↓↓↓↓onlyCmd↓↓↓↓↓↓↓↓\n%s\n↑↑↑↑↑↑↑onlyCmd↑↑↑↑↑↑↑",
+	//	_self.ps1Row[0], _self.GetX(), _self.GetY(), _self.getPs1AndCmd(), _self.getCmd())
+	//
+	//_self.GetLogger().Debug("-------------current cmd------------------")
 }
 
 func (_self *ParserSSHCharHandler) getPs1AndCmd() string {
@@ -298,12 +298,17 @@ func (_self *ParserSSHCharHandler) forEachCmd(x, y int, runeFunc func(r rune), n
 
 // doSave 保存
 func (_self *ParserSSHCharHandler) doSave() {
-	_self.operationEntity.Cmd = _self.getCmd()
+	cmd := _self.getCmd()
+	if len(cmd) <= 0 {
+		return
+	}
+	_self.operationEntity.Cmd = cmd
 	_self.operationEntity.CmdExecAt = c_type.NowTime()
 	_self.operationEntity.Sort = _self.cmdSort
 	_self.cmdSort++
 	_self.operationEntity.SsoSessionId = _self.GetId()
 	ssoOperation := _self.operationEntity
+
 	async.CommonWorkPool.Submit(func() {
 		_self.SimpleSave(ssoOperation)
 	})

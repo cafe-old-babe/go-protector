@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-spin :spinning="loading">
-      <a-card :bordered="false" title="单点会话审计" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
+      <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
         <div class="table-page-search-wrapper">
           <a-form layout="inline">
             <a-row :gutter="20">
@@ -44,16 +44,14 @@
           :showSizeChanger="true"
           :columns="columns"
           :data="loadData"
+          :scroll="{y:'calc(60vh - 30px)'}"
           :rowSelection="rowSelection"
         >
           <!--          <span slot="action" slot-scope="text, current">-->
           <template v-slot:action="text,current">
 
-            <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="editRecord(current)">
-              <a-icon type="edit" />编辑
-            </a>
-            <a :disabled="current.accountType==='0'" @click="deleteRecord(current.id)">
-              <a-icon type="delete" />删除
+            <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="playBack(current)">
+              <a-icon type="play-circle" />回放
             </a>
             <!--          </span>-->
           </template>
@@ -61,6 +59,14 @@
         </s-table>
       </a-card>
     </a-spin>
+    <PlayBack
+      :visible="playBackVisible"
+      :castData="castData"
+      :record="record"
+      @close="close"
+    >
+
+    </PlayBack>
   </div>
 </template>
 
@@ -68,15 +74,16 @@
 import STable from '@/components/Table'
 import { Columns } from './column'
 import request from '@/utils/request'
+import PlayBack from '@/views/sso/audit/session/components/PlayBack.vue'
 // import Permission from './Permission.vue'
 
 export default {
   name: 'Session',
-  components: { STable },
+  components: { STable, PlayBack },
   data() {
     return {
       loading: false,
-      editVisible: false,
+      playBackVisible: false,
       permissionVisible: false,
       columns: Columns,
       queryParam: {},
@@ -84,7 +91,7 @@ export default {
       selectedRows: [],
       record: {},
       windowHeight: 0,
-      roleId: 0,
+      castData: '',
       loadData: (parameter) => {
         const promise = request.post('/sso-session/page', Object.assign(parameter, this.queryParam)).then((res) => {
           const { code, data, message } = res
@@ -107,6 +114,7 @@ export default {
     }
   },
   computed: {
+
     rowSelection() {
       return {
         selectedRowKeys: this.selectedRowKeys,
@@ -118,12 +126,6 @@ export default {
           }
         })
       }
-    },
-    disabledDeleteBatch() {
-       return this.selectedRows.some(item => item.accountType === '0')
-    },
-    disabledCollBatch() {
-      return this.selectedRows.some(item => item.dailStatus !== '1')
     }
   },
   mounted() {
@@ -141,111 +143,24 @@ export default {
       this.selectedRowKeys = selectedRowKeys
       this.selectedRows = selectedRows
     },
-    editRecord: function (record) {
-      this.record = Object.assign({}, {
-        'id': record.id,
-        'assetId': record.assetBasic.id,
-        'assetInfoName': `${record.assetBasic.assetName}(${record.assetBasic.ip})`,
-        'accountType': record.accountType,
-        'account': record.account,
-        'password': record.password
-      })
-      this.editVisible = true
-    },
-    deleteRecord: function (id) {
-      this.doDelete({ 'ids': [id] })
-    },
-    deleteBatch: function() {
-      // 将 this.selectRows的id提取出来
-      this.doDelete({ ids: this.selectedRows.map(item => item.id) })
-    },
-    doDelete: function (param, confirm = true) {
-      if ((param?.ids ?? []).length <= 0) {
-        this.$message.warning('请选择要删除的数据')
-        return
-      }
-
-      if (!confirm) {
-        this.loading = true
-        request.post('/asset-account/delete', param).then(res => {
-          const { code, message } = res
-
-          if (code === 200) {
-            this.$message.success(message ?? '删除成功')
-            this.$refs.table.refresh(false)
-          } else {
-            this.$message.error(message)
-            this.loading = false
-          }
-        })
-        return
-      }
-
-      this.$confirm({
-        title: '确认删除',
-        content: '是否删除选择数据?',
-        okText: '确认',
-        okType: 'danger',
-        cancelText: '取消',
-        confirmLoading: this.loading,
-        onOk: () => this.doDelete(param, false)
+    playBack: function (record) {
+      request.post(`/sso-session/cast/${record.id}`).then(res => {
+        const { code, data, message } = res
+        if (code !== 200) {
+          this.$message.error(message)
+          return
+        }
+        this.record = record
+        this.castData = data
+        this.playBackVisible = true
       })
     },
-    editOk: function () {
-      this.editClose()
-      this.$refs.table.refresh(false)
-    },
-    editClose: function () {
+    close: function () {
+      this.playBackVisible = false
       this.record = {}
-      this.editVisible = false
-      this.permissionVisible = false
-      this.roleId = 0
-    },
-    dailBatch: function () {
-      const param = { ids: this.selectedRows.map(item => item.id) }
-      this.loading = true
-      request.post('/asset-info/dial/account', param).then(res => {
-        const { code, message } = res
-        if (code === 200) {
-          this.$message.success(message)
-          this.selectedRowKeys = []
-          this.selectedRows = []
-          this.$refs.table.refresh(false)
-        } else {
-          this.$message.error(message)
-        }
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    dailColor(dailStatus) {
-      switch (dailStatus) {
-        case '0':
-          return 'red'
-        case '1':
-          return 'green'
-        default:
-
-          return 'grey'
-      }
-    },
-    collBatch: function () {
-      const param = { ids: this.selectedRows.map(item => item.id) }
-      this.loading = true
-      request.post('/asset-info/collectors/account', param).then(res => {
-        const { code, message } = res
-        if (code === 200) {
-          this.$message.success(message)
-          this.selectedRowKeys = []
-          this.selectedRows = []
-          this.$refs.table.refresh(false)
-        } else {
-          this.$message.error(message)
-        }
-      }).finally(() => {
-        this.loading = false
-      })
+      this.castData = ''
     }
+
   }
 }
 </script>
