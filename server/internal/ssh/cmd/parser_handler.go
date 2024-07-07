@@ -28,10 +28,10 @@ type ParserSSHCharHandler struct {
 	recordState     bool                        // recordState true 记录, false 不记录
 	currentFirstIn  bool                        // currentFirstIn 第一次输入命令
 	cmd             [][]rune                    // cmd 记录的命令行
-	mutex           sync.Mutex                  // mutex 互斥锁
 	escCtl          EscCtl                      // escCtl 控制字符
 	operationEntity *entity.SsoOperation        // operationEntity 操作记录
 	cmdSort         int                         // cmdSort 操作记录顺序
+	sync.Mutex                                  // mutex 互斥锁
 	cursor                                      // cursor 光标所在位置
 	base.Service
 }
@@ -56,8 +56,8 @@ func (_self *ParserSSHCharHandler) PassToClient(r rune) bool {
 	if _self.recordState {
 		//_self.GetLogger().Debug("passToClient: %s\t%v", strconv.QuoteRune(r), r)
 	}
-	_self.mutex.Lock()
-	defer _self.mutex.Unlock()
+	_self.Lock()
+	defer _self.Unlock()
 	_self.RecordServerWrite(r)
 	return true
 }
@@ -67,8 +67,8 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 		return true
 	}
 	_self.GetLogger().Debug("passToServer: %s\t%v", strconv.QuoteRune(r), r)
-	_self.mutex.Lock()
-	defer _self.mutex.Unlock()
+	_self.Lock()
+	defer _self.Unlock()
 	if (len(_self.ps1Row) <= 0 ||
 		len(_self.ps1Row[0]) <= 0 ||
 		len(_self.ps1Row[_self.GetY()]) <= 0) && // 如果没有记录PS1
