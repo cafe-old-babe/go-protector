@@ -12,8 +12,11 @@ import (
 	"go-protector/server/internal/custom/c_type"
 	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/ssh/cmd"
+	"go-protector/server/internal/ssh/monitor"
 	"go-protector/server/internal/ssh/ssh_con"
 	"go-protector/server/internal/ssh/ssh_term"
+	"go-protector/server/internal/utils"
+	"gorm.io/gorm"
 	"io"
 	"os"
 	"path"
@@ -161,7 +164,9 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 	model.ConnectAt = c_type.NowTime()
 	term.ConnectAt = model.ConnectAt.Time
 	// 启动转发
-	if forward, err = ssh_term.NewTermForward(ws, term, cmd.NewParserHandler(_self.GetContext(), req.Id)); err != nil {
+	if forward, err = ssh_term.NewTermForward(ws, term,
+		cmd.NewParserHandler(_self.GetContext(), req.Id),
+		cmd.NewObserveHandler(_self.GetContext(), req.Id)); err != nil {
 		return
 	}
 
@@ -208,15 +213,20 @@ func (_self *SsoSession) GetCast(ssoSessionId uint64) (res *base.Result) {
 	var err error
 
 	var castFile string
-	if err = _self.DB.Table("sso_session").
-		Where("id = ?", ssoSessionId).
-		Pluck("COALESCE(cast_path,'') as cast_path", &castFile).Error; err != nil {
+	var ssoSession entity.SsoSession
+	if err = _self.DB.First(&ssoSession, ssoSessionId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = c_error.ErrIllegalAccess
+		}
 		res = base.ResultFailureErr(err)
-
+		return
+	}
+	if ssoSession.Status != consts.SessionClose {
+		res = base.ResultFailureErr(errors.New("会话未结束,无法查看录像"))
 		return
 	}
 
-	if len(castFile) <= 0 {
+	if castFile = ssoSession.CastPath; len(castFile) <= 0 {
 		err = errors.New("无法查看回放,请联系管理员")
 	}
 
@@ -241,4 +251,36 @@ func (_self *SsoSession) GetCast(ssoSessionId uint64) (res *base.Result) {
 
 	return
 
+}
+
+func (_self *SsoSession) MonitorBySession(req *dto.ConnectBySessionReq) (err error) {
+	if req == nil || req.Id <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	var ws *base.WsContext
+	// websocket
+	if ws, err = base.Upgrade(&_self.Service); err != nil {
+		return
+	}
+	observer := &monitor.Observer{
+		ObId:      utils.GetNextId(),
+		SsoId:     req.Id,
+		WsContext: ws,
+	}
+	defer monitor.Subject.RemoveObserver(observer)
+	if err = monitor.Subject.RegisterObserver(observer); err != nil {
+		return
+	}
+	if err = ws.Write(base.NewWsMsg(consts.MsgConnected, "")); err != nil {
+		return
+	}
+	for {
+		if _, err = observer.ReadMsg(); err != nil {
+
+			break
+		}
+
+	}
+	return nil
 }

@@ -12,13 +12,19 @@ export default {
   data() {
     return {
       xterm: null,
-      connected: false
+      connected: false,
+      ssoTerminal: {}
     }
   },
   // https://github.com/xtermjs/xterm.js/blob/3.14.2/README.md#addons
   // https://xtermjs.org/
   mounted() {
-    setDocumentTitle('单点登录')
+    const ssoTerminalStr = localStorage.getItem('ssoTerminal')
+    console.log(ssoTerminalStr)
+   this.ssoTerminal = JSON.parse(ssoTerminalStr)
+    // localStorage.removeItem('ssoTerminal')
+    // setDocumentTitle('单点登录')
+    setDocumentTitle(this.ssoTerminal.title)
     this.initTerm()
     this.initWebsocket()
   },
@@ -35,13 +41,17 @@ export default {
       fitAddon.fit()
       this.xterm.focus()
       // xterm.writeln('trying to connect to the server ...')
-      this.xterm.writeln('\x1B[1;3;31m正在连接,请稍后\x1B[0m $ ')
+      if (this.ssoTerminal.initMsg) {
+        // this.xterm.writeln('\x1B[1;3;31m正在连接,请稍后\x1B[0m $ ')
+        this.xterm.writeln(this.ssoTerminal.initMsg)
+      }
 
       console.log(this.xterm.cols, this.xterm.rows)
     },
     initWebsocket: function () {
       // 获取当前路由信息
-      const id = this.$route.query?.id
+      // const id = this.$route.query?.id
+      const id = this.ssoTerminal.id
       if (!id) {
         this.xterm.clear()
         this.xterm.writeln('\x1B[1;3;31m非法访问\x1B[0m ')
@@ -51,14 +61,14 @@ export default {
       const origin = window.location.origin
       const wsOrigin = origin.replace('http', 'ws')
 
-      const wsUrl = `${wsOrigin}/api/ws/sso-session/connect/${id}?${paramStr}`
+      const wsUrl = `${wsOrigin}${this.ssoTerminal.uri}${id}?${paramStr}`
       console.log(wsUrl)
       const ws = new WebSocket(wsUrl)
       this.xterm.onData(data => {
         if (!this.connected || this.websocket === null) {
           return
         }
-        ws.send(new WsMsg(WsMsg.MsgData, data).toString())
+        if (this.ssoTerminal?.send) { ws.send(new WsMsg(WsMsg.MsgData, data).toString()) }
       })
       ws.onclose = (e) => {
         this.connected = false
@@ -77,7 +87,7 @@ export default {
           case WsMsg.MsgClose:
 
             this.xterm.writeln(msg.body)
-            this.xterm.writeln('连接以关闭')
+            this.xterm.writeln('连接已关闭')
             ws.close()
             break
         }

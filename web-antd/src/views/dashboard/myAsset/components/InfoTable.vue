@@ -143,7 +143,16 @@ export default {
         const { code, message, data } = res
         if (code === 200) {
           console.log(data)
-          window.open(`/sso-terminal?id=${data.id}`)
+          const assign = Object.assign({}, {
+            id: data.id,
+            uri: '/api/ws/sso-session/connect/',
+            send: true,
+            initMsg: '\x1B[1;3;31m正在连接,请稍后\x1B[0m $ ',
+            title: '单点登录'
+          })
+          localStorage.setItem('ssoTerminal', JSON.stringify(assign))
+          // window.open(`/sso-terminal?id=${data.id}`)
+          window.open(`/sso-terminal`)
           return
         }
         this.$message.error(message)

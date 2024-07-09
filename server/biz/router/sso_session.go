@@ -14,12 +14,14 @@ func init() {
 
 	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
 		group.GET("/ws/sso-session/connect/:ssoSessionId", _ssoSession.ConnectBySession)
+		group.GET("/ws/sso-session/monitor/:ssoSessionId", _ssoSession.MonitorBySession)
 
 		routerGroup := group.Group("sso-session")
 		{
 			routerGroup.POST("/create/:authId", _ssoSession.CreateSession)
 			routerGroup.POST("/page", _ssoSession.Page)
 			routerGroup.POST("/cast/:ssoSessionId", _ssoSession.GetCast)
+
 		}
 	})
 
@@ -93,5 +95,31 @@ func (_self ssoSession) GetCast(c *gin.Context) {
 	var sessionService service.SsoSession
 	_self.MakeService(c, &sessionService)
 	c_result.Result(c, sessionService.GetCast(ssoSessionId))
+}
+
+// MonitorBySession 监控
+func (_self ssoSession) MonitorBySession(c *gin.Context) {
+	var req dto.ConnectBySessionReq
+	var err error
+	if err = c.ShouldBind(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+	if str := c.Param("ssoSessionId"); len(str) <= 0 {
+		c_result.Err(c, c_error.ErrParamInvalid)
+		return
+	} else {
+		if req.Id, err = strconv.ParseUint(str, 10, 64); err != nil {
+			c_result.Err(c, c_error.ErrParamInvalid)
+			return
+		}
+	}
+
+	var ssoSessionService service.SsoSession
+	_self.MakeService(c, &ssoSessionService)
+	if err = ssoSessionService.MonitorBySession(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
 
 }

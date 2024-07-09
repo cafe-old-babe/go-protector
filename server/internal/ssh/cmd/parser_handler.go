@@ -52,14 +52,14 @@ func (_self *ParserSSHCharHandler) GetId() uint64 {
 	return _self.id
 }
 
-func (_self *ParserSSHCharHandler) PassToClient(r rune) bool {
+func (_self *ParserSSHCharHandler) PassToClient(r rune) {
 	if _self.recordState {
 		//_self.GetLogger().Debug("passToClient: %s\t%v", strconv.QuoteRune(r), r)
 	}
 	_self.Lock()
 	defer _self.Unlock()
 	_self.RecordServerWrite(r)
-	return true
+	return
 }
 
 func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
@@ -125,6 +125,11 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 	}
 
 	return true
+}
+
+func (_self *ParserSSHCharHandler) Close() {
+	_self.ResetCmd()
+
 }
 
 func (_self *ParserSSHCharHandler) RecordServerWrite(r rune) {

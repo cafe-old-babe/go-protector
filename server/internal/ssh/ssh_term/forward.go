@@ -57,6 +57,9 @@ func (_self *TermForward) Stop() {
 	}
 	_self.timeTicker.Stop()
 	_self.ctxCancel()
+	for i := range _self.chain {
+		_self.chain[i].Close()
+	}
 }
 
 func (_self *TermForward) readTermToWriteChan() {
@@ -72,15 +75,10 @@ func (_self *TermForward) readTermToWriteChan() {
 				return
 			}
 			if i > 0 {
-				var next bool
 				for i := range _self.chain {
-					if next = _self.chain[i].PassToClient(data); !next {
-						break
-					}
+					_self.chain[i].PassToClient(data)
 				}
-				if next {
-					_self.dataChan <- data
-				}
+				_self.dataChan <- data
 			}
 
 		}

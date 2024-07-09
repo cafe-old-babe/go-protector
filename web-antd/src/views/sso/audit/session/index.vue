@@ -50,8 +50,11 @@
           <!--          <span slot="action" slot-scope="text, current">-->
           <template v-slot:action="text,current">
 
-            <a :disabled="current.accountType==='0'" style="margin-right: 8px" @click="playBack(current)">
+            <a :disabled="current.status!=='3'" style="margin-right: 8px" @click="playBack(current)">
               <a-icon type="play-circle" />回放
+            </a>
+            <a :disabled="current.status!=='2'" style="margin-right: 8px" @click="monitor(current)">
+              <a-icon type="video-camera" />云端监控
             </a>
             <!--          </span>-->
           </template>
@@ -154,6 +157,18 @@ export default {
         this.castData = data
         this.playBackVisible = true
       })
+    },
+    monitor: function (record) {
+      const assign = Object.assign({}, {
+        id: record.id,
+        uri: '/api/ws/sso-session/monitor/',
+        send: false,
+        initMsg: '\x1B[1;3;31m正在连接,请稍后\x1B[0m $ ',
+        title: '云端监控'
+      })
+      localStorage.setItem('ssoTerminal', JSON.stringify(assign))
+      // window.open(`/sso-terminal?id=${data.id}`)
+      window.open(`/sso-terminal`)
     },
     close: function () {
       this.playBackVisible = false
