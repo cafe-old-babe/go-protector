@@ -11,6 +11,7 @@ const WsMsg = class WsMsg {
   static MsgConnected = 0;
   static MsgClose = 1;
   static MsgData = 2;
+  static MsgAlarm = 3;
 
   static parse (s) {
     const indexOf = s.indexOf(' ')

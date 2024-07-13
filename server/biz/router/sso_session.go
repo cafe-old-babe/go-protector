@@ -21,6 +21,7 @@ func init() {
 			routerGroup.POST("/create/:authId", _ssoSession.CreateSession)
 			routerGroup.POST("/page", _ssoSession.Page)
 			routerGroup.POST("/cast/:ssoSessionId", _ssoSession.GetCast)
+			routerGroup.POST("/operationForMonitor", _ssoSession.OperationForMonitor)
 
 		}
 	})
@@ -121,5 +122,18 @@ func (_self ssoSession) MonitorBySession(c *gin.Context) {
 		c_result.Err(c, err)
 		return
 	}
+
+}
+
+func (_self ssoSession) OperationForMonitor(c *gin.Context) {
+	var req dto.OperationForMonitorReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c_result.Err(c, err)
+		return
+	}
+
+	var ssoSessionService service.SsoSession
+	_self.MakeService(c, &ssoSessionService)
+	c_result.Result(c, ssoSessionService.OperationForMonitor(&req))
 
 }

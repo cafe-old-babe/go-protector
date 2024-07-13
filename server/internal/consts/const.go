@@ -83,6 +83,8 @@ const (
 	MsgClose
 	// MsgData 正常消息
 	MsgData
+	// MsgAlarm 告警
+	MsgAlarm
 )
 
 const (

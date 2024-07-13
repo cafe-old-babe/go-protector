@@ -15,3 +15,9 @@ type SsoSessionPageReq struct {
 	UserAcc   string `json:"userAcc"`
 	AssetAcc  string `json:"assetAcc"`
 }
+
+type OperationForMonitorReq struct {
+	SsoSessionId uint64 `json:"ssoSessionId,omitempty" binding:"required"`
+	Type         string `json:"type,omitempty" binding:"required"` // 1: 告警;2: 阻断
+	Message      string `json:"message,omitempty" binding:"required_if=Type 1"`
+}

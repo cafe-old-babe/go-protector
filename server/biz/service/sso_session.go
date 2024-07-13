@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"go-protector/server/biz/model/dao"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
@@ -13,6 +14,7 @@ import (
 	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/ssh/cmd"
 	"go-protector/server/internal/ssh/monitor"
+	"go-protector/server/internal/ssh/notify"
 	"go-protector/server/internal/ssh/ssh_con"
 	"go-protector/server/internal/ssh/ssh_term"
 	"go-protector/server/internal/utils"
@@ -166,7 +168,9 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 	// 启动转发
 	if forward, err = ssh_term.NewTermForward(ws, term,
 		cmd.NewParserHandler(_self.GetContext(), req.Id),
-		cmd.NewObserveHandler(_self.GetContext(), req.Id)); err != nil {
+		cmd.NewObserveHandler(_self.GetContext(), req.Id),
+		cmd.NewNotifyHandler(ws, req.Id),
+	); err != nil {
 		return
 	}
 
@@ -266,7 +270,7 @@ func (_self *SsoSession) MonitorBySession(req *dto.ConnectBySessionReq) (err err
 	observer := &monitor.Observer{
 		ObId:      utils.GetNextId(),
 		SsoId:     req.Id,
-		WsContext: ws,
+		IWsWriter: ws,
 	}
 	defer monitor.Subject.RemoveObserver(observer)
 	if err = monitor.Subject.RegisterObserver(observer); err != nil {
@@ -276,11 +280,43 @@ func (_self *SsoSession) MonitorBySession(req *dto.ConnectBySessionReq) (err err
 		return
 	}
 	for {
-		if _, err = observer.ReadMsg(); err != nil {
+		if _, err = ws.ReadMsg(); err != nil {
 
 			break
 		}
 
 	}
 	return nil
+}
+
+func (_self *SsoSession) OperationForMonitor(req *dto.OperationForMonitorReq) (res *base.Result) {
+	if req == nil {
+		res = base.ResultFailureErr(c_error.ErrParamInvalid)
+		return
+	}
+	user, ok := current.GetUser(_self.Context)
+	if !ok {
+		res = base.ResultFailureErr(c_error.ErrIllegalAccess)
+		return
+	}
+	var wsMsg *base.WsMsg
+	switch req.Type {
+	case "0":
+		wsMsg = base.NewWsMsg(consts.MsgAlarm, fmt.Sprintf("%s 提示您: %s", user.UserName, req.Message))
+	case "1":
+		msg := fmt.Sprintf("%s 中断了您的会话", user.UserName)
+		if len(req.Message) > 0 {
+			msg = fmt.Sprintf(msg+", 并留言: %s", req.Message)
+		}
+		wsMsg = base.NewWsMsg(consts.MsgClose, msg)
+	}
+
+	if err := notify.WriterById(req.SsoSessionId, wsMsg); err != nil {
+		res = base.ResultFailureErr(err)
+	} else {
+		res = base.ResultSuccessMsg("操作成功")
+	}
+
+	return
+
 }

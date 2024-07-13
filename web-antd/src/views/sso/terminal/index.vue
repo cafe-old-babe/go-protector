@@ -7,13 +7,15 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { setDocumentTitle } from '@/utils/domUtil'
 import WsMsg from './lib/WsMsg'
+import request from '@/utils/request'
 export default {
   name: 'Terminal',
   data() {
     return {
       xterm: null,
       connected: false,
-      ssoTerminal: {}
+      ssoTerminal: {},
+      inputMsg: ''
     }
   },
   // https://github.com/xtermjs/xterm.js/blob/3.14.2/README.md#addons
@@ -84,6 +86,13 @@ export default {
           case WsMsg.MsgData:
             this.xterm.write(msg.body)
             break
+          case WsMsg.MsgAlarm:
+            this.$notification.warn({
+              message: '监控告警消息',
+              description: msg.body,
+              duration: 0
+            })
+            break
           case WsMsg.MsgClose:
 
             this.xterm.writeln(msg.body)
@@ -92,15 +101,45 @@ export default {
             break
         }
       }
+    },
+    alarm: function () {
+      if (!this.inputMsg) {
+        return
+      }
+      request.post(`/sso-session/operationForMonitor`, {
+        'ssoSessionId': this.ssoTerminal.id,
+        'type': '0',
+        'message': this.inputMsg
+      }).then(res => {
+        const { code, message } = res
+        if (code !== 200) {
+          this.$message.error(message)
+          return
+        }
+        this.inputMsg = ''
+        this.$message.success('告警成功')
+      })
+    },
+    off: function () {
+      request.post(`/sso-session/operationForMonitor`, {
+        'ssoSessionId': this.ssoTerminal.id,
+        'type': '1',
+        'message': this.inputMsg
+      }).then(res => {
+        const { code, message } = res
+        if (code !== 200) {
+          this.$message.error(message)
+          return
+        }
+        this.$message.success('阻断成功')
+      })
     }
   }
 }
 </script>
 
 <template>
-
   <div
-    id="terminal"
     :style="{
       position: 'absolute',
       top: 0,
@@ -111,9 +150,50 @@ export default {
       backgroundColor: '#1b1b1b'
     }"
   >
+    <div
+      id="terminal"
+      :style="{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: 'calc(100% - 70px)',
+        overflow: 'hidden',
+        backgroundColor: '#1b1b1b'
+      }"
+    >
+
+      <div
+        :style="{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          height: '50px',
+          backgroundColor: '#1b1b1b'
+        }"
+      >
+        <a-row v-if="!this.ssoTerminal.send">
+          <a-col :span="16">
+            <a-input-search
+              ref="alarm"
+              placeholder="请输入告警内容"
+              v-model="inputMsg"
+              enter-button="发送"
+              size="large"
+              @search="alarm"
+            />
+          </a-col>
+          <a-col :span="4">
+            <a-button type="primary" icon="poweroff" @click="off">
+              实时阻断
+            </a-button>
+          </a-col>
+        </a-row>
+      </div>
+    </div>
 
   </div>
-
 </template>
 
 <style scoped lang="less">

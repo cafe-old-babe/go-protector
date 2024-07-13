@@ -3,12 +3,13 @@ package monitor
 import (
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts"
+	"go-protector/server/internal/ws"
 )
 
 type Observer struct {
 	ObId  uint64
 	SsoId uint64
-	*base.WsContext
+	ws.IWsWriter
 }
 
 func (_self *Observer) GetObId() uint64 {
@@ -18,8 +19,8 @@ func (_self *Observer) GetObId() uint64 {
 func (_self *Observer) GetSsoId() uint64 {
 	return _self.SsoId
 }
-func (_self *Observer) Update(r rune) {
-	_ = _self.Write(base.NewWsMsg(consts.MsgData, string(r)))
+func (_self *Observer) Update(str string) {
+	_ = _self.Write(base.NewWsMsg(consts.MsgData, str))
 	return
 }
 func (_self *Observer) Close() {

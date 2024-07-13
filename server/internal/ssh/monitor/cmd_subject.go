@@ -49,7 +49,7 @@ func (_self *cmdSubject) RemoveObserver(observer observe.Observer) {
 	}
 }
 
-func (_self *cmdSubject) NotifyUpdateObservers(id uint64, r rune) {
+func (_self *cmdSubject) NotifyUpdateObservers(id uint64, str string) {
 	_self.RLock()
 	_self.RUnlock()
 	observers, ok := _self.termMap[id]
@@ -57,7 +57,7 @@ func (_self *cmdSubject) NotifyUpdateObservers(id uint64, r rune) {
 		return
 	}
 	for _, observer := range observers {
-		observer.Update(r)
+		observer.Update(str)
 	}
 }
 func (_self *cmdSubject) NotifyCloseObservers(id uint64) {
