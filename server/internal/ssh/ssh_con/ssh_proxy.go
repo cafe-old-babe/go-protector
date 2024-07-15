@@ -116,7 +116,10 @@ func (_self *SSHProxy) Close(channelKey string) (err error) {
 		if !ok {
 			return
 		}
-		errs = append(errs, channel.remoteConn.Close())
+		if channel.remoteConn != nil {
+
+			errs = append(errs, channel.remoteConn.Close())
+		}
 		//errs = append(errs, channel.localConn.Close())
 		delete(_self.channelMap, channelKey)
 	} else {

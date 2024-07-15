@@ -15,7 +15,7 @@ export default {
       xterm: null,
       connected: false,
       ssoTerminal: {},
-      inputMsg: ''
+       inputMsg: ''
     }
   },
   // https://github.com/xtermjs/xterm.js/blob/3.14.2/README.md#addons
@@ -121,6 +121,9 @@ export default {
       })
     },
     off: function () {
+      if (!this.inputMsg) {
+        return
+      }
       request.post(`/sso-session/operationForMonitor`, {
         'ssoSessionId': this.ssoTerminal.id,
         'type': '1',
@@ -131,6 +134,7 @@ export default {
           this.$message.error(message)
           return
         }
+        this.inputMsg = ''
         this.$message.success('阻断成功')
       })
     }
@@ -156,7 +160,7 @@ export default {
         position: 'absolute',
         top: 0,
         left: 0,
-        width: '100%',
+        width: 'calc(100% + 15px)',
         height: 'calc(100% - 70px)',
         overflow: 'hidden',
         backgroundColor: '#1b1b1b'
@@ -167,13 +171,13 @@ export default {
         :style="{
           position: 'fixed',
           bottom: 0,
-          left: 0,
+          left: '10%',
           width: '100%',
           height: '50px',
           backgroundColor: '#1b1b1b'
         }"
       >
-        <a-row v-if="!this.ssoTerminal.send">
+        <a-row v-if="!this.ssoTerminal.send" justify="center" gutter="16">
           <a-col :span="16">
             <a-input-search
               ref="alarm"
@@ -185,7 +189,7 @@ export default {
             />
           </a-col>
           <a-col :span="4">
-            <a-button type="primary" icon="poweroff" @click="off">
+            <a-button type="danger" size="large" icon="poweroff" @click="off">
               实时阻断
             </a-button>
           </a-col>
