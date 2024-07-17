@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/go-sql-driver/mysql"
 	"go-protector/server/biz/model/dao"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
@@ -12,7 +13,7 @@ import (
 )
 
 type AssetAuthExcelHandler[T entity.AssetAuth] struct {
-	ErrData []entity.AssetAuth
+	ErrData []T
 	base.Service
 }
 
@@ -27,6 +28,13 @@ func (_self *AssetAuthExcelHandler[T]) ReadRow(row *entity.AssetAuth) (err error
 		return
 	}
 	if err = _self.DB.Create(row).Error; err != nil {
+		var sqlError *mysql.MySQLError
+		if errors.As(err, &sqlError) {
+			if sqlError.Number == 1062 {
+				err = errors.New("授权已存在")
+				return
+			}
+		}
 		err = errors.New(fmt.Sprintf("新增授权失败: %s", err.Error()))
 	}
 
@@ -70,6 +78,6 @@ func (_self *AssetAuthExcelHandler[T]) NewRow() *entity.AssetAuth {
 	return &entity.AssetAuth{}
 }
 
-func (_self *AssetAuthExcelHandler[T]) AppendErrData(row *entity.AssetAuth) {
+func (_self *AssetAuthExcelHandler[T]) AppendErrData(row *T) {
 	_self.ErrData = append(_self.ErrData, *row)
 }
