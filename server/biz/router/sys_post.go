@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"go-protector/server/biz/model/dto"
+	"go-protector/server/biz/model/entity"
 	"go-protector/server/biz/service"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_error"
@@ -64,7 +65,7 @@ func (_self sysPost) Delete(c *gin.Context) {
 		return
 	}
 	var postService service.SysPost
-	req.Value = &service.SysPost{}
+	req.Value = &entity.SysPost{}
 	_self.MakeService(c, &postService)
 	c_result.Result(c, postService.DeleteByIds(&req))
 }
