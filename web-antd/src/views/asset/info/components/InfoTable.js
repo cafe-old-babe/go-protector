@@ -35,6 +35,6 @@ export const columns = [
   },
   {
     title: '操作',
-    width: 200,
+    width: 300,
     scopedSlots: { customRender: 'action' }
   }]

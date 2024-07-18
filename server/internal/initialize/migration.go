@@ -37,6 +37,7 @@ func startMigration() (err error) {
 			&entity.AssetAuth{},
 			&entity.SsoSession{},
 			&entity.SsoOperation{},
+			&entity.ApproveCmd{},
 		)
 	return err
 }

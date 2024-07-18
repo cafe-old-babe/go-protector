@@ -47,6 +47,8 @@
         <span slot="action" slot-scope="text, current">
           <a style="margin-right: 8px" @click="editRecord(current)"> <a-icon type="edit" />编辑 </a>
           <a @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
+          <a @click="editInstruction(current)"> <a-icon type="code" />审批指令管理 </a>
+
         </span>
         <span slot="dailStatus" slot-scope="text,current">
           <template>
@@ -71,7 +73,11 @@
         @close="editClose"
         @ok="editOk"
       />
-
+      <EditInstruction
+        :visible="instructionVisible"
+        :asset-id="record.id"
+        @close="editClose"
+      />
     </a-spin>
   </div>
 </template>
@@ -82,15 +88,17 @@ import request from '@/utils/request'
 import { loadAsset } from '@/api/asset'
 import EditInfo from './EditInfo.vue'
 import { columns } from './InfoTable.js'
+import EditInstruction from '@/views/asset/info/components/EditInstruction.vue'
 
 export default {
   name: 'UserList',
-  components: { EditInfo, STable },
+  components: { EditInstruction, EditInfo, STable },
   data() {
     return {
       windowHeight: 0,
       loading: false,
       editVisible: false,
+      instructionVisible: false,
       editStatusVisible: false,
       columns: columns,
       queryParam: {},
@@ -193,6 +201,7 @@ export default {
     editClose: function () {
       this.record = {}
       this.editVisible = false
+      this.instructionVisible = false
       this.editStatusVisible = false
     },
     loadInfo: function (groupIds = [], bool = true) {
@@ -243,7 +252,12 @@ export default {
       }).finally(() => {
         this.loading = false
       })
+    },
+    editInstruction: function (param) {
+      this.record = param
+      this.instructionVisible = true
     }
+
   }
 }
 </script>
