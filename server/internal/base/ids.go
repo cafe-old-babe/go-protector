@@ -1,9 +1,11 @@
 package base
 
+import "gorm.io/gorm/schema"
+
 type IdsReq struct {
-	Ids      []uint64 `json:"ids" binding:"required"`
-	Value    any      `json:"-"`
-	Unscoped bool     `json:"-"`
+	Ids      []uint64      `json:"ids" binding:"required"`
+	Value    schema.Tabler `json:"-"`
+	Unscoped bool          `json:"-"`
 }
 
 // GetIds 获取ids
