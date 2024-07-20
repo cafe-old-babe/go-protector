@@ -97,3 +97,11 @@ const (
 	// SessionClose 已关闭
 	SessionClose = "3"
 )
+
+const (
+	ApproveStatusUnprocessed c_type.ApproveStatus = iota
+	ApproveStatusPass
+	ApproveStatusReject
+	ApproveStatusCancel
+	ApproveStatusTimeout
+)

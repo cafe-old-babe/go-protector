@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+var approveStatusSlice = []string{"待处理", "通过", "拒绝", "撤回", "超时未处理"}
+
+type ApproveStatus int64
+
+type ApproveType string
+
 type SliceCondition string
 
 type RelationType string
@@ -78,4 +84,16 @@ func NewTime(v time.Time) Time {
 
 func NowTime() Time {
 	return NewTime(time.Now())
+}
+
+func (_self ApproveStatus) String() string {
+	var text string
+	defer func() string {
+		if err := recover(); err != nil {
+			_ = fmt.Errorf("approveStatus string err,status: %d, errMsg: %+v", _self, err)
+		}
+		return text
+	}()
+	text = approveStatusSlice[_self]
+	return text
 }

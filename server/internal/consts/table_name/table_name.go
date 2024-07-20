@@ -21,4 +21,5 @@ const (
 	SsoSession                = "sso_session"
 	SsoOperation              = "sso_operation"
 	ApproveCmd                = "approve_cmd"
+	ApproveRecord             = "approve_record"
 )
