@@ -65,3 +65,20 @@ func NewDelayTask(id string, delaySecond int, c context.Context, f func(context.
 	go task.start(ctx)
 	return &task, nil
 }
+
+// CancelDelayTask 取消延迟任务
+func CancelDelayTask(id string) (err error) {
+	if len(id) <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+
+	value, loaded := delayTaskMap.LoadAndDelete(id)
+	if !loaded {
+		err = errors.New("任务不存在或已被执行")
+		return
+	}
+	task := value.(*DelayTask)
+	task.cancel()
+	return
+}

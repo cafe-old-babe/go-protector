@@ -67,9 +67,19 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 		return
 	}
 	if insertDTO.Timeout > 0 {
+		_self.Set("timeout", &dto.DoApproveDTO{
+			Id:             record.ID,
+			ApproveStatus:  consts.ApproveStatusTimeout,
+			ApproveContent: "超时",
+			ApproveUserId:  insertDTO.ApplicantId,
+		})
+
 		_, _ = async.NewDelayTask(strconv.Itoa(int(record.ID)), insertDTO.Timeout, _self.GetContext(), func(ctx context.Context) {
-			//var recordService ApproveRecord
-			//recordService.Make(ctx)
+			if timeout, ok := ctx.Value("timeout").(*dto.DoApproveDTO); ok {
+				var recordService ApproveRecord
+				recordService.Make(ctx)
+				recordService.DoApprove(timeout)
+			}
 
 		})
 	}
@@ -104,7 +114,11 @@ func (_self *ApproveRecord) DoApprove(doApproveDTO *dto.DoApproveDTO) (res *base
 		res = base.ResultFailureErr(err)
 		return
 	}
-
+	if record.Timeout > 0 {
+		if err := async.CancelDelayTask(strconv.FormatUint(record.ID, 10)); err != nil {
+			_self.GetLogger().Warn("CancelDelayTask err: %s")
+		}
+	}
 	// 校验状态
 	switch doApproveDTO.ApproveStatus {
 	case consts.ApproveStatusPass, consts.ApproveStatusReject:
