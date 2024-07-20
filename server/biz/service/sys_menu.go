@@ -27,7 +27,7 @@ func (_self *SysMenuService) ListTree() (result *base.Result) {
 
 	var menuSlice []entity.SysMenu
 
-	if err := _self.DB.Find(&menuSlice).Error; err != nil {
+	if err := _self.GetDB().Find(&menuSlice).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	menuMap := map[uint64][]vo.SysMenuVO{}
@@ -101,10 +101,10 @@ func (_self *SysMenuService) Save(req *dto.SysMenuSaveReq) (result *base.Result)
 	var res *gorm.DB
 	if req.ID <= 0 {
 		// 新增
-		res = _self.DB.Create(model)
+		res = _self.GetDB().Create(model)
 	} else {
 		//更新
-		res = _self.DB.Updates(model)
+		res = _self.GetDB().Updates(model)
 	}
 	if res.Error != nil {
 		return base.ResultFailureErr(res.Error)
@@ -116,7 +116,7 @@ func (_self *SysMenuService) Save(req *dto.SysMenuSaveReq) (result *base.Result)
 }
 
 func (_self *SysMenuService) Delete(req *base.IdsReq) *base.Result {
-	if err := _self.DB.Unscoped().Delete(&entity.SysMenu{}, req.GetIds()).Error; err != nil {
+	if err := _self.GetDB().Unscoped().Delete(&entity.SysMenu{}, req.GetIds()).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	// todo 删除关联关系

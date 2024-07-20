@@ -105,7 +105,7 @@ func init() {
 func (_self *SysLoginPolicy) Info() (result *base.Result) {
 	info := map[c_type.LoginPolicyCode]map[string]interface{}{}
 	var modelSlice []entity.SysLoginPolicy
-	if err := _self.DB.Table(table_name.SysLoginPolicy).Find(&modelSlice).Error; err != nil {
+	if err := _self.GetDB().Table(table_name.SysLoginPolicy).Find(&modelSlice).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 
@@ -124,7 +124,7 @@ func (_self *SysLoginPolicy) Info() (result *base.Result) {
 		}
 	} else {
 		for _, model = range defaultPolicySlice {
-			if err := _self.DB.Where(entity.SysLoginPolicy{PolicyCode: model.PolicyCode}).
+			if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: model.PolicyCode}).
 				Attrs(model).FirstOrCreate(&model).Error; err != nil {
 				return base.ResultFailureErr(err)
 			}
@@ -140,7 +140,7 @@ func (_self *SysLoginPolicy) Info() (result *base.Result) {
 	}
 
 	/*
-		if err := _self.DB.Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyGlobal}).
+		if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyGlobal}).
 			Assign(defaultGlobalPolicy).FirstOrCreate(&model).Error; err != nil {
 			return base.ResultFailureErr(err)
 		}
@@ -152,7 +152,7 @@ func (_self *SysLoginPolicy) Info() (result *base.Result) {
 		clear(valMap)
 		model = entity.SysLoginPolicy{}
 
-		if err := _self.DB.Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyEmail}).
+		if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyEmail}).
 			Assign(defaultEmailPolicy).FirstOrCreate(&model).Error; err != nil {
 			return base.ResultFailureErr(err)
 		}
@@ -174,7 +174,7 @@ func (_self *SysLoginPolicy) Save(param map[c_type.LoginPolicyCode]map[string]in
 		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	// 只保存是否启用和json
-	db := _self.DB.Begin()
+	db := _self.GetDB().Begin()
 
 	defer func() {
 		if result.IsSuccess() {
@@ -301,7 +301,7 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 	redisKey := fmt.Sprintf("%s:%s", keyPre, "email")
 	lockKey := fmt.Sprintf("%s:%s", redisKey, "lock")
 
-	nx := redisClient.SetNX(processDTO.Service.Context, lockKey, "lock", time.Minute)
+	nx := redisClient.SetNX(processDTO.GetContext(), lockKey, "lock", time.Minute)
 	var isSuccess bool
 	isSuccess, err = nx.Result()
 	if err != nil {
@@ -311,7 +311,7 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 		err = errors.New("频繁发送过于频繁,请稍后再试")
 		return
 	}
-	defer redisClient.Del(processDTO.Service.Context, lockKey)
+	defer redisClient.Del(processDTO.GetContext(), lockKey)
 
 	emailDTO, ok := processDTO.PolicyDTO.(*dto.EmailLoginPolicyDTO)
 	if !ok {
@@ -320,7 +320,7 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 
 	expireTime := emailDTO.ExpireTime
 	expiration := time.Duration(expireTime) * time.Minute
-	if err = email.VerifySendInterval(processDTO.Service.Context, redisKey, expiration, 1*time.Minute); err != nil {
+	if err = email.VerifySendInterval(processDTO.GetContext(), redisKey, expiration, 1*time.Minute); err != nil {
 		return err
 	}
 
@@ -333,11 +333,11 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 		Subject: "登录验证码",
 		Body:    body,
 	}); err != nil {
-		processDTO.Service.Logger.Error("send: {},err: %s", processDTO.User.Email, err)
+		processDTO.GetLogger().Error("send: {},err: %s", processDTO.User.Email, err)
 		return
 	}
 
-	err = redisClient.Set(processDTO.Service.Context,
+	err = redisClient.Set(processDTO.GetContext(),
 		redisKey, randomCode, expiration).Err()
 
 	return
@@ -348,7 +348,7 @@ func (_self emailLoginPolicyService) Verify(processDTO *dto.LoginPolicyProcessDT
 	keyPre := fmt.Sprintf(consts.LoginPolicyCacheKeyFmt, processDTO.User.LoginName, processDTO.ParamDTO.SessionId)
 	redisKey := fmt.Sprintf("%s:%s", keyPre, "email")
 	var val string
-	val, err = redisClient.Get(processDTO.Service.Context, redisKey).Result()
+	val, err = redisClient.Get(processDTO.GetContext(), redisKey).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			err = errors.New("验证码无效或已过期")
@@ -384,7 +384,7 @@ func (_self otpLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO) (
 	redisKey := fmt.Sprintf("%s:%s", keyPre, "otp")
 	lockKey := fmt.Sprintf("%s:%s", redisKey, "lock")
 
-	nx := redisClient.SetNX(processDTO.Service.Context, lockKey, "lock", time.Minute)
+	nx := redisClient.SetNX(processDTO.GetContext(), lockKey, "lock", time.Minute)
 	var isSuccess bool
 	isSuccess, err = nx.Result()
 	if err != nil {
@@ -394,9 +394,9 @@ func (_self otpLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO) (
 		err = errors.New("频繁发送过于频繁,请稍后再试")
 		return
 	}
-	defer redisClient.Del(processDTO.Service.Context, lockKey)
+	defer redisClient.Del(processDTO.GetContext(), lockKey)
 
-	if err = email.VerifySendInterval(processDTO.Service.Context, redisKey, 1*time.Minute, 0); err != nil {
+	if err = email.VerifySendInterval(processDTO.GetContext(), redisKey, 1*time.Minute, 0); err != nil {
 		return err
 	}
 

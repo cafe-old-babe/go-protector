@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"go-protector/server/biz/model/dao"
 	"go-protector/server/biz/model/dto"
@@ -32,9 +33,9 @@ type SysUser struct {
 func (_self *SysUser) FindUserByDTO(findDTO *dto.FindUserDTO) (res *base.Result) {
 	var sysUser *entity.SysUser
 	var err error
-	sysUser, err = dao.SysUser.FindUserInfoByDTO(_self.DB, findDTO)
+	sysUser, err = dao.SysUser.FindUserInfoByDTO(_self.GetDB(), findDTO)
 	if err != nil {
-		_self.Logger.Error("FindUserInfoByDTO err: %v", err)
+		_self.GetLogger().Error("FindUserInfoByDTO err: %v", err)
 		//if errors.Is(c_error.ErrRecordNotFoundSysUser, err) {
 		//	res = base.ResultFailureMsg(c_error.ErrRecordNotFoundSysUser.Error())
 		//}
@@ -53,8 +54,14 @@ func (_self *SysUser) FindUserByDTO(findDTO *dto.FindUserDTO) (res *base.Result)
 func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *base.Result) {
 	var err error
 	// 更新最后登录时间 最后登录IP
-	if err = dao.SysUser.UpdateLastLoginIp(_self.DB, entity.ID, _self.Context.ClientIP()); err != nil {
-		_self.Logger.Error("用户: %s UpdateLastLoginIp err: %v", entity.LoginName, err)
+	var ginCtx *gin.Context
+	if ginCtx, err = _self.GetGinCtx(); err != nil {
+		res = base.ResultFailureErr(err)
+		return
+
+	}
+	if err = dao.SysUser.UpdateLastLoginIp(_self.GetDB(), entity.ID, ginCtx.ClientIP()); err != nil {
+		_self.GetLogger().Error("用户: %s UpdateLastLoginIp err: %v", entity.LoginName, err)
 	}
 
 	userDTO := &current.User{
@@ -64,7 +71,7 @@ func (_self *SysUser) LoginSuccess(entity *entity.SysUser) (res *base.Result) {
 		Email:     entity.Email,
 		UserName:  entity.Username,
 		LoginTime: time.Now().Format(time.DateTime),
-		LoginIp:   _self.Context.ClientIP(),
+		LoginIp:   ginCtx.ClientIP(),
 		Avatar:    "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
 		DeptId:    entity.DeptId,
 		RoleIds:   entity.SysRoleIds,
@@ -93,17 +100,17 @@ func (_self *SysUser) SetStatus(dto *dto.SetStatus) (err error) {
 	}
 	if dto.UserStatus <= 0 {
 		// 解锁
-		if err = dao.SysUser.UnlockUser(_self.DB, dto); err != nil {
-			_self.Logger.Error("SetStatus UnlockUser err: %v", err)
+		if err = dao.SysUser.UnlockUser(_self.GetDB(), dto); err != nil {
+			_self.GetLogger().Error("SetStatus UnlockUser err: %v", err)
 		}
 	} else {
 		// 加锁
-		if err = dao.SysUser.LockUser(_self.DB, &entity.SysUser{
+		if err = dao.SysUser.LockUser(_self.GetDB(), &entity.SysUser{
 			ModelId:    entity.ModelId{ID: dto.ID},
 			LockReason: sql.NullString{Valid: len(dto.LockReason) > 0, String: dto.LockReason},
 			UserStatus: dto.UserStatus,
 		}); err != nil {
-			_self.Logger.Error("SetStatus LockUser err: %v", err)
+			_self.GetLogger().Error("SetStatus LockUser err: %v", err)
 		}
 	}
 
@@ -113,7 +120,7 @@ func (_self *SysUser) SetStatus(dto *dto.SetStatus) (err error) {
 // UserInfo https://pro.antdv.com/docs/authority-management
 func (_self *SysUser) UserInfo() (res *base.Result) {
 	// 查询用户角色
-	user, ok := current.GetUser(_self.Context)
+	user, ok := current.GetUser(_self.GetContext())
 	if !ok {
 		res = base.ResultFailureMsg("获取当前用户失败")
 		return
@@ -176,7 +183,7 @@ func (_self *SysUser) UserInfo() (res *base.Result) {
 // Nav 获取菜单
 func (_self *SysUser) Nav() (res *base.Result) {
 	// 查询用户角色
-	user, ok := current.GetUser(_self.Context)
+	user, ok := current.GetUser(_self.GetContext())
 	if !ok {
 		res = base.ResultFailureMsg("获取当前用户失败")
 		return
@@ -188,7 +195,7 @@ func (_self *SysUser) Nav() (res *base.Result) {
 		return
 	}
 
-	menuSlice, err := dao.SysRole.GetPermissionSliceByIds(_self.DB, roleIds, []int8{0, 1}, user.IsAdmin)
+	menuSlice, err := dao.SysRole.GetPermissionSliceByIds(_self.GetDB(), roleIds, []int8{0, 1}, user.IsAdmin)
 	if err != nil {
 		res = base.ResultFailureErr(err)
 		return
@@ -220,7 +227,7 @@ func (_self *SysUser) Page(req *dto.UserPageReq) (result *base.Result) {
 	}
 	var count int64
 	var voSlice []vo.UserPage
-	tx := _self.DB.Table(table_name.SysUser + " as u")
+	tx := _self.GetDB().Table(table_name.SysUser + " as u")
 	err := tx.Select([]string{
 		"u.id",
 		"u.login_name",
@@ -245,8 +252,8 @@ func (_self *SysUser) Page(req *dto.UserPageReq) (result *base.Result) {
 			return db
 		},
 	).Joins(`left join `+table_name.SysDept+` d on d.id = u.dept_id`).
-		Joins("left join (?) as p on p.user_id = u.id", dao.SysPost.JoinUserPostDB(_self.DB)).
-		Joins("left join (?) as r on r.user_id = u.id", dao.SysRole.JoinUserRoleDB(_self.DB)).
+		Joins("left join (?) as p on p.user_id = u.id", dao.SysPost.JoinUserPostDB(_self.GetDB())).
+		Joins("left join (?) as r on r.user_id = u.id", dao.SysRole.JoinUserRoleDB(_self.GetDB())).
 		Find(&voSlice).Limit(-1).Offset(-1).Count(&count).Error
 	if err != nil {
 		result = base.ResultFailureErr(err)
@@ -258,7 +265,7 @@ func (_self *SysUser) Page(req *dto.UserPageReq) (result *base.Result) {
 
 func (_self *SysUser) Save(req *dto.UserSaveReq) (result *base.Result) {
 
-	if err := dao.SysUser.Save(_self.DB, req); err != nil {
+	if err := dao.SysUser.Save(_self.GetDB(), req); err != nil {
 		return base.ResultFailureErr(err)
 	}
 
@@ -271,7 +278,7 @@ func (_self *SysUser) DeleteByIds(req *base.IdsReq) (result *base.Result) {
 	if req == nil || len(req.Ids) <= 0 {
 		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
-	db := _self.DB.Begin()
+	db := _self.GetDB().Begin()
 	defer func() {
 		if result == nil || !result.IsSuccess() {
 			db.Rollback()
@@ -358,7 +365,7 @@ func (_self *SysUser) checkLogin(loginDTO *dto.LoginDTO, sysUser *entity.SysUser
 	   	// 检查有效期
 	   	if sysUser.ExpirationAt.Valid {
 	   		if now.After(sysUser.ExpirationAt.Time) {
-	   			_self.Logger.Error("用户: %s 已过有效期", loginDTO.LoginName)
+	   			_self.GetLogger().Error("用户: %s 已过有效期", loginDTO.LoginName)
 	   			result = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 	   			// 更新用户信息
 	   			sysUser.UserStatus = consts.LockTypeExpire
@@ -367,8 +374,8 @@ func (_self *SysUser) checkLogin(loginDTO *dto.LoginDTO, sysUser *entity.SysUser
 	   				Valid:  true,
 	   			}
 	   			sysUser.UpdatedBy = sysUser.ID
-	   			if err := dao.SysUser.LockUser(_self.DB, sysUser); err != nil {
-	   				_self.Logger.Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
+	   			if err := dao.SysUser.LockUser(_self.GetDB(), sysUser); err != nil {
+	   				_self.GetLogger().Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
 	   			}
 	   			return
 	   		}
@@ -486,7 +493,7 @@ func (_self *SysUser) GetLoginPolicyResult(user *entity.SysUser, policyInfoMap P
 	var err error
 	defer func() {
 		if err != nil {
-			redisClient.Del(_self.Context, policyKey)
+			redisClient.Del(_self.GetContext(), policyKey)
 			if result == nil {
 				result = base.ResultFailureErr(err)
 			}
@@ -498,7 +505,7 @@ func (_self *SysUser) GetLoginPolicyResult(user *entity.SysUser, policyInfoMap P
 		result = base.ResultFailureErr(err)
 		return
 	}
-	if err = redisClient.Set(_self.Context, policyKey, string(bytes), time.Minute*30).Err(); err != nil {
+	if err = redisClient.Set(_self.GetContext(), policyKey, string(bytes), time.Minute*30).Err(); err != nil {
 		return
 	}
 
@@ -520,7 +527,7 @@ func (_self *SysUser) ValidateLoginPolicyParam(loginDTO *dto.LoginDTO, user *ent
 
 	redisClient := cache.GetRedisClient()
 	// 获取登录策略
-	val, err := redisClient.Get(_self.Context, policyKey).Result()
+	val, err := redisClient.Get(_self.GetContext(), policyKey).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return base.ResultFailureErr(c_error.ErrIllegalAccess)
@@ -572,7 +579,7 @@ func (_self *SysUser) ValidateLoginPolicyParam(loginDTO *dto.LoginDTO, user *ent
 		return nil
 	}
 	// 更新缓存
-	expirationTime, err := redisClient.TTL(_self.Context, policyKey).Result()
+	expirationTime, err := redisClient.TTL(_self.GetContext(), policyKey).Result()
 	if err != nil {
 		return base.ResultFailureErr(err)
 	}
@@ -581,7 +588,7 @@ func (_self *SysUser) ValidateLoginPolicyParam(loginDTO *dto.LoginDTO, user *ent
 	if err != nil {
 		return base.ResultFailureErr(err)
 	}
-	if err = redisClient.Set(_self.Context, policyKey, marshal, expirationTime).Err(); err != nil {
+	if err = redisClient.Set(_self.GetContext(), policyKey, marshal, expirationTime).Err(); err != nil {
 		return base.ResultFailureErr(err)
 	}
 	// 继续返回策略信息

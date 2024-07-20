@@ -13,7 +13,7 @@ import (
 func Recovery(ctx *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			c_logger.GetLogger(ctx).Error("recover err: %v", err)
+			c_logger.GetLoggerByCtx(ctx).Error("recover err: %v", err)
 			if ctx.IsAborted() {
 				ctx.Status(200)
 			}

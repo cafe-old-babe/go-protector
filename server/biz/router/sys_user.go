@@ -42,7 +42,7 @@ type sysUser struct {
 func (_self sysUser) Login(c *gin.Context) {
 	var loginDTO dto.LoginDTO
 	if err := c.ShouldBindJSON(&loginDTO); err != nil {
-		c_logger.GetLogger(c).Error("login Error: %v", err)
+		c_logger.GetLoggerByCtx(c).Error("login Error: %v", err)
 		c_result.Failure(c, nil, err.Error())
 		return
 	}
@@ -59,7 +59,7 @@ func (_self sysUser) Logout(c *gin.Context) {
 func (_self sysUser) SetStatus(c *gin.Context) {
 	var updateDTO dto.SetStatus
 	if err := c.BindJSON(&updateDTO); err != nil {
-		c_logger.GetLogger(c).Error("SetStatus Error: %v", err)
+		c_logger.GetLoggerByCtx(c).Error("SetStatus Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}

@@ -13,59 +13,96 @@ import (
 )
 
 type IService interface {
-	Make(ctx *gin.Context)
+	Make(ctx context.Context)
 	MakeService(service ...IService)
 	GetDB() *gorm.DB
 	WithGoroutineDB()
-	GetContext() *gin.Context
+	GetContext() context.Context
 	GetLogger() *c_logger.SelfLogger
+	GetGinCtx() (*gin.Context, error)
+	Set(k, v any)
+	Begin()
 }
 
 type Service struct {
-	Logger  *c_logger.SelfLogger
-	DB      *gorm.DB
-	Context *gin.Context
+	logger *c_logger.SelfLogger
+	db     *gorm.DB
+	ctx    context.Context
 }
 
-func (_self *Service) Make(c *gin.Context) {
-	_self.DB = database.GetDB(c)
-	_self.Logger = c_logger.GetLogger(c)
-	_self.Context = c
+func (_self *Service) Make(c context.Context) {
+	if ginCtx, ok := c.(*gin.Context); ok {
+		c = context.WithValue(c, "ginCtx", ginCtx)
+	}
+	_self.ctx = c
+	// 死锁
+	// _self.db = database.GetDB(c)
+	// 使用已有的db
+	if db, ok := _self.ctx.Value(consts.CtxKeyDB).(*gorm.DB); ok {
+		_self.db = db
+	} else {
+		_self.db = database.GetDB(c)
+		_self.Set(consts.CtxKeyDB, _self.db)
+	}
+
 }
 
 func (_self *Service) MakeService(service ...IService) {
 	if len(service) <= 0 {
 		return
 	}
-	_self.Context.Set(consts.CtxKeyDB, _self.DB)
+	//_self.ctx = context.WithValue(_self.GetContext(), consts.CtxKeyDB, _self.GetDB())
 	for i := range service {
 		if service[i] == nil {
 			service[i] = new(Service)
 		}
-		service[i].Make(_self.Context)
+		service[i].Make(_self.GetContext())
 	}
 }
+
 func (_self *Service) GetDB() *gorm.DB {
-	return _self.DB
+	return _self.db
 }
 
 // WithGoroutineDB 开启协程 处理数据库连接 防止 context canceled
 func (_self *Service) WithGoroutineDB() {
-	_self.Context = _self.Context.Copy()
-	_self.DB = _self.DB.WithContext(context.Background())
-	_self.Context.Set(consts.CtxKeyDB, _self.DB)
+	_self.ctx = context.WithoutCancel(_self.GetContext())
+	_self.db = _self.db.WithContext(_self.GetContext())
+	_self.ctx = context.WithValue(_self.GetContext(), consts.CtxKeyDB, _self.GetDB())
 
 }
 
-func (_self *Service) GetContext() *gin.Context {
-	return _self.Context
+func (_self *Service) GetContext() context.Context {
+	return _self.ctx
 }
 
 func (_self *Service) GetLogger() *c_logger.SelfLogger {
-	if _self.Logger == nil {
-		_self.Logger = c_logger.GetLogger(_self.GetContext())
+	if _self.logger == nil {
+		_self.logger = c_logger.GetLoggerByCtx(_self.GetContext())
 	}
-	return _self.Logger
+	return _self.logger
+}
+
+func (_self *Service) GetGinCtx() (*gin.Context, error) {
+	value := _self.GetContext().Value("ginCtx")
+	if ginCtx, ok := value.(*gin.Context); ok {
+		if ginCtx == nil {
+			return nil, c_error.ErrIllegalAccess
+		}
+		return ginCtx, nil
+	}
+
+	return nil, c_error.ErrIllegalAccess
+
+}
+
+func (_self *Service) Set(k, v any) {
+	_self.ctx = context.WithValue(_self.GetContext(), k, v)
+}
+
+func (_self *Service) Begin() {
+	_self.db = _self.db.Begin()
+	_self.Set(consts.CtxKeyDB, _self.db)
 }
 
 // SimpleSave 通用保存 会保存所有的字段，即使字段是零值 简单
@@ -84,11 +121,11 @@ func (_self *Service) SimpleSave(model schema.Tabler,
 	var message string
 	if idValue.IsZero() {
 		// 判断ID是否为空
-		err = _self.DB.Create(model).Error
+		err = _self.db.Create(model).Error
 		message = "新增成功"
 	} else {
 		//更新属性，只会更新非零值的字段
-		err = _self.DB.Updates(model).Error
+		err = _self.db.Updates(model).Error
 		message = "更新成功"
 	}
 	if err != nil {
@@ -120,16 +157,16 @@ func (_self *Service) SimpleDelByIds(req *IdsReq,
 	}
 	var tx *gorm.DB
 	if req.Unscoped {
-		tx = _self.DB.Unscoped()
+		tx = _self.db.Unscoped()
 	} else {
-		tx = _self.DB
+		tx = _self.db
 	}
 	result := tx.Delete(req.Value, req.GetIds())
 	if result.Error != nil {
 		return ResultFailureErr(result.Error)
 	}
 	if result.RowsAffected <= 0 {
-		_self.Logger.Error("删除失败,无删除记录")
+		_self.GetLogger().Error("删除失败,无删除记录")
 		return ResultFailureMsg("删除失败")
 	}
 	return ResultSuccessMsg("删除成功")

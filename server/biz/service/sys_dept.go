@@ -14,7 +14,7 @@ type SysDept struct {
 
 func (_self *SysDept) DeptTree() *base.Result {
 	var deptSlice []entity.SysDept
-	if err := _self.DB.Find(&deptSlice).Error; err != nil {
+	if err := _self.GetDB().Find(&deptSlice).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	node := dto.GenerateTree(deptSlice, 0, "ID", "PID", "DeptName", nil)
@@ -23,7 +23,7 @@ func (_self *SysDept) DeptTree() *base.Result {
 
 func (_self *SysDept) SaveCheck(entity *entity.SysDept) error {
 	var count int64
-	err := _self.DB.Model(entity).Scopes(func(db *gorm.DB) *gorm.DB {
+	err := _self.GetDB().Model(entity).Scopes(func(db *gorm.DB) *gorm.DB {
 		if entity.ID > 0 {
 			db = db.Where("id <> ?", entity.ID)
 		}

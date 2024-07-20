@@ -9,7 +9,7 @@ import (
 
 // RecordLog 记录日志
 func RecordLog(ctx *gin.Context) {
-	selfLogger := c_logger.GetLogger(ctx)
+	selfLogger := c_logger.GetLoggerByCtx(ctx)
 	start := time.Now()
 	path := ctx.Request.URL.Path
 	query := ctx.Request.URL.RawQuery

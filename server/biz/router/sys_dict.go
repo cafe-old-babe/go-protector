@@ -42,7 +42,6 @@ func (_self sysDict) DictTypePage(c *gin.Context) {
 	_self.MakeService(c, &typeService)
 	var pageReq dto.DictTypePageReq
 	if err := c.BindJSON(&pageReq); err != nil {
-		typeService.Logger.Error("dictType page Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}
@@ -57,7 +56,6 @@ func (_self sysDict) DictTypeSave(c *gin.Context) {
 	_self.MakeService(c, &typeService)
 	var model entity.SysDictType
 	if err := c.BindJSON(&model); err != nil {
-		typeService.Logger.Error("dictType insert Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}
@@ -71,7 +69,6 @@ func (_self sysDict) DictTypeDelete(c *gin.Context) {
 	_self.MakeService(c, &typeService)
 	var req base.IdsReq
 	if err := c.BindJSON(&req); err != nil {
-		typeService.Logger.Error("dictType DictTypeDelete Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}
@@ -88,7 +85,6 @@ func (_self sysDict) DictDataPage(c *gin.Context) {
 	_self.MakeService(c, &dataService)
 	var pageReq dto.DictDataPageReq
 	if err := c.BindJSON(&pageReq); err != nil {
-		dataService.Logger.Error("dictData page  Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}
@@ -104,7 +100,6 @@ func (_self sysDict) DictDataSave(c *gin.Context) {
 	_self.MakeService(c, &dataService)
 	var model entity.SysDictData
 	if err := c.BindJSON(&model); err != nil {
-		dataService.Logger.Error("dictData insert Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}
@@ -117,7 +112,6 @@ func (_self sysDict) DictDataUpdateStatus(c *gin.Context) {
 	_self.MakeService(c, &dataService)
 	var updateReq dto.DictDataUpdateStatusReq
 	if err := c.BindUri(&updateReq); err != nil {
-		dataService.Logger.Error("dictData dictDataUpdateStatus Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}
@@ -129,7 +123,6 @@ func (_self sysDict) DictDataDelete(c *gin.Context) {
 	_self.MakeService(c, &dataService)
 	var req base.IdsReq
 	if err := c.BindJSON(&req); err != nil {
-		dataService.Logger.Error("dictData DictDataDelete Error: %v", err)
 		c_result.Err(c, err)
 		return
 	}

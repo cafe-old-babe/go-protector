@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"go-protector/server/biz/model/dao"
@@ -72,7 +71,7 @@ func (_self *AssetInfo) Page(req *dto.AssetInfoPageReq) (res *base.Result) {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
-	tx := _self.DB.Scopes(
+	tx := _self.GetDB().Scopes(
 		condition.Paginate(req),
 		condition.Like(table_name.AssetBasic+".asset_name", req.AssetName),
 		condition.Like(table_name.AssetBasic+".IP", req.IP),
@@ -84,10 +83,10 @@ func (_self *AssetInfo) Page(req *dto.AssetInfoPageReq) (res *base.Result) {
 		},
 		func(db *gorm.DB) *gorm.DB {
 			if !req.Auth {
-				return db.Joins("RootAcc", _self.DB.Where("account_type = ?", "0"))
+				return db.Joins("RootAcc", _self.GetDB().Where("account_type = ?", "0"))
 			}
 			return db.Where(table_name.AssetBasic+".id in (?)",
-				dao.AssetAuth.GenerateSubQueryForAssetId(db, current.GetUserId(_self.Context)))
+				dao.AssetAuth.GenerateSubQueryForAssetId(db, current.GetUserId(_self.GetContext())))
 
 		},
 	)
@@ -114,18 +113,18 @@ func (_self *AssetInfo) Page(req *dto.AssetInfoPageReq) (res *base.Result) {
 
 // Save 保存资产信息
 func (_self *AssetInfo) Save(req *dto.AssetInfoSaveReq) (res *base.Result) {
-	_self.DB = _self.DB.Begin()
+	_self.Begin()
 	defer func() {
 		if err := recover(); err != nil {
 			res = base.ResultFailureMsg(fmt.Sprintf("%s", err))
 			goto rollback
 		}
 		if res.IsSuccess() {
-			_self.DB.Commit()
+			_self.GetDB().Commit()
 			return
 		}
 	rollback:
-		_self.DB.Rollback()
+		_self.GetDB().Rollback()
 	}()
 	// 校验资产信息
 	assetBasic := entity.AssetBasic{
@@ -137,10 +136,10 @@ func (_self *AssetInfo) Save(req *dto.AssetInfoSaveReq) (res *base.Result) {
 		AssetGatewayId: req.AssetGatewayId,
 		ManagerUserId:  req.ManagerUserId,
 	}
-	//_self.Context.Request = _self.Context.Request.WithContext(context.WithValue(_self.Context.Request.Context(), "mutex", assetBasic))
-	//_self.DB.WithContext(context.WithValue(_self.DB.Statement.Context, "mutex", assetBasic))
+	//_self.GetContext().Request = _self.GetContext().Request.WithContext(context.WithValue(_self.GetContext().Request.ctx(), "mutex", assetBasic))
+	//_self.GetDB().WithContext(context.WithValue(_self.GetDB().Statement.ctx, "mutex", assetBasic))
 	res = _self.SimpleSave(&assetBasic, func() error {
-		return dao.AssetBasic.CheckSave(_self.DB, assetBasic)
+		return dao.AssetBasic.CheckSave(_self.GetDB(), assetBasic)
 
 	})
 	if !res.IsSuccess() {
@@ -171,7 +170,7 @@ func (_self *AssetInfo) Delete(idsReq *base.IdsReq) (res *base.Result) {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
-	if err := _self.DB.Transaction(func(tx *gorm.DB) (err error) {
+	if err := _self.GetDB().Transaction(func(tx *gorm.DB) (err error) {
 		// 删除资产
 		if err = tx.Delete(&entity.AssetBasic{}, ids).Error; err != nil {
 			return
@@ -216,7 +215,7 @@ func (_self *AssetInfo) Collectors(idsReq *base.IdsReq, collType string) (res *b
 	switch collType {
 	case "asset":
 		collectorsFunc = func() (slice []entity.AssetInfoAccount, err error) {
-			err = _self.DB.Joins("Accounts").Find(&slice).Error
+			err = _self.GetDB().Joins("Accounts").Find(&slice).Error
 			return
 		}
 	case "account":
@@ -283,7 +282,7 @@ func (_self *AssetInfo) DoBatchCollectors(slice []entity.AssetInfoAccount) (res 
 		return
 	}
 
-	//_self.DB = _self.DB.WithContext(context.Background())
+	//_self.GetDB() = _self.GetDB().WithContext(context.Background())
 	_self.WithGoroutineDB()
 	for _, assetInfo := range slice {
 		//async.CommonWork.Submit(func() {
@@ -323,7 +322,7 @@ func (_self *AssetInfo) DoBatchDail(slice []entity.AssetAccountInfo) (res *base.
 		res = base.ResultFailureErr(errors.New("无拨测信息"))
 		return
 	}
-	_self.DB = _self.DB.WithContext(context.Background())
+	_self.WithGoroutineDB()
 	for _, elem := range slice {
 		async.CommonWorkPool.Submit(func() {
 			_self.DoDail(elem)
@@ -343,7 +342,7 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 	defer func() {
 		if client != nil {
 			if closeErr := client.Close(); closeErr != nil {
-				_self.Logger.Error("close err: %v", closeErr)
+				_self.GetLogger().Error("close err: %v", closeErr)
 			}
 		}
 		dailStatus := "1"
@@ -356,12 +355,12 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 			dailMsg += "拨测成功"
 		}
 
-		if err = _self.DB.Updates(&entity.AssetAccount{
+		if err = _self.GetDB().Updates(&entity.AssetAccount{
 			ModelId:    elem.ModelId,
 			DailStatus: dailStatus,
 			DailMsg:    dailMsg,
 		}).Error; err != nil {
-			_self.Logger.Error("update dial result failure: %v", err)
+			_self.GetLogger().Error("update dial result failure: %v", err)
 		}
 	}()
 
@@ -437,7 +436,6 @@ func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 saveLabel:
 	var accountService AssetAccount
 	_self.MakeService(&accountService)
-	accountService.DB = _self.DB
 
 	accountService.AnalysisExtend(accountCollectorsDTO)
 }

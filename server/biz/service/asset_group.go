@@ -16,7 +16,7 @@ type AssetGroup struct {
 
 func (_self *AssetGroup) Tree() *base.Result {
 	var groupSlice []entity.AssetGroup
-	if err := _self.DB.Find(&groupSlice).Error; err != nil {
+	if err := _self.GetDB().Find(&groupSlice).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	node := dto.GenerateTree(groupSlice, 0, "ID", "PID", "Name", nil)
@@ -28,7 +28,7 @@ func (_self *AssetGroup) SaveCheck(model *entity.AssetGroup) error {
 		return errors.New("父节点校验失败,请选择有效父节点")
 	}
 	var count int64
-	err := _self.DB.Model(model).Scopes(func(db *gorm.DB) *gorm.DB {
+	err := _self.GetDB().Model(model).Scopes(func(db *gorm.DB) *gorm.DB {
 		if model.ID > 0 {
 			db = db.Where("id <> ?", model.ID)
 		}
@@ -59,7 +59,7 @@ func (_self *AssetGroup) DeleteByIds(req *base.IdsReq) (result *base.Result) {
 		return
 	}
 	// 删除所有
-	if err = _self.DB.Delete(&entity.AssetGroup{}, ids).Error; err != nil {
+	if err = _self.GetDB().Delete(&entity.AssetGroup{}, ids).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	return base.ResultSuccessMsg("删除成功")
@@ -85,8 +85,8 @@ func (_self *AssetGroup) findChildrenIdSlice(ids []uint64, contains bool) (idSli
 	builder.WriteString(" from asset_group ag ")
 	builder.WriteString(" join asset_group_rec agr on ag.p_id = agr.id ")
 	builder.WriteString(" ) select * from asset_group_rec")
-	subQuery := _self.DB.Raw(builder.String(), ids)
-	err = _self.DB.Table("(?) as t", subQuery).
+	subQuery := _self.GetDB().Raw(builder.String(), ids)
+	err = _self.GetDB().Table("(?) as t", subQuery).
 		Pluck("id", &idSlice).Error
 
 	return

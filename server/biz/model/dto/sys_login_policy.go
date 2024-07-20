@@ -13,7 +13,7 @@ import (
 
 // LoginPolicyProcessDTO 处理登录
 type LoginPolicyProcessDTO struct {
-	Service   base.Service
+	base.Service
 	PolicyDTO ILoginPolicyDTO
 	ParamDTO  *LoginPolicyParamDTO
 	User      *current.User

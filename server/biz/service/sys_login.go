@@ -21,7 +21,7 @@ func (_self *SysUser) DoLogin(loginDTO dto.LoginDTO) (res *base.Result) {
 		LoginName: loginDTO.LoginName,
 	})
 	if !res.IsSuccess() {
-		_self.Logger.Error("FindUser: %s, err: %v", loginDTO.LoginName, res.Message)
+		_self.GetLogger().Error("FindUser: %s, err: %v", loginDTO.LoginName, res.Message)
 		return base.ResultFailureErr(c_error.ErrLoginNameOrPasswordIncorrect)
 	}
 	sysUser := res.Data.(*entity.SysUser)

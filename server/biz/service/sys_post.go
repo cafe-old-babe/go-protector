@@ -38,7 +38,7 @@ func (_self *SysPost) Page(req *dto.SysPostPageReq) *base.Result {
 		    ) SELECT * FROM sys_dept_path
 		) d on r.relation_id = d.id group by p.id;
 	*/
-	tx := _self.DB.Table(table_name.SysPost + " as p")
+	tx := _self.GetDB().Table(table_name.SysPost + " as p")
 	builder := strings.Builder{}
 	builder.WriteString("WITH RECURSIVE sys_dept_path AS ( ")
 	builder.WriteString("SELECT id, dept_name  FROM sys_dept WHERE p_id = 0 ")
@@ -46,7 +46,7 @@ func (_self *SysPost) Page(req *dto.SysPostPageReq) *base.Result {
 	builder.WriteString("SELECT d.id, CONCAT(d.dept_name, '/',dp.dept_name ) as dept_path ")
 	builder.WriteString("FROM sys_dept d INNER JOIN sys_dept_path dp ON d.p_id = dp.id ")
 	builder.WriteString(") SELECT * FROM sys_dept_path ")
-	rawTx := _self.DB.Raw(builder.String())
+	rawTx := _self.GetDB().Raw(builder.String())
 	tx = tx.
 		Select([]string{"p.id", "p.name", "p.code", "GROUP_CONCAT(r.id) r_ids", "GROUP_CONCAT(d.id) as dept_ids"}).
 		Scopes(
@@ -69,7 +69,7 @@ func (_self *SysPost) Page(req *dto.SysPostPageReq) *base.Result {
 
 func (_self *SysPost) CheckSave(req *dto.SysPostSaveReq) (err error) {
 	var count int64
-	if err = _self.DB.Table(table_name.SysPost).
+	if err = _self.GetDB().Table(table_name.SysPost).
 		Scopes(func(db *gorm.DB) *gorm.DB {
 			if req.ID > 0 {
 				db = db.Where("id <> ? ", req.ID)
@@ -89,7 +89,7 @@ func (_self *SysPost) CheckSave(req *dto.SysPostSaveReq) (err error) {
 
 func (_self *SysPost) DeleteByIds(req *base.IdsReq) *base.Result {
 
-	if err := dao.SysPost.DeleteByPostId(_self.DB, req.GetIds()); err != nil {
+	if err := dao.SysPost.DeleteByPostId(_self.GetDB(), req.GetIds()); err != nil {
 		return base.ResultFailureErr(err)
 	}
 	return base.ResultSuccessMsg("删除成功")
@@ -98,7 +98,7 @@ func (_self *SysPost) DeleteByIds(req *base.IdsReq) *base.Result {
 
 func (_self *SysPost) Save(req *dto.SysPostSaveReq) *base.Result {
 
-	if err := dao.SysPost.Save(_self.DB, req); err != nil {
+	if err := dao.SysPost.Save(_self.GetDB(), req); err != nil {
 		return base.ResultFailureErr(err)
 	}
 	return base.ResultSuccessMsg("保存成功")
@@ -109,8 +109,8 @@ func (_self *SysPost) ListByDeptId(deptId uint64) *base.Result {
 		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	var postSlice []entity.SysPost
-	err := _self.DB.Find(&postSlice, "id in (?)",
-		_self.DB.Select("post_id").
+	err := _self.GetDB().Find(&postSlice, "id in (?)",
+		_self.GetDB().Select("post_id").
 			Model(&entity.SysPostRelation{}).
 			Where("relation_type = ? and relation_id = ?", consts.Dept, deptId)).Error
 	if err != nil {

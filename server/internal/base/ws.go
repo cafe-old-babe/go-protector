@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
@@ -24,10 +25,6 @@ type WsContext struct {
 	conn *websocket.Conn
 	user *current.User
 	Service
-}
-
-func (_self *WsContext) Set(key string, value any) {
-	_self.GetContext().Set(key, value)
 }
 
 func (_self *WsContext) Value(key string) (value any) {
@@ -69,11 +66,16 @@ func (_self *WsContext) GetUser() *current.User {
 func Upgrade(service IService) (*WsContext, error) {
 	var user *current.User
 	var ok bool
+	var err error
 	if user, ok = current.GetUser(service.GetContext()); !ok {
 		return nil, c_error.ErrParamInvalid
 	}
-	ws, err := Upgrader.Upgrade(service.GetContext().Writer,
-		service.GetContext().Request, nil)
+	var ginCtx *gin.Context
+	if ginCtx, err = service.GetGinCtx(); err != nil {
+		return nil, err
+	}
+	var ws *websocket.Conn
+	ws, err = Upgrader.Upgrade(ginCtx.Writer, ginCtx.Request, nil)
 	if err != nil {
 		return nil, err
 	}

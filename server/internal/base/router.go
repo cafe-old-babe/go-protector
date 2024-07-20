@@ -1,11 +1,13 @@
 package base
 
-import "github.com/gin-gonic/gin"
+import (
+	"context"
+)
 
 type Router struct {
 }
 
-func (_self Router) MakeService(c *gin.Context, service ...IService) {
+func (_self Router) MakeService(c context.Context, service ...IService) {
 	if len(service) <= 0 {
 		return
 	}

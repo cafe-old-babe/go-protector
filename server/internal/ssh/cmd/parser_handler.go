@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
 	"go-protector/server/biz/model/entity"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_ascii"
@@ -36,7 +36,7 @@ type ParserSSHCharHandler struct {
 	base.Service
 }
 
-func NewParserHandler(c *gin.Context, id uint64) (_self *ParserSSHCharHandler) {
+func NewParserHandler(c context.Context, id uint64) (_self *ParserSSHCharHandler) {
 	_self = new(ParserSSHCharHandler)
 	_self.id = id
 	_self.Make(c)

@@ -29,7 +29,7 @@ func (_self *AssetAccount) Page(req *dto.AssetAccountPageReq) (res *base.Result)
 		return
 	}
 	var slice []entity.AssetAccount
-	tx := _self.DB.Omit(table_name.AssetAccount+".password").Scopes(
+	tx := _self.GetDB().Omit(table_name.AssetAccount+".password").Scopes(
 		condition.Paginate(req),
 		condition.Like(table_name.AssetAccount+".account", req.Account),
 		condition.Like("AssetBasic.ip", req.IP),
@@ -63,7 +63,7 @@ func (_self *AssetAccount) FindAssetInfoAccountSliceByIds(ids []uint64) (slice [
 		return
 	}
 	var accountSlice []entity.AssetAccount
-	if err = _self.DB.Find(&accountSlice, ids).Error; err != nil || len(accountSlice) <= 0 {
+	if err = _self.GetDB().Find(&accountSlice, ids).Error; err != nil || len(accountSlice) <= 0 {
 		return
 	}
 	var assetIdSlice []uint64
@@ -76,8 +76,8 @@ func (_self *AssetAccount) FindAssetInfoAccountSliceByIds(ids []uint64) (slice [
 		accountMapByAssetId[account.AssetId] = append(accountMapByAssetId[account.AssetId], account)
 	}
 
-	if err = _self.DB.Joins("AssetGateway").
-		Joins("RootAcc", _self.DB.Where("account_type = ?", "0")).
+	if err = _self.GetDB().Joins("AssetGateway").
+		Joins("RootAcc", _self.GetDB().Where("account_type = ?", "0")).
 		Find(&slice, assetIdSlice).Error; err != nil || len(slice) <= 0 {
 		return
 	}
@@ -98,7 +98,7 @@ func (_self *AssetAccount) FindRootAccMapByAssetIdSlice(asseIdSlice []uint64) (r
 		return
 	}
 	var accountSlice []entity.AssetAccount
-	if err = _self.DB.Where("account_type = '0' and asset_id in ?", accountSlice).Find(&accountSlice).Error; err != nil {
+	if err = _self.GetDB().Where("account_type = '0' and asset_id in ?", accountSlice).Find(&accountSlice).Error; err != nil {
 		return
 	}
 
@@ -259,7 +259,7 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 		}
 
 	saveLabel:
-		if err = _self.DB.Transaction(func(tx *gorm.DB) (err error) {
+		if err = _self.GetDB().Transaction(func(tx *gorm.DB) (err error) {
 			// 保存从账号信息
 			account.AccountStatus = accountStatus
 			if err = tx.Updates(&account).Error; err != nil {
@@ -268,7 +268,7 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 			err = tx.Omit("created_by", "created_at").Save(&extend).Error
 			return
 		}); err != nil {
-			_self.Logger.Error("save account extend err: %v", err)
+			_self.GetLogger().Error("save account extend err: %v", err)
 		}
 
 	}
@@ -279,7 +279,7 @@ func (_self *AssetAccount) AnalysisExtend(dtoSlice []dto.AccountAnalysisExtendDT
 // Save 保存
 func (_self *AssetAccount) Save(model *entity.AssetAccount) (res *base.Result) {
 	res = _self.SimpleSave(model, func() error {
-		return dao.AssetAccount.CheckSave(_self.DB, model)
+		return dao.AssetAccount.CheckSave(_self.GetDB(), model)
 	})
 	return
 }
@@ -291,7 +291,7 @@ func (_self *AssetAccount) CheckBatchDeleteByIds(ids []uint64) (err error) {
 		return
 	}
 	var count int64
-	count, err = _self.Count(_self.DB.Model(&entity.AssetAccount{}).Where("account_type = '0' and id in ?", ids))
+	count, err = _self.Count(_self.GetDB().Model(&entity.AssetAccount{}).Where("account_type = '0' and id in ?", ids))
 	if err != nil {
 		return
 	}
@@ -307,7 +307,7 @@ func (_self *AssetAccount) FindAssetAccountInfoSliceByIds(ids []uint64) (slice [
 		err = c_error.ErrParamInvalid
 		return
 	}
-	err = _self.DB.Preload("AssetBasic").Find(&slice, ids).Error
+	err = _self.GetDB().Preload("AssetBasic").Find(&slice, ids).Error
 	return
 }
 
@@ -318,7 +318,7 @@ func (_self *AssetAccount) Delete(req *base.IdsReq) (res *base.Result) {
 		res = base.ResultFailureErr(err)
 		return
 	}
-	if err = _self.DB.Transaction(func(tx *gorm.DB) (err error) {
+	if err = _self.GetDB().Transaction(func(tx *gorm.DB) (err error) {
 		var auth entity.AssetAuth
 
 		if err = auth.DeleteRedundancy(tx, req.GetIds(), entity.TypeAssetAccount); err != nil {
@@ -340,14 +340,14 @@ func (_self *AssetAccount) ListByAuth(assetId uint64) (res *base.Result) {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
-	userId := current.GetUserId(_self.Context)
+	userId := current.GetUserId(_self.GetContext())
 	if userId <= 0 {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
 	var slice []entity.AssetAuth
 
-	if err := _self.DB.Omit(table_name.AssetAccount+".password").Joins("AssetAccount").
+	if err := _self.GetDB().Omit(table_name.AssetAccount+".password").Joins("AssetAccount").
 		Where(table_name.AssetAuth+".asset_id = ? ", assetId).
 		Where(table_name.AssetAuth+".user_id = ? ", userId).
 		Where(" sysdate() between IFNULL(start_date,sysdate()) and IFNULL(end_date,sysdate()) ").

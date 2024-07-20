@@ -19,7 +19,7 @@ func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *base.Result) {
 	var dictType entity.SysDictType
 	var list []entity.SysDictType
 	var count int64
-	if err := _self.DB.Model(&dictType).
+	if err := _self.GetDB().Model(&dictType).
 		Scopes(
 			condition.Paginate(req),
 			condition.Like("type_code", req.TypeCode),
@@ -35,7 +35,7 @@ func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *base.Result) {
 // Save 字典类型保存
 func (_self *SysDictType) Save(model *entity.SysDictType) *base.Result {
 	// todo 校验
-	if err := _self.DB.Save(model).Error; err != nil {
+	if err := _self.GetDB().Save(model).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	return base.ResultSuccess(model, "创建成功")
@@ -44,7 +44,7 @@ func (_self *SysDictType) Save(model *entity.SysDictType) *base.Result {
 // Update 字典类型更新
 func (_self *SysDictType) Update(model *entity.SysDictType) *base.Result {
 	// todo 校验
-	if err := _self.DB.Save(model).Error; err != nil {
+	if err := _self.GetDB().Save(model).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 	return base.ResultSuccess(model, "更新成功")
@@ -58,7 +58,7 @@ func (_self *SysDictType) Delete(req *base.IdsReq) *base.Result {
 	}
 	ids := req.GetIds()
 	//todo 同时删除data
-	err := _self.DB.Transaction(func(tx *gorm.DB) error {
+	err := _self.GetDB().Transaction(func(tx *gorm.DB) error {
 		var dictTypeSlice []entity.SysDictType
 		if err := tx.Find(&dictTypeSlice, ids).Error; err != nil {
 			return err

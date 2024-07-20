@@ -3,12 +3,9 @@ package c_logger
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"go-protector/server/internal/consts"
-	"go-protector/server/internal/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"strconv"
 	"sync"
 )
 
@@ -29,31 +26,6 @@ func SetLogger(logger *zap.Logger) {
 
 }
 
-func GetLogger(c *gin.Context) (log *SelfLogger) {
-	var ok bool
-	var value any
-	if value, ok = c.Get(consts.CtxKeyLog); ok {
-		if log, ok = value.(*SelfLogger); ok {
-			return
-		}
-		return
-	}
-	var traceId string
-	if value, ok = c.Get(consts.CtxKeyTraceId); !ok {
-		traceId = strconv.FormatUint(utils.GetNextId(), 10)
-	} else {
-		if traceId, ok = value.(string); !ok {
-			traceId = strconv.FormatUint(utils.GetNextId(), 10)
-		}
-	}
-	c.Set(consts.CtxKeyTraceId, traceId)
-	log = &SelfLogger{
-		zapLog: _log.zapLog.Named("traceId: " + traceId),
-		ctx:    c,
-	}
-	c.Set(consts.CtxKeyLog, log)
-	return
-}
 func GetLoggerByCtx(ctx context.Context) (log *SelfLogger) {
 	var ok bool
 	log, ok = ctx.Value(consts.CtxKeyLog).(*SelfLogger)

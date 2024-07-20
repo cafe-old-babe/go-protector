@@ -21,7 +21,7 @@ func (_self *AssetGateway) Page(req *dto.AssetGatewayPageReq) (res *base.Result)
 	}
 	var slice []entity.AssetGateway
 	var count int64
-	if err := _self.DB.Scopes(
+	if err := _self.GetDB().Scopes(
 		condition.Paginate(req),
 		condition.Like("ag_name", req.AgName),
 		condition.Like("ag_ip", req.AgIp),
@@ -37,7 +37,7 @@ func (_self *AssetGateway) Page(req *dto.AssetGatewayPageReq) (res *base.Result)
 func (_self *AssetGateway) Check(model *entity.AssetGateway) (err error) {
 
 	var count int64
-	if err = _self.DB.Model(model).Scopes(
+	if err = _self.GetDB().Model(model).Scopes(
 		func(db *gorm.DB) *gorm.DB {
 			if model.ID > 0 {
 				db = db.Where("id <> ?", model.ID)
@@ -56,7 +56,7 @@ func (_self *AssetGateway) Check(model *entity.AssetGateway) (err error) {
 func (_self *AssetGateway) List() (res *base.Result) {
 	var slice []entity.AssetGateway
 
-	if err := _self.DB.Find(&slice).Error; err != nil {
+	if err := _self.GetDB().Find(&slice).Error; err != nil {
 		res = base.ResultFailureErr(err)
 		return
 	}

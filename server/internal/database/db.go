@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"go-protector/server/internal/consts"
 	"go-protector/server/internal/current"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
@@ -46,10 +45,6 @@ func SetDB(db *gorm.DB) {
 }
 
 func GetDB(ctx context.Context) *gorm.DB {
-	if db, ok := ctx.Value(consts.CtxKeyDB).(*gorm.DB); ok {
-		return db
-	}
-
 	return _db.WithContext(ctx)
 }
 
@@ -108,7 +103,7 @@ func updateByFunc(db *gorm.DB) {
 				},
 				Value: userId,
 			}))
-			//_ = db.Statement.AddError(field.Set(db.Statement.Context, db.Statement.ReflectValue, userId))
+			//_ = db.Statement.AddError(field.Set(db.Statement.ctx, db.Statement.ReflectValue, userId))
 
 		}
 	}

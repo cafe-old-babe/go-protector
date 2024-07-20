@@ -24,7 +24,7 @@ type SysOtpBind struct {
 func (_self *SysOtpBind) GetQRCodeBase64ByUser(user current.User,
 	policyDTO dto.OTPLoginPolicyDTO) (imageBase64 string, err error) {
 	var model entity.SysOtpBind
-	if err = _self.DB.First(&model, user.ID).Error; err != nil {
+	if err = _self.GetDB().First(&model, user.ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			if model, err = _self.CreateOtpByUser(user, policyDTO); err != nil {
 				return
@@ -54,7 +54,7 @@ func (_self *SysOtpBind) GetQRCodeBase64ByUser(user current.User,
 
 	err = png.Encode(imageBuffer, image)
 	if err != nil {
-		_self.Logger.Error("无法保存二维码: %v", err)
+		_self.GetLogger().Error("无法保存二维码: %v", err)
 		return
 	}
 	imageBase64 = base64.StdEncoding.EncodeToString(imageBuffer.Bytes())
@@ -63,7 +63,7 @@ func (_self *SysOtpBind) GetQRCodeBase64ByUser(user current.User,
 
 func (_self *SysOtpBind) VerifyCode(user current.User, code string) (err error) {
 	var model entity.SysOtpBind
-	if err = _self.DB.First(&model, user.ID).Error; err != nil {
+	if err = _self.GetDB().First(&model, user.ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = errors.New("动态认证码无效或已过期")
 		}
@@ -110,7 +110,7 @@ func (_self *SysOtpBind) CreateOtpByUser(user current.User,
 		UserId:     user.ID,
 		OtpAuthURL: key.URL(),
 	}
-	err = _self.DB.Clauses(clause.OnConflict{
+	err = _self.GetDB().Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).Create(&model).Error
 	return

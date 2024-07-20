@@ -25,7 +25,7 @@ func (_self *AssetAuth) Page(req *dto.AssetAuthPageReq) (res *base.Result) {
 
 	var slice []entity.AssetAuth
 	count, err := _self.Count(
-		_self.DB.Scopes(
+		_self.GetDB().Scopes(
 			condition.Paginate(req),
 			condition.Like("asset_ip", req.AssetIp),
 			condition.Like("asset_acc", req.AssetAcc),
@@ -46,7 +46,7 @@ func (_self *AssetAuth) SaveCheck(data *entity.AssetAuth) (err error) {
 	}
 
 	count, err := _self.Count(
-		_self.DB.Model(data).Scopes(func(db *gorm.DB) *gorm.DB {
+		_self.GetDB().Model(data).Scopes(func(db *gorm.DB) *gorm.DB {
 			if data.ID > 0 {
 				db = db.Where("id <> ?", data.ID)
 			}
@@ -66,7 +66,7 @@ func (_self *AssetAuth) SaveCheck(data *entity.AssetAuth) (err error) {
 
 // Import 导入
 func (_self *AssetAuth) Import(file *multipart.FileHeader) (err error) {
-	_self.Logger.Debug("fileName: %s", file.Filename)
+	_self.GetLogger().Debug("fileName: %s", file.Filename)
 
 	open, err := file.Open()
 	if err != nil {
@@ -81,7 +81,8 @@ func (_self *AssetAuth) Import(file *multipart.FileHeader) (err error) {
 	}
 
 	if len(excelHandler.ErrData) <= 0 {
-		c_result.Success(_self.Context, nil, "导入成功")
+		ctx, _ := _self.GetGinCtx()
+		c_result.Success(ctx, nil, "导入成功")
 		return
 	}
 	ext := filepath.Ext(file.Filename)
@@ -91,14 +92,15 @@ func (_self *AssetAuth) Import(file *multipart.FileHeader) (err error) {
 		return
 	}
 	defer resFile.Close()
-	err = excel.Export(_self.Context, resFile, fileName)
+	ctx, _ := _self.GetGinCtx()
+	err = excel.Export(ctx, resFile, fileName)
 	return
 }
 
 func (_self *AssetAuth) ExportData(req *dto.AssetAuthPageReq) (err error) {
 
 	var slice []entity.AssetAuth
-	err = _self.DB.Scopes(
+	err = _self.GetDB().Scopes(
 		condition.Paginate(req),
 		condition.Like("asset_ip", req.AssetIp),
 		condition.Like("asset_acc", req.AssetAcc),
@@ -116,7 +118,8 @@ func (_self *AssetAuth) ExportData(req *dto.AssetAuthPageReq) (err error) {
 	if err != nil {
 		return
 	}
-	err = excel.Export(_self.Context, file, "授权数据.xlsx")
+	ctx, _ := _self.GetGinCtx()
+	err = excel.Export(ctx, file, "授权数据.xlsx")
 	return
 }
 
@@ -126,6 +129,7 @@ func (_self *AssetAuth) ExportTemplate() (err error) {
 	if err != nil {
 		return
 	}
-	err = excel.Export(_self.Context, file, "授权导入模板.xlsx")
+	ctx, _ := _self.GetGinCtx()
+	err = excel.Export(ctx, file, "授权导入模板.xlsx")
 	return
 }

@@ -33,7 +33,7 @@ func JwtAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if set, ok := ignoreUrlSet[c.Request.Method]; ok {
 			if _, ok := set[c.FullPath()]; ok {
-				c_logger.GetLogger(c).Debug("Hit whitelist break auth, method: %s, url: %s", c.Request.Method, c.Request.URL.Path)
+				c_logger.GetLoggerByCtx(c).Debug("Hit whitelist break auth, method: %s, url: %s", c.Request.Method, c.Request.URL.Path)
 				c.Next()
 				return
 			}

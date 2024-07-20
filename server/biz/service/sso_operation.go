@@ -65,7 +65,7 @@ func (_self SsoOperation) PageBySsoId(req *dto.SsoOperationPageReq) (res *base.R
 	}
 
 	var count int64
-	count, err = _self.Count(_self.DB.Table("sso_operation").
+	count, err = _self.Count(_self.GetDB().Table("sso_operation").
 		Scopes(
 			condition.Paginate(req),
 			condition.Eq("sso_session_id", req.SsoSessionId),

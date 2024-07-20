@@ -24,7 +24,7 @@ func (_self *SysDictData) Page(req *dto.DictDataPageReq) *base.Result {
 	var dictData entity.SysDictData
 	var list []vo.DictDataPage
 	var count int64
-	if err := _self.DB.Model(&dictData).
+	if err := _self.GetDB().Model(&dictData).
 		Select([]string{
 			table_name.SysDictData + ".id",
 			table_name.SysDictType + ".type_name",
@@ -57,7 +57,7 @@ func (_self *SysDictData) Page(req *dto.DictDataPageReq) *base.Result {
 // Save 字典数据新增
 func (_self *SysDictData) Save(model *entity.SysDictData) *base.Result {
 	// todo 校验
-	if err := _self.DB.Save(model).Error; err != nil {
+	if err := _self.GetDB().Save(model).Error; err != nil {
 		return base.ResultFailureErr(err)
 	}
 
@@ -67,7 +67,7 @@ func (_self *SysDictData) Save(model *entity.SysDictData) *base.Result {
 // UpdateStatus 更新状态
 func (_self *SysDictData) UpdateStatus(req *dto.DictDataUpdateStatusReq) *base.Result {
 
-	result := _self.DB.Model(&entity.SysDictData{}).
+	result := _self.GetDB().Model(&entity.SysDictData{}).
 		Where("id = ?", req.ID).
 		Update("status", req.Status)
 
@@ -75,7 +75,7 @@ func (_self *SysDictData) UpdateStatus(req *dto.DictDataUpdateStatusReq) *base.R
 		return base.ResultFailureErr(result.Error)
 	}
 	if result.RowsAffected <= 0 {
-		_self.Logger.Error("更新失败,无更新记录")
+		_self.GetLogger().Error("更新失败,无更新记录")
 		return base.ResultFailureMsg("更新失败")
 	}
 	return base.ResultSuccessMsg("更新成功")
@@ -87,12 +87,12 @@ func (_self *SysDictData) Delete(req *base.IdsReq) *base.Result {
 	if req == nil || len(req.GetIds()) <= 0 {
 		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
-	result := _self.DB.Delete(&entity.SysDictData{}, req.GetIds())
+	result := _self.GetDB().Delete(&entity.SysDictData{}, req.GetIds())
 	if result.Error != nil {
 		return base.ResultFailureErr(result.Error)
 	}
 	if result.RowsAffected <= 0 {
-		_self.Logger.Error("删除失败,无删除记录")
+		_self.GetLogger().Error("删除失败,无删除记录")
 		return base.ResultFailureMsg("删除失败")
 	}
 	return base.ResultSuccessMsg("删除成功")
@@ -104,7 +104,7 @@ func (_self *SysDictData) DictDataList(dictType *string) *base.Result {
 		return base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
 	var slice []vo.DictDataList
-	err := _self.DB.Model(&entity.SysDictData{}).Order("sort").
+	err := _self.GetDB().Model(&entity.SysDictData{}).Order("sort").
 		Find(&slice, "type_code = ? and status = '0'", dictType).Error
 	if err != nil {
 		return base.ResultFailureErr(err)

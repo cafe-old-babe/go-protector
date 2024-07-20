@@ -21,7 +21,7 @@ func Failure(c *gin.Context, data any, msg ...string) {
 
 func Err(c *gin.Context, err error) {
 	err = c_translator.ConvertValidateErr(err)
-	c_logger.GetLogger(c).Error("path: %s, err: %v", c.FullPath(), err)
+	c_logger.GetLoggerByCtx(c).Error("path: %s, err: %v", c.FullPath(), err)
 	c.AbortWithStatusJSON(http.StatusOK, base.ResultFailureErr(err))
 }
 

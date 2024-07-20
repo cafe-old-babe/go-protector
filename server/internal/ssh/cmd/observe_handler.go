@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"github.com/gin-gonic/gin"
 	"go-protector/server/internal/ssh/monitor"
 	"go-protector/server/internal/utils/async"
 	"time"
@@ -18,7 +17,7 @@ type ObserveHandler struct {
 	ctxCancel context.CancelFunc
 }
 
-func NewObserveHandler(c *gin.Context, id uint64) Handler {
+func NewObserveHandler(c context.Context, id uint64) Handler {
 	ctx, ctxCancel := context.WithCancel(c)
 	_self := &ObserveHandler{
 		id:        id,

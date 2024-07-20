@@ -21,13 +21,13 @@ func (_self *AssetAuthExcelHandler[T]) ReadRow(row *entity.AssetAuth) (err error
 	if row == nil {
 		return
 	}
-	if err = fillAuth(_self.DB, row); err != nil {
+	if err = fillAuth(_self.GetDB(), row); err != nil {
 		return
 	}
 	if err = binding.Validator.ValidateStruct(row); err != nil {
 		return
 	}
-	if err = _self.DB.Create(row).Error; err != nil {
+	if err = _self.GetDB().Create(row).Error; err != nil {
 		var sqlError *mysql.MySQLError
 		if errors.As(err, &sqlError) {
 			if sqlError.Number == 1062 {

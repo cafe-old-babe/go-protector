@@ -37,7 +37,7 @@ func (_self *SsoSession) CreateSession(authId uint64) (res *base.Result) {
 	// 查询授权信息
 	var auth entity.AssetAuth
 	var err error
-	if auth, err = dao.AssetAuth.FindById(_self.DB, authId); err != nil {
+	if auth, err = dao.AssetAuth.FindById(_self.GetDB(), authId); err != nil {
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
@@ -49,19 +49,19 @@ func (_self *SsoSession) CreateSession(authId uint64) (res *base.Result) {
 		}
 	}
 	// 校验授权信息
-	if auth.UserId != current.GetUserId(_self.Context) {
+	if auth.UserId != current.GetUserId(_self.GetContext()) {
 		res = base.ResultFailureErr(errors.New("授权无效或已过期"))
 		return
 	}
 
-	assetBasic, err := dao.AssetBasic.FindAssetBasicByDTO(_self.DB, dto.FindAssetDTO{
+	assetBasic, err := dao.AssetBasic.FindAssetBasicByDTO(_self.GetDB(), dto.FindAssetDTO{
 		ID: auth.AssetId,
 	})
 	if err != nil {
 		res = base.ResultFailureErr(err)
 		return
 	}
-	assetAccount, err := dao.AssetAccount.FindAssetAccountByDTO(_self.DB, dto.FindAssetAccountDTO{
+	assetAccount, err := dao.AssetAccount.FindAssetAccountByDTO(_self.GetDB(), dto.FindAssetAccountDTO{
 		AssetId: auth.AssetId,
 		Account: auth.AssetAcc,
 	})
@@ -89,7 +89,7 @@ func (_self *SsoSession) CreateSession(authId uint64) (res *base.Result) {
 
 	session.Status = consts.SessionWaiting
 
-	if err = _self.DB.Create(&session).Error; err != nil {
+	if err = _self.GetDB().Create(&session).Error; err != nil {
 		res = base.ResultFailureErr(err)
 		return
 	}
@@ -119,7 +119,7 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 		}
 		if model.ID > 0 {
 			model.Status = consts.SessionClose
-			_self.DB.Updates(&model)
+			_self.GetDB().Updates(&model)
 		}
 		if term != nil {
 			_ = term.Close()
@@ -133,7 +133,7 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 			}
 		}
 	}()
-	if err = _self.DB.First(&model, req.Id).Error; err != nil {
+	if err = _self.GetDB().First(&model, req.Id).Error; err != nil {
 		return
 	}
 	assetAccPwd := model.AssetAccPwd
@@ -142,12 +142,12 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 		err = c_error.ErrIllegalAccess
 		return
 	}
-	if model.UserId != current.GetUserId(_self.Context) {
+	if model.UserId != current.GetUserId(_self.GetContext()) {
 		err = c_error.ErrIllegalAccess
 		return
 	}
 	model.Status = consts.SessionConnecting
-	if err = _self.DB.Updates(&model).Error; err != nil {
+	if err = _self.GetDB().Updates(&model).Error; err != nil {
 		return err
 	}
 	// 启动shell
@@ -179,7 +179,7 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 		return
 	}
 	model.CastPath = castPath
-	if err = _self.DB.Updates(&model).Error; err != nil {
+	if err = _self.GetDB().Updates(&model).Error; err != nil {
 		return err
 	}
 	forward.Start()
@@ -218,7 +218,7 @@ func (_self *SsoSession) GetCast(ssoSessionId uint64) (res *base.Result) {
 
 	var castFile string
 	var ssoSession entity.SsoSession
-	if err = _self.DB.First(&ssoSession, ssoSessionId).Error; err != nil {
+	if err = _self.GetDB().First(&ssoSession, ssoSessionId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = c_error.ErrIllegalAccess
 		}
@@ -294,7 +294,7 @@ func (_self *SsoSession) OperationForMonitor(req *dto.OperationForMonitorReq) (r
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 		return
 	}
-	user, ok := current.GetUser(_self.Context)
+	user, ok := current.GetUser(_self.GetContext())
 	if !ok {
 		res = base.ResultFailureErr(c_error.ErrIllegalAccess)
 		return

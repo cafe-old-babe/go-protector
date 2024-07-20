@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"go-protector/server/biz/model/dao"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
@@ -28,7 +29,7 @@ var (
 	// checkUserStatus 校验用户状态与有效期
 	checkUserStatus = func(_self base.Service, sysUser *entity.SysUser,
 		loginDTO *dto.LoginDTO, policyDTOMap PolicyDTOMap) (res *base.Result, isLoop bool) {
-		_self.Logger.Debug("chain do checkUserExpirationAt")
+		_self.GetLogger().Debug("chain do checkUserExpirationAt")
 		if sysUser.UserStatus != 0 {
 			res = base.ResultFailureErr(c_error.ErrLoginNameOrPasswordIncorrect)
 		}
@@ -42,7 +43,7 @@ var (
 			return
 		}
 
-		_self.Logger.Error("用户: %s 已过有效期", loginDTO.LoginName)
+		_self.GetLogger().Error("用户: %s 已过有效期", loginDTO.LoginName)
 		res = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
 		// 更新用户信息
 		sysUser.UserStatus = consts.LockTypeExpire
@@ -51,8 +52,8 @@ var (
 			Valid:  true,
 		}
 		sysUser.UpdatedBy = sysUser.ID
-		if err := dao.SysUser.LockUser(_self.DB, sysUser); err != nil {
-			_self.Logger.Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
+		if err := dao.SysUser.LockUser(_self.GetDB(), sysUser); err != nil {
+			_self.GetLogger().Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
 		}
 		return
 	}
@@ -60,7 +61,7 @@ var (
 	// checkUserPassword 校验用户密码
 	checkUserPassword = func(_self base.Service, sysUser *entity.SysUser,
 		loginDTO *dto.LoginDTO, policyDTOMap PolicyDTOMap) (res *base.Result, isLoop bool) {
-		_self.Logger.Debug("chain do checkUserPassword")
+		_self.GetLogger().Debug("chain do checkUserPassword")
 		if loginDTO.PolicyParam != nil {
 			// 策略登录不参与校验密码
 			return
@@ -72,7 +73,7 @@ var (
 
 		policyDTO, ok := policyDTOMap[consts.LoginPolicyIntruder]
 		if !ok {
-			_self.Logger.Debug("获取防爆破策略失败")
+			_self.GetLogger().Debug("获取防爆破策略失败")
 			return
 		}
 		if !policyDTO.IsEnable() {
@@ -84,11 +85,11 @@ var (
 		redisClient := cache.GetRedisClient()
 
 		redisKey := fmt.Sprintf(consts.LoginIntruderCacheKeyFmt, time.Now().Day(), loginDTO.LoginName)
-		redisClient.SetNX(_self.Context, redisKey, 0, time.Hour*24)
+		redisClient.SetNX(_self.GetContext(), redisKey, 0, time.Hour*24)
 
-		val, err := redisClient.Incr(_self.Context, redisKey).Result()
+		val, err := redisClient.Incr(_self.GetContext(), redisKey).Result()
 		if err != nil {
-			_self.Logger.Error("incr %s, err: %v", redisKey, err)
+			_self.GetLogger().Error("incr %s, err: %v", redisKey, err)
 			return
 		}
 		failCount := uint(val)
@@ -102,8 +103,8 @@ var (
 				Valid:  true,
 			}
 			sysUser.UpdatedBy = sysUser.ID
-			if err := dao.SysUser.LockUser(_self.DB, sysUser); err != nil {
-				_self.Logger.Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
+			if err := dao.SysUser.LockUser(_self.GetDB(), sysUser); err != nil {
+				_self.GetLogger().Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
 			}
 		}
 		return
@@ -119,14 +120,19 @@ var (
 			return
 		}
 		isLoop = true
-		if sysUser.LastLoginIp == _self.Context.ClientIP() {
+		var err error
+		var ginCtx *gin.Context
+		if ginCtx, err = _self.GetGinCtx(); err != nil {
+			res = base.ResultFailureErr(err)
+		}
+		if sysUser.LastLoginIp == ginCtx.ClientIP() {
 			return
 		}
 		if !sysUser.LastLoginTime.Valid {
 			return
 		}
-		var err error
-		if sysUser, err = dao.SysUser.FindUserInfoByDTO(_self.DB, &dto.FindUserDTO{
+
+		if sysUser, err = dao.SysUser.FindUserInfoByDTO(_self.GetDB(), &dto.FindUserDTO{
 			ID: sysUser.ID,
 		}); err != nil {
 			res = base.ResultFailureErr(err)
@@ -155,14 +161,14 @@ var (
 		isLoop = true
 		redisClient := cache.GetRedisClient()
 		key := fmt.Sprintf(consts.OnlineUserCacheKeyFmt, loginDTO.LoginName, "*")
-		scan := redisClient.Scan(_self.Context, 0, key, 0)
+		scan := redisClient.Scan(_self.GetContext(), 0, key, 0)
 		if scan.Err() != nil {
 			res = base.ResultFailureErr(scan.Err())
 			return
 		}
 		var keys []string
 		iterator := scan.Iterator()
-		for iterator.Next(_self.Context) {
+		for iterator.Next(_self.GetContext()) {
 			if loginPolicyDTO.SingleOnlineOperate == 0 {
 				res = base.ResultFailureMsg("该账号正在使用中,请稍后再试")
 				return
@@ -173,12 +179,13 @@ var (
 		if len(keys) <= 0 {
 			return
 		}
-		value, exists := _self.Context.Get("status")
-		if !exists {
+		value := _self.GetContext().Value("status")
+		val, ok := value.(string)
+		if !ok {
 			return
 		}
-		if value == "second" {
-			if _, err := redisClient.Del(_self.Context, keys...).Result(); err != nil {
+		if val == "second" {
+			if _, err := redisClient.Del(_self.GetContext(), keys...).Result(); err != nil {
 				res = base.ResultFailureMsg("系统繁忙,请稍后再试")
 				return
 			}
@@ -230,7 +237,7 @@ func (_self *SysLoginPolicyChain) Do(sysUser *entity.SysUser, loginDTO *dto.Logi
 
 	var loopChain []LoginPolicyHandler
 	var isLoop bool
-	_self.Context.Set("status", "first")
+	_self.Set("status", "first")
 
 	for i := range chain {
 		res, isLoop = chain[i](_self.Service, sysUser, loginDTO, policyDTOMap)
@@ -245,7 +252,7 @@ func (_self *SysLoginPolicyChain) Do(sysUser *entity.SysUser, loginDTO *dto.Logi
 		}
 	}
 	for i := range loopChain {
-		_self.Context.Set("status", "second")
+		_self.Set("status", "second")
 		res, _ = loopChain[i](_self.Service, sysUser, loginDTO, policyDTOMap)
 		if res == nil || !res.IsSuccess() {
 			continue
