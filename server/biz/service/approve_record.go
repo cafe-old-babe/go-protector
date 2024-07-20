@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"github.com/gin-gonic/gin/binding"
 	"go-protector/server/biz/model/dto"
@@ -10,7 +11,9 @@ import (
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/database/condition"
+	"go-protector/server/internal/utils/async"
 	"gorm.io/gorm"
+	"strconv"
 )
 
 type ApproveRecord struct {
@@ -61,9 +64,16 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 	err := _self.GetDB().Create(&record).Error
 	if err != nil {
 		res = base.ResultFailureErr(err)
-	} else {
-		res = base.ResultSuccess(&record)
+		return
 	}
+	if insertDTO.Timeout > 0 {
+		_, _ = async.NewDelayTask(strconv.Itoa(int(record.ID)), insertDTO.Timeout, _self.GetContext(), func(ctx context.Context) {
+			//var recordService ApproveRecord
+			//recordService.Make(ctx)
+
+		})
+	}
+	res = base.ResultSuccess(&record)
 	return
 }
 

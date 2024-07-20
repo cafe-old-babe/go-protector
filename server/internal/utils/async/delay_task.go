@@ -44,7 +44,7 @@ func (_self *DelayTask) Cancel() (err error) {
 }
 
 // NewDelayTask 创建延迟任务
-func NewDelayTask(id string, delaySecond int64, c context.Context, f func(context.Context)) (*DelayTask, error) {
+func NewDelayTask(id string, delaySecond int, c context.Context, f func(context.Context)) (*DelayTask, error) {
 	if len(id) <= 0 || f == nil || delaySecond <= 0 || c == nil {
 		return nil, c_error.ErrParamInvalid
 	}
