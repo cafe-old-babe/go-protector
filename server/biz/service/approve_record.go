@@ -97,7 +97,7 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 		ApproveUserId:    insertDTO.ApproveUserId,
 		ApproveStatus:    consts.ApproveStatusUnprocessed,
 		ApproveType:      insertDTO.ApproveType,
-		ApproveBindId:    insertDTO.Id,
+		ApproveBindId:    insertDTO.ApproveBindId,
 		Timeout:          insertDTO.Timeout,
 	}
 

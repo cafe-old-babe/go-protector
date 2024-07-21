@@ -191,13 +191,16 @@ export default {
   },
   watch: {
      record(val) {
-      this.loadGroupTree()
-      this.loadGateway()
-      this.localRecord = Object.assign({}, val)
+       // 为打开当前页面 不查询
+       if (!this.visible) {
+         return
+       }
+       this.loadGroupTree()
+       this.loadGateway()
+       this.localRecord = Object.assign({}, val)
        console.log(this.localRecord)
-      this.rules.password[0].required = !this.localRecord.id
-
-      this.loading = false
+       this.rules.password[0].required = !this.localRecord.id
+       this.loading = false
     }
   },
   computed: {

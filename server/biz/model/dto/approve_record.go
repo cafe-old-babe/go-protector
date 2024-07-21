@@ -13,7 +13,6 @@ type ApproveRecordPageReq struct {
 }
 
 type ApproveRecordInsertDTO struct {
-	Id               uint64             `json:"id,omitempty" binding:"required"`
 	ApplicantId      uint64             `json:"applicantId,omitempty" binding:"required"`
 	ApproveUserId    uint64             `json:"approveUserId,omitempty" binding:"required"`
 	SessionId        string             `json:"sessionId,omitempty" binding:"required"`

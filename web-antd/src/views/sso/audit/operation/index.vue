@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-spin :spinning="loading">
-      <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 150px)`,overflow:'auto'}">
+      <a-card :bordered="false" :style="{height:`calc(${windowHeight}px - 140px)`,overflow:'auto'}">
         <div class="table-page-search-wrapper">
           <a-form layout="inline">
             <a-row :gutter="20">
@@ -42,6 +42,7 @@
           :columns="columns"
           :data="loadData"
           :rowSelection="rowSelection"
+          :scroll="{y:'calc(60vh - 20px)'}"
         >
 
         </s-table>

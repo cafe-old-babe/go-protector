@@ -23,7 +23,7 @@ type TermForward struct {
 	record     *Record
 }
 
-func NewTermForward(ws *base.WsContext, term *Terminal, chain ...cmd.Handler) (_self *TermForward, err error) {
+func NewTermForward(ws *base.WsContext, term *Terminal, dataChan chan rune, chain ...cmd.Handler) (_self *TermForward, err error) {
 	ctx, ctxCancel := context.WithCancel(ws.GetContext())
 	if chain == nil {
 		chain = make([]cmd.Handler, 0)
@@ -34,7 +34,7 @@ func NewTermForward(ws *base.WsContext, term *Terminal, chain ...cmd.Handler) (_
 	_self = &TermForward{
 		ws:         ws,
 		term:       term,
-		dataChan:   make(chan rune),
+		dataChan:   dataChan,
 		ctx:        ctx,
 		ctxCancel:  ctxCancel,
 		timeTicker: time.NewTicker(time.Millisecond * 60),
@@ -75,12 +75,8 @@ func (_self *TermForward) readTermToWriteChan() {
 				return
 			}
 			if i > 0 {
-				for i := range _self.chain {
-					_self.chain[i].PassToClient(data)
-				}
 				_self.dataChan <- data
 			}
-
 		}
 
 	}
@@ -107,6 +103,9 @@ func (_self *TermForward) readChanToWriteWs() {
 		case <-_self.ctx.Done():
 			return
 		case data := <-_self.dataChan:
+			for i := range _self.chain {
+				_self.chain[i].PassToClient(data)
+			}
 			if data == utf8.RuneError {
 				continue
 			}

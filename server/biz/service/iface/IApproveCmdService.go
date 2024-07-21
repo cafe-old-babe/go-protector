@@ -17,7 +17,7 @@ func RegisterApproveCmdService(impl IApproveCmdService) {
 }
 
 func ApproveCmdService(c context.Context) IApproveCmdService {
-	value := reflect.New(reflect.TypeOf(approveCmdService))
+	value := reflect.New(reflect.Indirect(reflect.ValueOf(approveCmdService)).Type())
 	recordService := value.Interface().(IApproveCmdService)
 	recordService.Make(c)
 	return recordService

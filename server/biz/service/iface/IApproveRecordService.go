@@ -22,7 +22,9 @@ func RegisterApproveRecordService(impl IApproveRecordService) {
 }
 
 func ApproveRecordService(c context.Context) IApproveRecordService {
-	value := reflect.New(reflect.TypeOf(approveRecordService))
+
+	value := reflect.New(reflect.ValueOf(approveRecordService).Elem().Type())
+	//value := reflect.New(reflect.Indirect(reflect.ValueOf(approveRecordService)).Type())
 	recordService := value.Interface().(IApproveRecordService)
 	recordService.Make(c)
 	return recordService

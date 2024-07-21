@@ -2,16 +2,22 @@ package cmd
 
 import (
 	"context"
+	"fmt"
+	"go-protector/server/biz/model/dao"
+	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
+	"go-protector/server/biz/service/iface"
 	"go-protector/server/internal/base"
+	"go-protector/server/internal/consts"
+	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_ascii"
 	"go-protector/server/internal/custom/c_structure"
 	"go-protector/server/internal/custom/c_type"
-	"go-protector/server/internal/utils/async"
 	"math"
-	"strconv"
+	"regexp"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -34,13 +40,37 @@ type ParserSSHCharHandler struct {
 	sync.Mutex                                  // mutex 互斥锁
 	cursor                                      // cursor 光标所在位置
 	base.Service
+	// 审批
+	approveRecordService iface.IApproveRecordService
+	approveCmdSlice      []string                     // approveCmdSlice 需要审批的命令
+	assetBasic           entity.AssetBasic            // assetBasic 资产信息
+	currentUser          *current.User                // currentUser 当前用户
+	approveRecord        *entity.ApproveRecord        // approveRecord 审批记录
+	writeCliDataChan     chan<- rune                  // writeCliDataChan 写向客户端
+	writeServer          func(in []byte) (int, error) // writeServer 写向服务端
 }
 
-func NewParserHandler(c context.Context, id uint64) (_self *ParserSSHCharHandler) {
+func NewParserHandler(c context.Context, id uint64, dataChan chan<- rune,
+	writeServer func(in []byte) (int, error)) (_self *ParserSSHCharHandler) {
+
 	_self = new(ParserSSHCharHandler)
 	_self.id = id
 	_self.Make(c)
 	_self.ResetCmd()
+	// 审批
+	_self.writeCliDataChan = dataChan
+	_self.writeServer = writeServer
+	_self.approveRecordService = iface.ApproveRecordService(c)
+	assetId := c.Value("assetId").(uint64)
+	_self.approveCmdSlice, _ = iface.ApproveCmdService(c).GetApproveCmdSliceByAssetId(assetId)
+	_self.currentUser, _ = current.GetUser(c)
+	if len(_self.approveCmdSlice) > 0 {
+		_self.assetBasic, _ = dao.AssetBasic.FindAssetBasicByDTO(_self.GetDB(), dto.FindAssetDTO{
+			ID: assetId,
+		})
+
+	}
+
 	return
 }
 
@@ -64,9 +94,12 @@ func (_self *ParserSSHCharHandler) PassToClient(r rune) {
 
 func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 	if !_self.recordState {
+		if r == 0x03 {
+			_self.ResetCmd()
+		}
 		return true
 	}
-	_self.GetLogger().Debug("passToServer: %s\t%v", strconv.QuoteRune(r), r)
+	//_self.GetLogger().Debug("passToServer: %s\t%v", strconv.QuoteRune(r), r)
 	_self.Lock()
 	defer _self.Unlock()
 	if (len(_self.ps1Row) <= 0 ||
@@ -75,11 +108,33 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 		// 如果开启记录PS1
 		_self.recordPS1 {
 		_self.recordPs1(_self.getCmdByLine(_self.GetY()))
+	}
 
+	if _self.approveRecord != nil && r != 0x03 {
+
+		sprintf := fmt.Sprintf("\r\n请等待 %s(%s) 审批, ctrl+c 可取消审批",
+			_self.approveRecord.ApproveUser.Username,
+			_self.approveRecord.ApproveUser.LoginName)
+		_self.WriteCli(sprintf)
+		return false
 	}
 	switch r {
 	case 0x03: // ctrl+c
-		_self.ResetCmd()
+		if _self.approveRecord != nil { // 取消
+
+			// 取消审批
+			_ = _self.approveRecordService.DoApprove(&dto.DoApproveDTO{
+				Id:            _self.approveRecord.ID,
+				ApproveStatus: consts.ApproveStatusCancel,
+				ApproveUserId: _self.currentUser.ID,
+			})
+			_self.ResetCmd()
+			_, _ = _self.writeServer([]byte{0x03})
+		} else {
+
+			_self.ResetCmd()
+		}
+
 	case 0x0d: // \r
 		_self.recordPS1 = true
 		if _self.recordState {
@@ -95,7 +150,12 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 			break
 		}
 		cmd := _self.getCmd()
-
+		defer func() {
+			// top 特殊处理
+			if strings.HasPrefix(cmd, "top") {
+				_self.recordState = false
+			}
+		}()
 		i := strings.IndexAny(cmd, "`'\"")
 
 		if i > -1 {
@@ -117,11 +177,59 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 		}
 		if !_self.quoteStack.IsEmpty() {
 			break
+		}
+		// _self.doSave(match)
+		// _self.ResetCmd()
+		// 匹配
+		match := _self.matchApproveCmd()
+		res := _self.doSave(match)
+		if !res.IsSuccess() {
+
+			sprintf := fmt.Sprintf("记录命令失败: %v", res.Message)
+			_self.GetLogger().Error(sprintf)
+			_self.WriteCli("\r\n" + sprintf + ",请稍后重试")
+			_self.ResetCmd()
+			_, _ = _self.writeServer([]byte{0x03})
+			return false
 
 		}
-		_self.doSave()
-		_self.ResetCmd()
 
+		if !match {
+			_self.ResetCmd()
+
+			return true
+		}
+		_self.operationEntity = res.Data.(*entity.SsoOperation)
+		// 创建审批
+		applicantContent := fmt.Sprintf("用户: %s(%s) [%s]在资产: [%s(%s)] 执行了: %s, 触发了审批,请您处理",
+			_self.currentUser.UserName, _self.currentUser.LoginName, time.Now().Format(time.DateTime),
+			_self.assetBasic.AssetName, _self.assetBasic.IP, cmd)
+
+		res = _self.approveRecordService.Insert(&dto.ApproveRecordInsertDTO{
+			ApplicantId:      _self.currentUser.ID,
+			ApproveUserId:    _self.assetBasic.ManagerUserId,
+			SessionId:        _self.currentUser.SessionId,
+			ApplicantContent: applicantContent,
+			Timeout:          5 * 60,
+			ApproveType:      consts.ApproveTypSsoOperation,
+			ApproveBindId:    _self.operationEntity.ID,
+		})
+
+		if !res.IsSuccess() {
+			sprintf := fmt.Sprintf("创建审批失败: %v", res.Message)
+			_self.GetLogger().Error(sprintf)
+			_self.WriteCli("\r\n" + sprintf)
+			_self.ResetCmd()
+			_, _ = _self.writeServer([]byte{0x03})
+		} else {
+			_self.approveRecord = res.Data.(*entity.ApproveRecord)
+			sprintf := fmt.Sprintf("\r\n请等待 %s(%s) 审批, ctrl+c 可取消审批",
+				_self.approveRecord.ApproveUser.Username,
+				_self.approveRecord.ApproveUser.LoginName)
+			_self.WriteCli(sprintf)
+
+		}
+		return false
 	}
 
 	return true
@@ -161,7 +269,10 @@ func (_self *ParserSSHCharHandler) ResetCmd() {
 	_self.currentFirstIn = true
 	_self.ResetCursor()
 	_self.quoteStack.Clear()
+
 	_self.operationEntity = new(entity.SsoOperation)
+	_self.approveRecord = nil
+
 }
 
 func (_self *ParserSSHCharHandler) printCmdInfo() {
@@ -302,7 +413,7 @@ func (_self *ParserSSHCharHandler) forEachCmd(x, y int, runeFunc func(r rune), n
 }
 
 // doSave 保存
-func (_self *ParserSSHCharHandler) doSave() {
+func (_self *ParserSSHCharHandler) doSave(match bool) (res *base.Result) {
 	cmd := _self.getCmd()
 	if len(cmd) <= 0 {
 		return
@@ -310,11 +421,47 @@ func (_self *ParserSSHCharHandler) doSave() {
 	_self.operationEntity.Cmd = cmd
 	_self.operationEntity.CmdExecAt = c_type.NowTime()
 	_self.operationEntity.Sort = _self.cmdSort
-	_self.cmdSort++
-	_self.operationEntity.SsoSessionId = _self.GetId()
-	ssoOperation := _self.operationEntity
 
-	async.CommonWorkPool.Submit(func() {
-		_self.SimpleSave(ssoOperation)
-	})
+	_self.operationEntity.SsoSessionId = _self.GetId()
+	if match {
+		// 待审批
+		_self.operationEntity.ExecStatus = "1"
+	} else {
+		// 执行成功
+		_self.operationEntity.ExecStatus = "0"
+		_self.cmdSort++
+	}
+	return _self.SimpleSave(_self.operationEntity)
+
+}
+
+// matchApproveCmd 匹配命令
+func (_self *ParserSSHCharHandler) matchApproveCmd() (match bool) {
+	cmd := _self.getCmd()
+	if len(cmd) <= 0 {
+		return false
+	}
+	for _, approveCmd := range _self.approveCmdSlice {
+		if match, _ = regexp.MatchString(approveCmd, cmd); !match {
+			continue
+		} else {
+			break
+		}
+	}
+	return
+
+}
+
+// WriteCli 写向客户端
+func (_self *ParserSSHCharHandler) WriteCli(str string) {
+	if len(str) <= 0 {
+		return
+	}
+	go func() {
+
+		for _, strRune := range []rune(str) {
+			_self.writeCliDataChan <- strRune
+		}
+	}()
+
 }

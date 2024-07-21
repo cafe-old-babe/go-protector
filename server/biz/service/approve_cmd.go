@@ -57,6 +57,6 @@ func (_self *ApproveCmd) GetApproveCmdSliceByAssetId(assetId uint64) (cmdSlice [
 		err = c_error.ErrParamInvalid
 		return
 	}
-	err = _self.GetDB().Table(table_name.ApproveCmd).Pluck("cmd", &cmdSlice).Error
+	err = _self.GetDB().Table(table_name.ApproveCmd).Where("asset_id = ?", assetId).Pluck("cmd", &cmdSlice).Error
 	return
 }

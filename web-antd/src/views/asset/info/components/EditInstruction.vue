@@ -116,6 +116,7 @@ export default {
       })
     },
     handleCancel: function () {
+      this.queryParam.cmd = ''
       this.$emit('close')
     }
 
