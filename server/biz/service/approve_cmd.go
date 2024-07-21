@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
+	"go-protector/server/biz/service/iface"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/custom/c_error"
@@ -12,6 +13,10 @@ import (
 
 type ApproveCmd struct {
 	base.Service
+}
+
+func init() {
+	iface.RegisterApproveCmdService(&ApproveCmd{})
 }
 
 func (_self *ApproveCmd) Page(req *dto.ApproveCmdPageReq) (res *base.Result) {
@@ -44,5 +49,14 @@ func (_self *ApproveCmd) SaveCheck(req entity.ApproveCmd) (err error) {
 	if count > 0 {
 		err = errors.New("指令重复")
 	}
+	return
+}
+
+func (_self *ApproveCmd) GetApproveCmdSliceByAssetId(assetId uint64) (cmdSlice []string, err error) {
+	if assetId <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	err = _self.GetDB().Table(table_name.ApproveCmd).Pluck("cmd", &cmdSlice).Error
 	return
 }

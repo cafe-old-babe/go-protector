@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin/binding"
+	"go-protector/server/biz/model/dao"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
+	"go-protector/server/biz/service/iface"
 	"go-protector/server/internal/approve"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts"
@@ -31,7 +33,7 @@ func init() {
 		return nil
 
 	})
-
+	iface.RegisterApproveRecordService(&ApproveRecord{})
 }
 
 type ApproveRecord struct {
@@ -79,8 +81,15 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 	}
 	if err := binding.Validator.ValidateStruct(insertDTO); err != nil {
 		res = base.ResultFailureErr(err)
+		return
 	}
-
+	sysUser, err := dao.SysUser.FindUserByDTO(_self.GetDB(), dto.FindUserDTO{
+		ID: insertDTO.ApproveUserId,
+	})
+	if err != nil {
+		res = base.ResultFailureErr(err)
+		return
+	}
 	record := entity.ApproveRecord{
 		SessionId:        insertDTO.SessionId,
 		ApplicantId:      insertDTO.ApplicantId,
@@ -91,11 +100,13 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 		ApproveBindId:    insertDTO.Id,
 		Timeout:          insertDTO.Timeout,
 	}
-	err := _self.GetDB().Create(&record).Error
+
+	err = _self.GetDB().Create(&record).Error
 	if err != nil {
 		res = base.ResultFailureErr(err)
 		return
 	}
+	record.ApproveUser = sysUser
 	if insertDTO.Timeout > 0 {
 		_self.Set("timeout", &dto.DoApproveDTO{
 			Id:             record.ID,
