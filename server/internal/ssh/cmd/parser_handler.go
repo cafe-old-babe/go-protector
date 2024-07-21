@@ -13,6 +13,7 @@ import (
 	"go-protector/server/internal/custom/c_ascii"
 	"go-protector/server/internal/custom/c_structure"
 	"go-protector/server/internal/custom/c_type"
+	"go-protector/server/internal/ssh/notify"
 	"math"
 	"regexp"
 	"strings"
@@ -128,10 +129,11 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 				ApproveStatus: consts.ApproveStatusCancel,
 				ApproveUserId: _self.currentUser.ID,
 			})
+			notify.ApproveManager.UnSubscribe(_self.approveRecord.ID)
 			_self.ResetCmd()
 			_, _ = _self.writeServer([]byte{0x03})
-		} else {
 
+		} else {
 			_self.ResetCmd()
 		}
 
@@ -226,6 +228,32 @@ func (_self *ParserSSHCharHandler) PassToServer(r rune) bool {
 			sprintf := fmt.Sprintf("\r\n请等待 %s(%s) 审批, ctrl+c 可取消审批",
 				_self.approveRecord.ApproveUser.Username,
 				_self.approveRecord.ApproveUser.LoginName)
+
+			notify.ApproveManager.Subscribe(_self.approveRecord.ID, func(record entity.ApproveRecord) {
+
+				_self.WriteCli(fmt.Sprintf("\r\n审批结果: %s, 审批消息: %s",
+					record.ApproveStatusText, record.ApproveContent))
+				var dataByte byte
+				switch record.ApproveStatus {
+				case consts.ApproveStatusPass:
+					// 通过
+					_self.doSave(true)
+					_self.ResetCmd()
+					dataByte = 0x0d
+				default:
+					// 非通过
+					_self.GetDB().Model(_self.operationEntity).Updates(&entity.SsoOperation{
+						ExecStatus: "2",
+						CmdExecAt:  c_type.Time{},
+					})
+					dataByte = 0x03
+
+				}
+				_self.ResetCmd()
+				_, _ = _self.writeServer([]byte{dataByte})
+
+			})
+
 			_self.WriteCli(sprintf)
 
 		}
@@ -269,7 +297,6 @@ func (_self *ParserSSHCharHandler) ResetCmd() {
 	_self.currentFirstIn = true
 	_self.ResetCursor()
 	_self.quoteStack.Clear()
-
 	_self.operationEntity = new(entity.SsoOperation)
 	_self.approveRecord = nil
 

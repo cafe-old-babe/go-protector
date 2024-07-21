@@ -34,7 +34,7 @@ func (*ApproveRecord) TableName() string {
 
 func (_self *ApproveRecord) BeforeCreate(db *gorm.DB) (err error) {
 	if len(_self.WorkNum) <= 0 {
-		_self.WorkNum, err = utils.GenerateDateNextSeq("approve")
+		_self.WorkNum, err = utils.GenerateDateNextSeq("approve-")
 	}
 	return
 }

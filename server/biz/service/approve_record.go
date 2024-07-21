@@ -18,6 +18,7 @@ import (
 	"go-protector/server/internal/custom/c_error"
 	"go-protector/server/internal/custom/c_logger"
 	"go-protector/server/internal/database/condition"
+	"go-protector/server/internal/ssh/notify"
 	"go-protector/server/internal/utils/async"
 	"gorm.io/gorm"
 	"strconv"
@@ -28,10 +29,9 @@ func init() {
 		record := ctx.Value("record").(entity.ApproveRecord)
 		log := c_logger.GetLoggerByCtx(ctx)
 		marshal, _ := json.Marshal(record)
-
 		log.Debug("callback record: %s", string(marshal))
+		notify.ApproveManager.Notify(record)
 		return nil
-
 	})
 	iface.RegisterApproveRecordService(&ApproveRecord{})
 }
@@ -63,7 +63,7 @@ func (_self *ApproveRecord) Page(req *dto.ApproveRecordPageReq) (res *base.Resul
 			return db
 		},
 	)
-	count, err := _self.Count(tx.Joins("ApproveUser").Joins("ApplicantUser").Find(&slice))
+	count, err := _self.Count(tx.Joins("ApproveUser").Joins("ApplicantUser").Order(table_name.ApproveRecord + ".created_at desc").Find(&slice))
 	if err != nil {
 		res = base.ResultFailureErr(err)
 		return
