@@ -38,6 +38,7 @@ func startMigration() (err error) {
 			&entity.SsoSession{},
 			&entity.SsoOperation{},
 			&entity.ApproveCmd{},
+			&entity.ApproveRecord{},
 		)
 	return err
 }

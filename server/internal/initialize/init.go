@@ -3,12 +3,14 @@ package initialize
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go-protector/server/internal/consts"
 	"go-protector/server/internal/utils/async"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -35,18 +37,18 @@ func StartServer() (err error) {
 	// SIGINT
 	//产生方式为键盘ctrl+c，只针对当前前台进程及其所在的进程组的每个进程都发送SIGINT信号，之后这些进程会执行信号处理程序再终止。
 	//
-	//SIGTERM
+	//SIGTERM kill -SIGTERM
 	//产生方式为使用kill函数，kill + pid 方式发送。当前进程会收到信号，而子进程不会收到，如果当前进程被kill，则其子进程的父进程将为init，即pid为1的进程。
 	//
 	//SIGKILL
 	//产生方式为使用kill函数，kill -9 + pid方式发送，当前进程收到该信号，会直接发送默认行为（该信号无法捕获，即无法处理）。
 
 	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	o := <-quit
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*5)
 	defer cancel()
-
+	fmt.Printf("==================================== %v\n", o.String())
 	if err := server.Shutdown(ctx); err != nil {
 		zap.L().Error("server Shutdown failure ", zap.Error(err))
 	}

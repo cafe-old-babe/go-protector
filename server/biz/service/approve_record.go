@@ -2,19 +2,37 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin/binding"
 	"go-protector/server/biz/model/dto"
 	"go-protector/server/biz/model/entity"
+	"go-protector/server/internal/approve"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/consts"
+	"go-protector/server/internal/consts/table_name"
 	"go-protector/server/internal/current"
 	"go-protector/server/internal/custom/c_error"
+	"go-protector/server/internal/custom/c_logger"
 	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/utils/async"
 	"gorm.io/gorm"
 	"strconv"
 )
+
+func init() {
+	_ = approve.RegisterTypeInfo(consts.ApproveTypSsoOperation, "单点登录操作", func(ctx context.Context) error {
+		record := ctx.Value("record").(entity.ApproveRecord)
+		log := c_logger.GetLoggerByCtx(ctx)
+		marshal, _ := json.Marshal(record)
+
+		log.Debug("callback record: %s", string(marshal))
+		return nil
+
+	})
+
+}
 
 type ApproveRecord struct {
 	base.Service
@@ -29,8 +47,19 @@ func (_self *ApproveRecord) Page(req *dto.ApproveRecordPageReq) (res *base.Resul
 	var slice []entity.ApproveRecord
 	tx := _self.GetDB().Scopes(
 		condition.Paginate(req),
+		condition.Like(table_name.ApproveRecord+".work_num", req.WorkNum),
 		condition.Like("ApproveUser.username", req.ApproveUsername),
 		condition.Like("ApplicantUser.username", req.ApplicantUsername),
+		func(db *gorm.DB) *gorm.DB {
+			if user, ok := current.GetUser(_self.GetContext()); ok {
+				if user.IsAdmin {
+					return db
+				}
+				db = db.Where("( "+table_name.ApproveRecord+".applicant_id = @userId or "+
+					table_name.ApproveRecord+".applicant_id = @userId )", sql.Named("userId", user.ID))
+			}
+			return db
+		},
 	)
 	count, err := _self.Count(tx.Joins("ApproveUser").Joins("ApplicantUser").Find(&slice))
 	if err != nil {
@@ -51,10 +80,11 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 	if err := binding.Validator.ValidateStruct(insertDTO); err != nil {
 		res = base.ResultFailureErr(err)
 	}
+
 	record := entity.ApproveRecord{
 		SessionId:        insertDTO.SessionId,
 		ApplicantId:      insertDTO.ApplicantId,
-		ApplicantContent: insertDTO.ApplicantContext,
+		ApplicantContent: insertDTO.ApplicantContent,
 		ApproveUserId:    insertDTO.ApproveUserId,
 		ApproveStatus:    consts.ApproveStatusUnprocessed,
 		ApproveType:      insertDTO.ApproveType,
@@ -83,6 +113,7 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 
 		})
 	}
+
 	res = base.ResultSuccess(&record)
 	return
 }
@@ -98,6 +129,7 @@ func (_self *ApproveRecord) DoApprove(doApproveDTO *dto.DoApproveDTO) (res *base
 		res = base.ResultFailureErr(err)
 		return
 	}
+
 	if doApproveDTO.ApproveUserId <= 0 {
 		doApproveDTO.ApproveUserId = current.GetUserId(_self.GetContext())
 	}
@@ -114,19 +146,32 @@ func (_self *ApproveRecord) DoApprove(doApproveDTO *dto.DoApproveDTO) (res *base
 		res = base.ResultFailureErr(err)
 		return
 	}
-	if record.Timeout > 0 {
-		if err := async.CancelDelayTask(strconv.FormatUint(record.ID, 10)); err != nil {
-			_self.GetLogger().Warn("CancelDelayTask err: %s")
-		}
-	}
+
 	// 校验状态
 	switch doApproveDTO.ApproveStatus {
-	case consts.ApproveStatusPass, consts.ApproveStatusReject:
+	case consts.ApproveStatusReject:
+		if len(doApproveDTO.ApproveContent) <= 0 {
+			res = base.ResultFailureErr(errors.New("请填写拒绝通过原因"))
+			return
+		}
+		fallthrough
+	case consts.ApproveStatusPass:
+		if len(doApproveDTO.ApproveContent) <= 0 {
+			doApproveDTO.ApproveContent = "通过(系统默认生成)"
+		}
 		if record.ApproveUserId != doApproveDTO.ApproveUserId {
 			res = base.ResultFailureErr(c_error.ErrAuthFailure)
 			return
 		}
-	case consts.ApproveStatusTimeout, consts.ApproveStatusCancel:
+	case consts.ApproveStatusCancel:
+		if len(doApproveDTO.ApproveContent) <= 0 {
+			doApproveDTO.ApproveContent = "用户撤回审批(系统默认生成)"
+		}
+		fallthrough
+	case consts.ApproveStatusTimeout:
+		if len(doApproveDTO.ApproveContent) <= 0 {
+			doApproveDTO.ApproveContent = "超时未审批(系统默认生成)"
+		}
 		if record.ApplicantId != doApproveDTO.ApproveUserId {
 			res = base.ResultFailureErr(c_error.ErrAuthFailure)
 			return
@@ -134,12 +179,17 @@ func (_self *ApproveRecord) DoApprove(doApproveDTO *dto.DoApproveDTO) (res *base
 	default:
 		res = base.ResultFailureErr(c_error.ErrParamInvalid)
 	}
+	if record.Timeout > 0 {
+		if err := async.CancelDelayTask(strconv.FormatUint(record.ID, 10)); err != nil {
+			_self.GetLogger().Warn("CancelDelayTask err: %s")
+		}
+	}
 	var update entity.ApproveRecord
 	update.ID = doApproveDTO.Id
 	update.ApproveStatus = doApproveDTO.ApproveStatus
 	update.ApproveContent = doApproveDTO.ApproveContent
 
-	tx := _self.GetDB().Updates(update)
+	tx := _self.GetDB().Updates(&update)
 	if err := tx.Error; err != nil {
 		res = base.ResultFailureErr(err)
 		return
@@ -147,6 +197,16 @@ func (_self *ApproveRecord) DoApprove(doApproveDTO *dto.DoApproveDTO) (res *base
 	if tx.RowsAffected != 1 {
 		res = base.ResultFailureErr(errors.New("处理失败,请稍后重试"))
 		return
+	}
+	// 回调
+	switch doApproveDTO.ApproveStatus {
+	case consts.ApproveStatusPass, consts.ApproveStatusReject, consts.ApproveStatusTimeout:
+		record.ApproveStatus = update.ApproveStatus
+		record.ApproveStatusText = record.ApproveStatus.String()
+		record.ApproveContent = update.ApproveContent
+		ctx := context.WithValue(context.Background(), "record", record)
+		_ = approve.HandleCallback(record.ApproveType, ctx)
+	default:
 
 	}
 	res = base.ResultSuccessMsg()

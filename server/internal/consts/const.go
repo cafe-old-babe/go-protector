@@ -105,3 +105,7 @@ const (
 	ApproveStatusCancel
 	ApproveStatusTimeout
 )
+
+const (
+	ApproveTypSsoOperation = "sso_operation"
+)

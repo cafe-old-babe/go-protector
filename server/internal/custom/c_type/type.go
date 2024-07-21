@@ -88,12 +88,9 @@ func NowTime() Time {
 
 func (_self ApproveStatus) String() string {
 	var text string
-	defer func() string {
-		if err := recover(); err != nil {
-			_ = fmt.Errorf("approveStatus string err,status: %d, errMsg: %+v", _self, err)
-		}
-		return text
-	}()
+	if _self > 4 || _self < 0 {
+		return ""
+	}
 	text = approveStatusSlice[_self]
 	return text
 }
