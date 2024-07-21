@@ -166,7 +166,7 @@ func (_self *SsoSession) ConnectBySession(req *dto.ConnectBySessionReq) (err err
 	model.ConnectAt = c_type.NowTime()
 	term.ConnectAt = model.ConnectAt.Time
 	_self.Set("assetId", model.AssetId)
-	dataChan := make(chan rune, 1024)
+	dataChan := make(chan rune)
 	// 启动转发
 	if forward, err = ssh_term.NewTermForward(ws, term, dataChan,
 		cmd.NewParserHandler(_self.GetContext(), req.Id, dataChan, term.Write),
