@@ -6,7 +6,7 @@ import { Terminal } from 'xterm'
 
 import { FitAddon } from 'xterm-addon-fit'
 import { setDocumentTitle } from '@/utils/domUtil'
-import WsMsg from './lib/WsMsg'
+import WsMsg from '@/core/lib/WsMsg'
 import request from '@/utils/request'
 export default {
   name: 'Terminal',

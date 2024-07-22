@@ -85,6 +85,8 @@ const (
 	MsgData
 	// MsgAlarm 告警
 	MsgAlarm
+	// MsgApprove 审批消息推送
+	MsgApprove
 )
 
 const (

@@ -50,7 +50,7 @@
     <!--    </template>-->
     <multi-tab v-if="settings.multiTab" />
     <!--        <page-header-wrapper v-else />-->
-    <router-view />
+    <router-view ref="child"/>
   </pro-layout>
 </template>
 
@@ -67,6 +67,7 @@ import Ads from '@/components/Other/CarbonAds'
 import MultiTab from '@/components/MultiTab'
 import SettingDrawer from '@/components/SettingDrawer'
 import store from '@/store'
+import WsMsg from '@/core/lib/WsMsg'
 
 export default {
   name: 'BasicLayout',
@@ -110,7 +111,8 @@ export default {
       query: {},
 
       // 是否手机模式
-      isMobile: false
+      isMobile: false,
+      ws: null
     }
   },
   computed: {
@@ -147,6 +149,8 @@ export default {
     if (process.env.NODE_ENV !== 'production' || process.env.VUE_APP_PREVIEW === 'true') {
       updateTheme(this.settings.primaryColor)
     }
+
+    this.connectWs()
   },
   methods: {
     i18nRender,
@@ -184,6 +188,52 @@ export default {
         case 'multiTab':
           this.settings.multiTab = value
           store.commit(TOGGLE_MULTI_TAB, value)
+      }
+    },
+    connectWs: function () {
+      const origin = window.location.origin
+      const wsOrigin = origin.replace('http', 'ws')
+
+      const wsUrl = `${wsOrigin}/api/ws/bus` + '?token=' + this.$store.getters.token
+      console.log(wsUrl)
+      this.ws = new WebSocket(wsUrl)
+
+      this.ws.onmessage = (e) => {
+        const msg = WsMsg.parse(e.data)
+        switch (msg.msgNum) {
+          case WsMsg.MsgApprove:
+            const key = `open${Date.now()}`
+            this.$notification.open({
+              message: '待审批消息',
+              duration: null,
+              description: `${msg.body}`,
+              btn: h => {
+                return h(
+                  'a-button',
+                  {
+                    props: {
+                      type: 'primary',
+                      size: 'small'
+                    },
+                    on: {
+                      click: () => {
+                        this.$notification.close(key)
+                        if (this.$route.path === '/sso/sso-approve') {
+                          console.log(this.$refs.child.$children[0].refresh())
+                        } else {
+                          this.$router.push({ path: '/sso/sso-approve' })
+                        }
+                      }
+                    }
+                  },
+                  '处理'
+                )
+              },
+              key,
+              onClose: close
+            })
+            break
+        }
       }
     }
   }

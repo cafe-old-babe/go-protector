@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"go-protector/server/biz/service"
 	"go-protector/server/internal/base"
 	"go-protector/server/internal/custom/c_captcha"
 	"go-protector/server/internal/custom/c_result"
@@ -9,6 +10,8 @@ import (
 
 func init() {
 	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+
+		group.GET("/ws/bus", _system.wsBus)
 		routerGroup := group.Group("system")
 		{
 			routerGroup.GET("/captcha", _system.GenerateCaptcha)
@@ -39,4 +42,14 @@ func (_self system) GenerateCaptcha(c *gin.Context) {
 
 func (_self system) Routes(c *gin.Context) {
 	c_result.Result(c, base.ResultSuccess(nil))
+}
+
+func (_self system) wsBus(c *gin.Context) {
+	var sysStemService service.System
+	_self.MakeService(c, &sysStemService)
+
+	if err := sysStemService.Bus(); err != nil {
+		c_result.Err(c, err)
+		return
+	}
 }

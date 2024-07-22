@@ -20,6 +20,7 @@ import (
 	"go-protector/server/internal/database/condition"
 	"go-protector/server/internal/ssh/notify"
 	"go-protector/server/internal/utils/async"
+	"go-protector/server/internal/ws"
 	"gorm.io/gorm"
 	"strconv"
 )
@@ -63,7 +64,10 @@ func (_self *ApproveRecord) Page(req *dto.ApproveRecordPageReq) (res *base.Resul
 			return db
 		},
 	)
-	count, err := _self.Count(tx.Joins("ApproveUser").Joins("ApplicantUser").Order(table_name.ApproveRecord + ".created_at desc").Find(&slice))
+	count, err := _self.Count(tx.Joins("ApproveUser").Joins("ApplicantUser").
+		Order(table_name.ApproveRecord + ".approve_status ").
+		Order(table_name.ApproveRecord + ".created_at desc").
+		Find(&slice))
 	if err != nil {
 		res = base.ResultFailureErr(err)
 		return
@@ -124,6 +128,9 @@ func (_self *ApproveRecord) Insert(insertDTO *dto.ApproveRecordInsertDTO) (res *
 
 		})
 	}
+	msg := base.NewWsMsg(consts.MsgApprove, "您好, 当前有一条新增的审批消息需要您处理 待处理的审批")
+	// 发消息,
+	ws.SendMsgByGroupId(msg, strconv.FormatUint(record.ApproveUserId, 10))
 
 	res = base.ResultSuccess(&record)
 	return
@@ -223,4 +230,16 @@ func (_self *ApproveRecord) DoApprove(doApproveDTO *dto.DoApproveDTO) (res *base
 	res = base.ResultSuccessMsg()
 
 	return
+}
+
+// FindCountUnprocessed 查询未审批数量
+func (_self *ApproveRecord) FindCountUnprocessed(userId uint64) (count int64, err error) {
+	if userId <= 0 {
+		err = c_error.ErrParamInvalid
+		return
+	}
+	count, err = _self.Count(_self.GetDB().Model(&entity.ApproveRecord{}).Where("approve_user_id = ? and approve_status = ?",
+		userId, consts.ApproveStatusUnprocessed))
+	return
+
 }

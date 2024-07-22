@@ -28,6 +28,3 @@ type DoApproveDTO struct {
 	ApproveContent string               `json:"approveContent,omitempty"`
 	ApproveUserId  uint64               `json:"approveUserId"` // 优先获取currentUser
 }
-
-type ApproveRecordDTO struct {
-}

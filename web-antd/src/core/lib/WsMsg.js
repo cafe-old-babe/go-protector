@@ -12,6 +12,7 @@ const WsMsg = class WsMsg {
   static MsgClose = 1;
   static MsgData = 2;
   static MsgAlarm = 3;
+  static MsgApprove = 4;
 
   static parse (s) {
     const indexOf = s.indexOf(' ')

@@ -70,6 +70,7 @@ import Edit from '@/views/asset/account/Edit.vue'
 export default {
   name: 'Approve',
   components: { Edit, DoApprove, STable },
+
   data() {
     return {
       windowHeight: 0,
@@ -123,8 +124,10 @@ export default {
         applicantUsername: record.applicantUser.username
       })
       this.visible = true
+    },
+    refresh: function() {
+      this.$refs.table.refresh(true)
     }
-
   }
 }
 </script>
