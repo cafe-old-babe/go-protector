@@ -23,7 +23,7 @@ func StartServer() (err error) {
 	async.MainWork = async.NewMain()
 	async.CommonWorkPool = async.NewWorkPool("common-work-pool", 0, 0)
 	async.CommonWork = async.NewWork("common-work", 0)
-
+	// 2-13	【实战】使用协程启动服务并优雅停机-掌握协程主死从随
 	go func() {
 		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			zap.L().Error("ListenAndServe failure ", zap.Error(err))
@@ -32,6 +32,7 @@ func StartServer() (err error) {
 	}()
 
 	zap.L().Info("server start success!")
+	// 2-14	【实战】优雅停机-掌握使用通道接收系统中断信号
 	// 优雅停机
 	// 停止进程信号主要是3个，SIGINT,SIGKILL,SIGTERM。
 	// SIGINT

@@ -14,6 +14,7 @@ import (
 
 // initLogger 初始化日志组件
 // https://www.cnblogs.com/Vikyanite/p/17210643.html
+// 2-7	【实战】引入高性能zap日志-掌握zap日志核心配置
 func initLogger() (err error) {
 	loggerCfg := config.GetConfig().Logger
 	var zapLog *zap.Logger

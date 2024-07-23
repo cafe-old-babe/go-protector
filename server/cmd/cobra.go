@@ -40,6 +40,7 @@ func Execute() {
 	}
 }
 
+// 2-4	【实战】引入命令行工具cobra-掌握GO语言init函数
 func init() {
 	time.Local, _ = time.LoadLocation("Asia/Shanghai")
 	rootCmd.AddCommand(server.StartCmd)

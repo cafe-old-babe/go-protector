@@ -18,6 +18,7 @@ type SelfLogger struct {
 
 var once sync.Once
 
+// 2-9	【实战】GORM整合zap日志-掌握GO语言指针、接口
 func SetLogger(logger *zap.Logger) {
 	once.Do(func() {
 		_log.zapLog = logger

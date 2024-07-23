@@ -16,6 +16,7 @@ type Result struct {
 // Result.Code 默认 http.StatusOK
 // data 对应 Result.Data
 // msg 对应 Result.Message, 默认操作成功,可以自定义,也可以格式化
+// 2-12	【实战】封装统一的返回格式-掌握GO语言可变参数与切片的使用技巧
 func ResultSuccess(data any, msg ...string) *Result {
 
 	return ResultCustom(http.StatusOK, data, msg...)

@@ -11,6 +11,7 @@ var _config *config
 
 var lock sync.Mutex
 
+// 2-5	【实战】引入配置文件-掌握GO语言操作文件、Tag特性
 type config struct {
 	Database database `yaml:"database"`
 	Logger   logger   `yaml:"logger"`
@@ -21,6 +22,7 @@ type config struct {
 }
 
 func GetConfig() *config {
+	// 2-6	【实战】玩点儿花活，改写配置文件代码-掌握DCL单例模式
 	if _config != nil {
 		return _config
 	}

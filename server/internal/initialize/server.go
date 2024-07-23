@@ -10,6 +10,7 @@ import (
 	"net/http"
 )
 
+// 2-11	【实战】Gin路由搭建-掌握Go语言receiver的值类型和指针类型的区别
 func initServer() (server *http.Server) {
 	engine := gin.New()
 	// https://github.com/gin-gonic/gin/pull/3367

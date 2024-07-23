@@ -25,6 +25,7 @@ type database struct {
 }
 
 func (_self database) GetDsn() (dsn string, err error) {
+	// 2-8	【实战】引入Gorm-掌握go语言map语法
 	if format, ok := dbFormatMap[_self.Driver]; ok {
 		dsn = fmt.Sprintf(format, _self.Username,
 			_self.Password, _self.Host, _self.Port, _self.Dbname)
