@@ -63,7 +63,7 @@ func GetServer() (server *http.Server, err error) {
 	defer func() {
 		_ = os.Unsetenv(consts.EnvConfig)
 	}()
-
+	// 3-9	【实战】登录成功后生成认证Token-掌握JWT原理及应用-掌握解决基于Session认证的局限性，RFC文档介绍，设置本地时区
 	time.Local, _ = time.LoadLocation("Asia/Shanghai")
 	// 加载配置
 	if err = initLogger(); err != nil {

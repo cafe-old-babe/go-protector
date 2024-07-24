@@ -8,10 +8,13 @@ import (
 	"time"
 )
 
+// 3-5	后端-引入Redis存放图片验证码
 var store redisStore
 
 // Generate 生成图片
 func Generate() (id, b64s string, err error) {
+	// 3-4	后端-动态图片验证码
+	// 内存 base64Captcha.DefaultMemStore
 	c := base64Captcha.NewCaptcha(base64Captcha.DefaultDriverDigit, store)
 
 	id, b64s, _, err = c.Generate()

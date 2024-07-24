@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// 3-3	【实战】登录接口数据库设计-掌握GORM-自动迁移与Preload
 type SysUser struct {
 	ModelId
 	LoginName     string         `json:"loginName" gorm:"size:32;comment:登录名"`

@@ -33,7 +33,7 @@ var trans ut.Translator
 
 // https://github.com/go-playground/validator
 // https://github.com/go-playground/validator/blob/master/_examples/translations/main.go
-
+// 3-8	【实战】优化Gin绑定校验提示信息-掌握validator Translator国际化
 func init() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterTagNameFunc(func(fld reflect.StructField) string {

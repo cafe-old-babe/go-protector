@@ -20,6 +20,7 @@ const secretKey = "secret-p90-23n09.32342"
 
 // GenerateToken 生成token https://pkg.go.dev/github.com/golang-jwt/jwt/v5#Token
 // go get -u github.com/golang-jwt/jwt/v5
+// 3-9	【实战】登录成功后生成认证Token-掌握JWT原理及应用-掌握解决基于Session认证的局限性，RFC文档介绍，设置本地时区
 func GenerateToken(currentUser *current.User) (jwtStringPointer *string, expireAt time.Time, err error) {
 	var bytes []byte
 	sessionTimeout := config.GetConfig().Jwt.SessionTimeout
@@ -92,6 +93,7 @@ func ParserToken(jwtString *string) (userPointer *current.User, err error) {
 }
 
 // DoCheckTokenEffective check redis --> token
+// 3-10	【实战】JWT主动销毁及续约-掌握并发场景下续约的两种解决方案
 func DoCheckTokenEffective(jwtToken *string, currentUser *current.User) (breakCheckTimeout bool, err error) {
 	keyFmt := consts.OnlineUserCacheKeyFmt
 

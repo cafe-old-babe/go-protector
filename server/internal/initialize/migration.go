@@ -7,6 +7,7 @@ import (
 )
 
 // startMigration 启动自动迁移 创建数据库 go-protector
+// 3-3	【实战】登录接口数据库设计-掌握GORM-自动迁移与Preload
 func startMigration() (err error) {
 	//if err = initLogger(); err != nil {
 	//	return

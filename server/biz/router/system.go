@@ -27,7 +27,9 @@ type system struct {
 }
 
 // GenerateCaptcha 获取验证码
+// 3-4	后端-动态图片验证码
 func (_self system) GenerateCaptcha(c *gin.Context) {
+
 	id, b64s, err := c_captcha.Generate()
 	if err != nil {
 		c_result.Err(c, err)

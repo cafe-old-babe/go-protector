@@ -14,7 +14,7 @@ const user = {
     roles: [],
     info: {}
   },
-
+  // 3-12	【实战】登录改造（通过VUEX保存用户相关信息）
   mutations: {
     SET_TOKEN: (state, token) => {
       state.token = token

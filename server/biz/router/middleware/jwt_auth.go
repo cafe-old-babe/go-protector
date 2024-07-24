@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// 3-10	【实战】JWT主动销毁及续约（忽略白名单校验，并发场景下续约的两种解决方案分析与实现）
 var ignoreUrlSet map[string]map[string]any
 
 func init() {
