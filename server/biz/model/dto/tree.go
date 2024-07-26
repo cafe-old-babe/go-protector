@@ -10,6 +10,7 @@ type TreeNode struct {
 	Children []TreeNode `json:"children"`
 }
 
+// 4-18	【实战】部门与岗位管理-部门接口开发-掌握GO语言反射基本操作
 func GenerateTree(slice any, rootId uint64, idField, pidField, nameField string,
 	selectedSet map[uint64]any) (node *TreeNode) {
 	// 判断 slice 是否为 slice 类型

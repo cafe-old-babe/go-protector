@@ -16,6 +16,7 @@ func init() {
 		routerGroup := group.Group("post")
 		{
 			routerGroup.POST("/page", _sysPost.Page)
+			// 4-20	后端-部门与岗位管理-岗位接口增删改接口开发（GORM-DeletedAt注意事项）
 			routerGroup.POST("/list/:deptId", _sysPost.List)
 			routerGroup.POST("/save", _sysPost.Save)
 			routerGroup.POST("/delete", _sysPost.Delete)

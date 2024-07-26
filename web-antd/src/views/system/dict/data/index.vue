@@ -86,6 +86,7 @@ export default {
     }
   },
   watch: {
+    // 4-14	【实战】字典管理页面实战-掌握VUE-组件之间传递数据
     typeCode() {
       this.$refs.table.refresh(true)
     }

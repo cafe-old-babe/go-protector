@@ -34,6 +34,7 @@ func SetUserId(c context.Context, data uint64) context.Context {
 }
 
 // SetUser 设置当前用户
+// 4-4	【实战】实现ant-design-vue-pro的路由接口-掌握使用Gin中间件保存当前用户信息
 func SetUser(c context.Context, user *User) (nc context.Context) {
 	if c == nil || user == nil {
 		return

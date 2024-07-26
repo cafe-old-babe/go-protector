@@ -18,11 +18,14 @@ func init() {
 			routerGroup.POST("/type/save", _sysDict.DictTypeSave)
 			routerGroup.POST("/type/delete", _sysDict.DictTypeDelete)
 
+			//4-10	【实战】字典数据管理接口开发一（GORM-使用join查询）
 			routerGroup.POST("/data", _sysDict.DictDataPage)
+
+			// 4-11	【实战】字典数据管理接口开发之增删改-掌握通过uri接收请求参数
+			routerGroup.POST("/data/:id/:status", _sysDict.DictDataUpdateStatus)
 			routerGroup.POST("/dataList/:dictType", _sysDict.DictDataList)
 			routerGroup.POST("/data/save", _sysDict.DictDataSave)
 			routerGroup.POST("/data/delete", _sysDict.DictDataDelete)
-			routerGroup.POST("/data/:id/:status", _sysDict.DictDataUpdateStatus)
 
 		}
 	})

@@ -27,6 +27,7 @@ type UserPage struct {
 	entity.ModelDelete
 }
 
+// 4-24	【实战】补全后端人员管理接口-掌握在GORM中使用Join衍生表、Hook钩子函数；掌握分组函数GROUP_CONCAT
 func (_self *UserPage) AfterFind(tx *gorm.DB) (err error) {
 	var tempId uint64
 	if len(_self.PostIds) > 0 {

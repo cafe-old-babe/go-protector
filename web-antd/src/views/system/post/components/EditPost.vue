@@ -21,6 +21,7 @@
             label="上级部门"
             prop="deptIds"
           >
+            <!--            4-21	【实战】岗位页面实战开发-掌握TreeSelect组件、VUE-组件之间同步操作-->
             <a-tree-select
               v-model="localRecord.deptIds"
               style="width: 100%"

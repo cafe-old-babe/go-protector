@@ -44,7 +44,9 @@ func (_self sysPost) DeleteByPostId(db *gorm.DB, ids []uint64) (err error) {
 
 func (_self sysPost) Save(db *gorm.DB, req *dto.SysPostSaveReq) error {
 	var count int64
-	if err := db.Table(table_name.SysPost).
+	// 4-20	【实战】部门与岗位管理-岗位接口增删改接口开发-掌握GORM的DeletedAt注意事项
+	//if err := db.Table(table_name.SysPost). 不会携带 deleted_at
+	if err := db.Model(&entity.SysPost{}).
 		Scopes(func(db *gorm.DB) *gorm.DB {
 			if req.ID > 0 {
 				db = db.Where("id <> ? ", req.ID)
@@ -148,6 +150,7 @@ func (_self sysPost) UserBindPostIds(db *gorm.DB, userId uint64, postIds []uint6
 // GROUP_CONCAT(p.id SEPARATOR ',') AS post_ids
 // from sys_post_relation pr  left join sys_post p on
 // and pr.relation_type = 'user' group by pr.relation_id
+// 4-24	【实战】补全后端人员管理接口-掌握在GORM中使用Join衍生表、Hook钩子函数；掌握分组函数GROUP_CONCAT
 func (_self sysPost) JoinUserPostDB(db *gorm.DB) *gorm.DB {
 	return db.Table(table_name.SysPostRelation+" as pr").
 		Joins("left join "+table_name.SysPost+

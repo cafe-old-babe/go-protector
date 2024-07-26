@@ -56,6 +56,7 @@ func (_self sysUser) Logout(c *gin.Context) {
 	c_result.Success(c, nil)
 }
 
+// 4-22	【实战】修改用户状态-掌握结构体更新与map更新的区别、自定义类型实现JSON序列化与数据库保存
 func (_self sysUser) SetStatus(c *gin.Context) {
 	var updateDTO dto.SetStatus
 	if err := c.BindJSON(&updateDTO); err != nil {

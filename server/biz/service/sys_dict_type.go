@@ -15,6 +15,7 @@ type SysDictType struct {
 }
 
 // Page 字典类型分页查询
+// 4-9	【实战】字典类型管理接口开发之分页-掌握GORM封装高级查询与分页
 func (_self *SysDictType) Page(req *dto.DictTypePageReq) (res *base.Result) {
 	var dictType entity.SysDictType
 	var list []entity.SysDictType
@@ -58,6 +59,7 @@ func (_self *SysDictType) Delete(req *base.IdsReq) *base.Result {
 	}
 	ids := req.GetIds()
 	//todo 同时删除data
+	// 4-12	【实战】字典管理接口统一优化-掌握GORM处理事物
 	err := _self.GetDB().Transaction(func(tx *gorm.DB) error {
 		var dictTypeSlice []entity.SysDictType
 		if err := tx.Find(&dictTypeSlice, ids).Error; err != nil {

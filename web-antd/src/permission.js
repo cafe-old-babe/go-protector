@@ -14,6 +14,7 @@ const allowList = ['login', 'register', 'registerResult'] // no redirect allowLi
 const loginRoutePath = '/user/login'
 const defaultRoutePath = '/dashboard/workplace'
 
+// 4-2	【基础】分析ant-design-vue-pro官方提供的动态路由样例
 router.beforeEach((to, from, next) => {
   NProgress.start() // start progress bar
   to.meta && typeof to.meta.title !== 'undefined' && setDocumentTitle(`${i18nRender(to.meta.title)} - ${domTitle}`)

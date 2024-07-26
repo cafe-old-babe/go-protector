@@ -139,6 +139,7 @@ export default {
         @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
       <a-button type="danger" @click="deleteBatch">批量删除</a-button>
     </div>
+    <!--    改造STable组件-->
     <s-table
       ref="table"
       rowKey="id"

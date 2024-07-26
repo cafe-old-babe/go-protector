@@ -1,6 +1,7 @@
 <script>
 import moment from 'moment'
 import request from '@/utils/request'
+// 4-28	【实战】人员管理页面功能之修改用户状态-掌握antd对话框、Form表单、date-picker组件
 export default {
  props: {
    visible: {

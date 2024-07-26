@@ -22,6 +22,7 @@ type sysUser struct {
 }
 
 // FindUserInfoByDTO 根据条件查询用户信息
+// 3-3	【实战】登录接口数据库设计-掌握GORM-自动迁移与Preload
 func (_self *sysUser) FindUserInfoByDTO(db *gorm.DB, dto *dto.FindUserDTO) (
 	sysUser *entity.SysUser, err error) {
 
@@ -177,6 +178,7 @@ func (_self *sysUser) Save(db *gorm.DB, req *dto.UserSaveReq) (err error) {
 		DeptId:       req.DeptId,
 		Sex:          req.Sex,
 	}
+	// 4-23	【实战】保存用户信息-掌握Gin依赖校验、GO语言defer特性
 	tx := db.Begin()
 	defer func() {
 		if err != nil {
@@ -202,6 +204,7 @@ func (_self *sysUser) Save(db *gorm.DB, req *dto.UserSaveReq) (err error) {
 	} else {
 		// 更新
 		// Updates 方法支持 struct 和 map[string]interface{} 参数。当使用 struct 更新时，默认情况下GORM 只会更新非零值的字段
+		//  4-22	【实战】修改用户状态-掌握结构体更新与map更新的区别、自定义类型实现JSON序列化与数据库保存
 		if err = tx.Omit(
 			"password",
 			"login_name",

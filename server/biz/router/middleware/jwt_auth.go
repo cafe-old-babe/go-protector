@@ -55,6 +55,7 @@ func JwtAuth() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, base.ResultCustom(http.StatusUnauthorized, nil, err.Error()))
 			return
 		}
+		// 4-4	【实战】实现ant-design-vue-pro的路由接口-掌握使用Gin中间件保存当前用户信息
 		c.Request = c.Request.WithContext(current.SetUser(c.Request.Context(), currentUser))
 
 		if oldTokenStr != tokenStr {

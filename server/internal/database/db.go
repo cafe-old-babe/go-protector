@@ -16,6 +16,7 @@ var _db *gorm.DB
 var once sync.Once
 var databaseName string
 
+// 4-25	后端-GORM插件使用（新增、更新操作统一写入用户信息）
 func SetDB(db *gorm.DB) {
 	once.Do(func() {
 		databaseName = db.Migrator().CurrentDatabase()

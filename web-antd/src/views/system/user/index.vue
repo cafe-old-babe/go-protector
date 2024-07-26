@@ -43,7 +43,7 @@ import UserList from './components/UserList.vue'
 import { loadDept } from '@/api/user'
 import EditDept from './components/EditDept.vue'
 import request from '@/utils/request'
-
+// 4-26	【实战】人员管理页面功能之分页查询删除-掌握Antd基础布局
 export default {
   name: 'User',
   components: { EditDept, CTree, UserList },

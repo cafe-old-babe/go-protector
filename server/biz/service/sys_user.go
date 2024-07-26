@@ -118,8 +118,10 @@ func (_self *SysUser) SetStatus(dto *dto.SetStatus) (err error) {
 }
 
 // UserInfo https://pro.antdv.com/docs/authority-management
+// 4-2	【基础】分析ant-design-vue-pro官方提供的动态路由样例
 func (_self *SysUser) UserInfo() (res *base.Result) {
 	// 查询用户角色
+	// 4-4	【实战】实现ant-design-vue-pro的路由接口-掌握使用Gin中间件保存当前用户信息
 	user, ok := current.GetUser(_self.GetContext())
 	if !ok {
 		res = base.ResultFailureMsg("获取当前用户失败")
@@ -131,6 +133,7 @@ func (_self *SysUser) UserInfo() (res *base.Result) {
 		res = base.ResultFailureMsg("当前用户未绑定角色")
 		return
 	}
+	// 4-5	【实战】对接ant-design-vue-pro官方提供的动态路由
 	var roleService SysRole
 	_self.MakeService(&roleService)
 	menuSlice, buttonSlice, err := roleService.GetMenuByRoleIds(roleIds, user.IsAdmin)

@@ -23,7 +23,7 @@ type SysPost struct {
 func (_self *SysPost) Page(req *dto.SysPostPageReq) *base.Result {
 	var slice []vo.PostPage
 	var count int64
-
+	// 4-19	【实战】部门与岗位管理-岗位接口分页查询开发-掌握使用GORM执行Mysql原生SQL完成递归查询
 	/*
 		select p.id,p.name,p.code, GROUP_CONCAT(r.id) r_ids,
 		       GROUP_CONCAT(d.dept_name) as dept_names,GROUP_CONCAT(d.id) as dept_ids
@@ -69,6 +69,7 @@ func (_self *SysPost) Page(req *dto.SysPostPageReq) *base.Result {
 
 func (_self *SysPost) CheckSave(req *dto.SysPostSaveReq) (err error) {
 	var count int64
+	// 4-20	【实战】部门与岗位管理-岗位接口增删改接口开发-掌握GORM的DeletedAt注意事项
 	if err = _self.GetDB().Table(table_name.SysPost).
 		Scopes(func(db *gorm.DB) *gorm.DB {
 			if req.ID > 0 {

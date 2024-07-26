@@ -16,6 +16,7 @@ type SysDictData struct {
 }
 
 // Page 字典数据分页查询
+// 4-10	【实战】字典数据管理接口开发之稍微复杂的分页查询-掌握使用GORM完成join关联查询）
 func (_self *SysDictData) Page(req *dto.DictDataPageReq) *base.Result {
 	if len(req.TypeCode) <= 0 {
 		return base.ResultFailureMsg("请选择字典类型")

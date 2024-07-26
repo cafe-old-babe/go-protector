@@ -35,6 +35,7 @@
         </div>
         <span slot="action" slot-scope="text, current">
           <a style="margin-right: 8px" @click="editRecord(current)"> <a-icon type="edit" />编辑 </a>
+          <!--          4-7	【实战】菜单页面开发-掌握树形表格、表单双向绑定校验、按钮级别权限控制-->
           <a v-action:delete @click="deleteRecord(current.id)"> <a-icon type="delete" />删除 </a>
         </span>
       </a-table>
@@ -48,7 +49,7 @@
     />
   </div>
 </template>
-
+<!--4-7	【实战】菜单页面开发-掌握树形表格、表单双向绑定校验、按钮级别权限控制-->
 <script>
 import STable from '@/components/Table'
 import { Columns } from './column'

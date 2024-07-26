@@ -19,6 +19,7 @@ func initServer() (server *http.Server) {
 	// https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
 	// https://pkg.go.dev/github.com/rumorshub/gin#section-readme
 	// https://before80.github.io/go_docs/thirdPkg/gin/gin/
+	// 4-4	【实战】实现ant-design-vue-pro的路由接口-掌握使用Gin中间件保存当前用户信息
 	engine.ContextWithFallback = true
 
 	gin.SetMode(config.GetConfig().Server.Model)

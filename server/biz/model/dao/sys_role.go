@@ -39,6 +39,7 @@ func (_self sysRole) GetRoleIdByRelationId(db *gorm.DB, relationId uint64,
 // ids 角色ID
 // menuType 菜单类型
 // admin 是否为管理员 非管理员:关联权限表 管理员:直接查询
+// 4-15	【实战】角色RBAC权限模型-掌握GORM子查询
 func (_self sysRole) GetPermissionSliceByIds(db *gorm.DB, ids []uint64, menuType []int8, admin bool) (
 	menuSlice []entity.SysMenu, err error) {
 	tx := db.Debug().Table(table_name.SysMenu)

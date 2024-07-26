@@ -23,6 +23,7 @@ type MsgType int
 
 type SessionStatus string
 
+// 4-22	【实战】修改用户状态-掌握结构体更新与map更新的区别、自定义类型实现JSON序列化与数据库保存
 type Time sql.NullTime
 
 func (_self *Time) UnmarshalJSON(data []byte) (err error) {

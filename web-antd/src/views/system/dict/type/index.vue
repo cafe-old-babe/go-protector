@@ -28,6 +28,7 @@
           @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
         <a-button type="danger" @click="deleteBatch">批量删除</a-button>
       </div>
+      <!--      4-13	【实战】字典管理页面实战-掌握STable组件的使用-->
       <s-table
         ref="table"
         rowKey="id"

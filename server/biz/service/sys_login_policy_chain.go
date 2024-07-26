@@ -33,6 +33,7 @@ var (
 		if sysUser.UserStatus != 0 {
 			res = base.ResultFailureErr(c_error.ErrLoginNameOrPasswordIncorrect)
 		}
+		// 4-23	【实战】保存用户信息-掌握Gin依赖校验、GO语言defer特性
 		// 检查有效期
 		if !sysUser.ExpirationAt.Valid {
 			return

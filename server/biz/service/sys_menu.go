@@ -23,6 +23,7 @@ func MakeSysMenuService(c *gin.Context) *SysMenuService {
 	return &self
 }
 
+// 4-6	【实战】功能菜单管理-掌握递归实现父子关联
 func (_self *SysMenuService) ListTree() (result *base.Result) {
 
 	var menuSlice []entity.SysMenu

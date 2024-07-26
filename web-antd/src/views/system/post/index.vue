@@ -1,4 +1,4 @@
-
+<!--4-17	【实战】部门与岗位管理-部门管理-掌握Antd基础布局，封装公共组件-->
 <template>
   <a-layout>
     <a-layout-sider width="280">
@@ -140,6 +140,7 @@ export default {
       console.log(e)
       if (!this.operateTreeNode) {
         this.currentDeptName = e.selectedNodes.length > 0 ? e.selectedNodes[0].data.props.name : null
+        // 4-21	【实战】岗位页面实战开发-掌握TreeSelect组件、VUE-跨组件调用
         this.$refs.postTable.loadPost(key)
       }
     },

@@ -12,6 +12,7 @@ import (
 	"reflect"
 )
 
+// 4-8	【实战】字典类型管理接口开发之发现问题解决问题-掌握架构抽象能力
 type IService interface {
 	Make(ctx context.Context)
 	MakeService(service ...IService)
