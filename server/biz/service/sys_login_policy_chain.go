@@ -71,7 +71,7 @@ var (
 			return
 		}
 		res = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
-
+		// 5-14	【实战】在责任链中添加防爆破登录、共享登录校验-掌握Redis scan命令
 		policyDTO, ok := policyDTOMap[consts.LoginPolicyIntruder]
 		if !ok {
 			_self.GetLogger().Debug("获取防爆破策略失败")
@@ -147,6 +147,7 @@ var (
 		return
 	}
 	// 校验单用户登录策略
+	// 5-14	【实战】在责任链中添加防爆破登录、共享登录校验-掌握Redis scan命令
 	checkLoginSingle = func(_self base.Service, sysUser *entity.SysUser,
 		loginDTO *dto.LoginDTO, policyDTOMap PolicyDTOMap) (res *base.Result, isLoop bool) {
 

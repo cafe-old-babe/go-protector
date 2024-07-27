@@ -33,6 +33,7 @@ type SendDTO struct {
 }
 
 // Send 发送邮件
+// 5-8	【实战】邮箱验证码认证-掌握QQ邮箱发送认证码，防止恶意频繁发送验证码
 func Send(dto *SendDTO) (err error) {
 	if dto == nil || len(dto.To) <= 0 || len(dto.Subject) <= 0 || len(dto.Body) <= 0 {
 		return c_error.ErrParamInvalid
@@ -47,6 +48,7 @@ func Send(dto *SendDTO) (err error) {
 		return c_error.ErrParamInvalid
 	}
 	if len(dto.messageFormat) <= 0 {
+		// 5-9	【实战】OTP认证一-掌握使用QQ邮箱发送HTML格式的图片
 		dto.messageFormat = messageFormatText
 	}
 	// 将邮件内容组织成RFC 822格式
@@ -60,6 +62,7 @@ func Send(dto *SendDTO) (err error) {
 }
 
 // SendImage 发送带图片
+// 5-9	【实战】OTP认证一-掌握使用QQ邮箱发送HTML格式的图片
 func SendImage(dto SendDTO, imageBase64 string) (err error) {
 	if len(dto.To) <= 0 || len(dto.Subject) <= 0 || len(dto.Body) <= 0 || len(imageBase64) <= 0 {
 		return c_error.ErrParamInvalid

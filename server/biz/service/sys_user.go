@@ -323,6 +323,7 @@ func (_self *SysUser) DeleteByIds(req *base.IdsReq) (result *base.Result) {
 // checkLogin 400:失败提示信息; 200:登录成功; 201:触发登录策略; 203:展示提示信息
 // loginDTO 必传
 // sysUser 可选
+// 5-6	【实战】登录增加多因子认证机制-掌握GO语言切片删除操作、goto关键字；掌握门面模式、策略模式
 func (_self *SysUser) checkLogin(loginDTO *dto.LoginDTO, sysUser *entity.SysUser) (result *base.Result) {
 
 	if loginDTO == nil || nil == sysUser {
@@ -356,103 +357,105 @@ func (_self *SysUser) checkLogin(loginDTO *dto.LoginDTO, sysUser *entity.SysUser
 	_self.MakeService(&chainService)
 	return chainService.Do(sysUser, loginDTO, policyDTOMap, _self.LoginSuccess)
 	/*
-	   	var err error
-	   	now := time.Now()
-	   	if sysUser.UserStatus != 0 {
-	   		if sysUser.UserStatus != consts.LockTypePasswordFailure {
-	   			result = base.ResultFailureErr(c_error.ErrLoginNameOrPasswordIncorrect)
-	   			return
-	   		}
-	   	}
+			// 5-6	【实战】登录增加多因子认证机制-掌握GO语言切片删除操作、goto关键字；掌握门面模式、策略模式
+		   	var err error
+		   	now := time.Now()
+		   	if sysUser.UserStatus != 0 {
+		   		if sysUser.UserStatus != consts.LockTypePasswordFailure {
+		   			result = base.ResultFailureErr(c_error.ErrLoginNameOrPasswordIncorrect)
+		   			return
+		   		}
+		   	}
 
-	   	// 检查有效期
-	   	if sysUser.ExpirationAt.Valid {
-	   		if now.After(sysUser.ExpirationAt.Time) {
-	   			_self.GetLogger().Error("用户: %s 已过有效期", loginDTO.LoginName)
-	   			result = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
-	   			// 更新用户信息
-	   			sysUser.UserStatus = consts.LockTypeExpire
-	   			sysUser.LockReason = sql.NullString{
-	   				String: "用户已过有效期",
-	   				Valid:  true,
-	   			}
-	   			sysUser.UpdatedBy = sysUser.ID
-	   			if err := dao.SysUser.LockUser(_self.GetDB(), sysUser); err != nil {
-	   				_self.GetLogger().Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
-	   			}
-	   			return
-	   		}
-	   	}
-	   	// 校验密码
-	   	if sysUser.Password != loginDTO.Password {
-	   		result = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
-	   		return
-	   	}
+		   	// 检查有效期
+		   	if sysUser.ExpirationAt.Valid {
+		   		if now.After(sysUser.ExpirationAt.Time) {
+		   			_self.GetLogger().Error("用户: %s 已过有效期", loginDTO.LoginName)
+		   			result = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
+		   			// 更新用户信息
+		   			sysUser.UserStatus = consts.LockTypeExpire
+		   			sysUser.LockReason = sql.NullString{
+		   				String: "用户已过有效期",
+		   				Valid:  true,
+		   			}
+		   			sysUser.UpdatedBy = sysUser.ID
+		   			if err := dao.SysUser.LockUser(_self.GetDB(), sysUser); err != nil {
+		   				_self.GetLogger().Error("用户: %s lockUser err: %v", loginDTO.LoginName, err)
+		   			}
+		   			return
+		   		}
+		   	}
+		   	// 校验密码
+		   	if sysUser.Password != loginDTO.Password {
+		   		result = base.ResultFailureMsg(c_error.ErrLoginNameOrPasswordIncorrect.Error())
+		   		return
+		   	}
 
-	   	// 校验全局策略
-	   	policyParam := loginDTO.PolicyParam
-	   	var sysLoginPolicyService SysLoginPolicy
-	   	_self.MakeService(&sysLoginPolicyService)
-	   	result = sysLoginPolicyService.Info()
-	   	if !result.IsSuccess() {
-	   		return
-	   	}
-	   	policyInfoMap, ok := result.Data.(map[c_type.LoginPolicyCode]map[string]interface{})
-	   	if !ok {
-	   		result = base.ResultFailureErr(errors.New("查询策略失败,请联系管理员"))
-	   		return
-	   	}
-	   	var policyDTO dto.ILoginPolicyDTO
+		   	// 校验全局策略
+		   	policyParam := loginDTO.PolicyParam
+		   	var sysLoginPolicyService SysLoginPolicy
+		   	_self.MakeService(&sysLoginPolicyService)
+		   	result = sysLoginPolicyService.Info()
+		   	if !result.IsSuccess() {
+		   		return
+		   	}
+		   	policyInfoMap, ok := result.Data.(map[c_type.LoginPolicyCode]map[string]interface{})
+		   	if !ok {
+		   		result = base.ResultFailureErr(errors.New("查询策略失败,请联系管理员"))
+		   		return
+		   	}
+		   	var policyDTO dto.ILoginPolicyDTO
 
-	   	var policyDTOMap PolicyDTOMap
-	   	for k, v := range policyInfoMap {
-	   		if policyDTO, err = dto.NewLoginPolicyDTO(k, v); err != nil {
-	   			result = base.ResultFailureErr(err)
-	   			return
-	   		}
-	   		policyDTOMap[k] = policyDTO
-	   		if k == consts.LoginPolicyGlobal {
-	   			if !policyDTO.IsEnable() {
-	   				goto doLoginSuccess
-	   			}
+		   	var policyDTOMap PolicyDTOMap
+		   	for k, v := range policyInfoMap {
+		   		if policyDTO, err = dto.NewLoginPolicyDTO(k, v); err != nil {
+		   			result = base.ResultFailureErr(err)
+		   			return
+		   		}
+		   		policyDTOMap[k] = policyDTO
+		   		if k == consts.LoginPolicyGlobal {
+		   			if !policyDTO.IsEnable() {
+		   				goto doLoginSuccess
+		   			}
 
-	   		}
+		   		}
 
-	   	}
+		   	}
 
-	   	// 创建责任链
+		   	// 创建责任链
+			// 5-13	【实战】分析目前登录逻辑的弊端，提高并行思维能力-掌握责任链模式
 
-	   	if policyParam == nil {
-	   		policyDTO, err = dto.NewLoginPolicyDTO(consts.LoginPolicyGlobal, policyInfoMap[consts.LoginPolicyGlobal])
-	   		if err != nil {
-	   			result = base.ResultFailureErr(err)
-	   			return
-	   		}
-	   		if !policyDTO.IsEnable() {
-	   			goto doLoginSuccess
-	   		}
-	   		result = _self.GetLoginPolicyResult(sysUser, policyDTOMap)
-	   		if nil == result {
-	   			goto doLoginSuccess
-	   		}
-	   		return
-	   	}
-	   	result = _self.ValidateLoginPolicyParam(loginDTO, sysUser, policyDTOMap)
-	   	if result != nil {
-	   		return
-	   	}
+		   	if policyParam == nil {
+		   		policyDTO, err = dto.NewLoginPolicyDTO(consts.LoginPolicyGlobal, policyInfoMap[consts.LoginPolicyGlobal])
+		   		if err != nil {
+		   			result = base.ResultFailureErr(err)
+		   			return
+		   		}
+		   		if !policyDTO.IsEnable() {
+		   			goto doLoginSuccess
+		   		}
+		   		result = _self.GetLoginPolicyResult(sysUser, policyDTOMap)
+		   		if nil == result {
+		   			goto doLoginSuccess
+		   		}
+		   		return
+		   	}
+		   	result = _self.ValidateLoginPolicyParam(loginDTO, sysUser, policyDTOMap)
+		   	if result != nil {
+		   		return
+		   	}
 
-	   	// 校验共享登录策略
-	   	if policyDTO, err = dto.NewLoginPolicyDTO(consts.LoginPolicyShare, policyInfoMap[consts.LoginPolicyShare]); err != nil {
-	   		result = base.ResultFailureErr(err)
-	   		return
-	   	}
-	   	if !policyDTO.IsEnable() {
-	   		goto doLoginSuccess
-	   	}
+		   	// 校验共享登录策略
+		   	if policyDTO, err = dto.NewLoginPolicyDTO(consts.LoginPolicyShare, policyInfoMap[consts.LoginPolicyShare]); err != nil {
+		   		result = base.ResultFailureErr(err)
+		   		return
+		   	}
+		   	if !policyDTO.IsEnable() {
+		   		goto doLoginSuccess
+		   	}
 
-	   doLoginSuccess:
-	   	return _self.LoginSuccess(sysUser)*/
+		   doLoginSuccess:
+		   	return _self.LoginSuccess(sysUser)*/
 }
 
 // GetLoginPolicyResult 获取全局认证策略结果

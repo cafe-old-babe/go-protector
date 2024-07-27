@@ -314,7 +314,7 @@
 
 <script>
 import request from '@/utils/request'
-
+// 5-5	【实战】完成策略页面实战-掌握antd Tabs、Skeleton组件；掌握使用策略模式完成校验和提交
 export default {
   data() {
     return {

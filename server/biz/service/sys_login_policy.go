@@ -140,28 +140,29 @@ func (_self *SysLoginPolicy) Info() (result *base.Result) {
 	}
 
 	/*
-		if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyGlobal}).
-			Assign(defaultGlobalPolicy).FirstOrCreate(&model).Error; err != nil {
-			return base.ResultFailureErr(err)
-		}
-		if err := json.Unmarshal([]byte(model.PJson), &valMap); err != nil {
-			return base.ResultFailureErr(err)
-		}
-		valMap["name"] = model.PolicyName
-		info[consts.LoginPolicyGlobal] = valMap
-		clear(valMap)
-		model = entity.SysLoginPolicy{}
+		5-3	【实战】策略管理查询接口-掌握GORM FirstOrCreate+Attrs完成数据初始化
+			if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyGlobal}).
+				Assign(defaultGlobalPolicy).FirstOrCreate(&model).Error; err != nil {
+				return base.ResultFailureErr(err)
+			}
+			if err := json.Unmarshal([]byte(model.PJson), &valMap); err != nil {
+				return base.ResultFailureErr(err)
+			}
+			valMap["name"] = model.PolicyName
+			info[consts.LoginPolicyGlobal] = valMap
+			clear(valMap)
+			model = entity.SysLoginPolicy{}
 
-		if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyEmail}).
-			Assign(defaultEmailPolicy).FirstOrCreate(&model).Error; err != nil {
-			return base.ResultFailureErr(err)
-		}
-		if err := json.Unmarshal([]byte(model.PJson), &valMap); err != nil {
-			return base.ResultFailureErr(err)
-		}
-		valMap["name"] = model.PolicyName
-		info[consts.LoginPolicyEmail] = valMap
-		clear(valMap)
+			if err := _self.GetDB().Where(entity.SysLoginPolicy{PolicyCode: consts.LoginPolicyEmail}).
+				Assign(defaultEmailPolicy).FirstOrCreate(&model).Error; err != nil {
+				return base.ResultFailureErr(err)
+			}
+			if err := json.Unmarshal([]byte(model.PJson), &valMap); err != nil {
+				return base.ResultFailureErr(err)
+			}
+			valMap["name"] = model.PolicyName
+			info[consts.LoginPolicyEmail] = valMap
+			clear(valMap)
 	*/
 	return base.ResultSuccess(info)
 }
@@ -307,6 +308,7 @@ func (_self emailLoginPolicyService) Send(processDTO *dto.LoginPolicyProcessDTO)
 	if err != nil {
 		return
 	}
+	// 5-8	【实战】邮箱验证码认证-掌握QQ邮箱发送认证码，防止恶意频繁发送验证码
 	if !isSuccess {
 		err = errors.New("频繁发送过于频繁,请稍后再试")
 		return

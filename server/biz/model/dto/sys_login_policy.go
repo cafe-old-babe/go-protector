@@ -34,6 +34,7 @@ type LoginPolicyResultDTO struct {
 	PolicyCode []c_type.LoginPolicyCode `json:"policyCode"`
 }
 
+// 5-4	【实战】策略管理保存接口-掌握GO语言继承的特殊性；掌握工厂模式、策略模式
 var LoginPolicyDTOFactory = make(map[c_type.LoginPolicyCode]ILoginPolicyDTO)
 
 func init() {
@@ -127,6 +128,7 @@ func (_self *basePolicyDTO) GetKey(key string) interface{} {
 // 如果一个子类对象可以用其父类对象替换，那么这个子类必须满足父类所有的接口。
 // Go 语言的继承并不完全满足里氏替换原则
 // https://github.com/Authenticator-Extension/Authenticator
+// 5-10	后端-OTP认证二（讲解OTP校验规则与校验逻辑；GORM-Upsert操作）
 type OTPLoginPolicyDTO struct {
 	// Go 语言没有显式的继承语法。在 Go 语言中，要实现继承，
 	// 需要使用嵌入式结构体（embedded struct）和指针。
