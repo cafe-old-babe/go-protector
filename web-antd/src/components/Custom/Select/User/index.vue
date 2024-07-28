@@ -1,5 +1,6 @@
 <!--https://v2.cn.vuejs.org/v2/guide/components-custom-events.html#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%84%E4%BB%B6%E7%9A%84-v-model-->
 <script>
+// 6-10	【实战】资源编辑页面-掌握封装自定义选择器公共组件搞定v-model双向绑定）
 import selectIndex from './components/SelectIndex.vue'
 export default {
   name: 'SelectUser',

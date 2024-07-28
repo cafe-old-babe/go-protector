@@ -10,6 +10,7 @@ import (
 
 func init() {
 	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
+		// 6-7	【实战】资源组管理接口实战
 		routerGroup := group.Group("asset-group")
 		{
 			routerGroup.POST("/tree", _assetGroup.Tree)

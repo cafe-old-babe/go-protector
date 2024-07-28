@@ -157,6 +157,7 @@ export default {
     selectTreeNode: function (value) {
       this.localRecord.pid = value
     },
+    // 6-9	【实战】资源组管理与资源分页查询-掌握使用使用递归控制TreeSelect指定节点不可选中）
     disabledLocal: function (data, id) {
       if (data && id) {
         data.forEach((item) => {

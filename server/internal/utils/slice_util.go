@@ -55,6 +55,7 @@ func SliceSubN[T uint64 | int64](v1, v2 []T) (sub []T) {
 
 }
 
+// 6-8	【实战】资源管理接口-掌握Belongs To、Joins预加载；掌握使用反射+泛型+断言提取切片中的某一列）
 func SliceToFieldSlice[T interface{ uint64 | string }](field string, slice interface{}) (fieldSlice []T) {
 	fieldSlice = make([]T, 0)
 	//循环slice

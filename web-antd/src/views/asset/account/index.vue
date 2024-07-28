@@ -141,6 +141,7 @@ export default {
         onChange: this.onSelectChange,
         getCheckboxProps: record => ({
           props: {
+            // 6-12	【实战】资源从账号分页列表与删除实战-掌握通过计算属性控制批量选中时禁止删除特权帐号
             // disabled: record.accountType === '0', // Column configuration not to be checked
             name: record.name
           }

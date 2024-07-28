@@ -45,6 +45,7 @@ func GenerateTree(slice any, rootId uint64, idField, pidField, nameField string,
 					Name:     name,
 					Children: make([]TreeNode, 0),
 				}
+				// 6-9	【实战】资源组管理与资源分页查询-掌握控制指定节点不可选中
 				_, node.Selected = selectedSet[node.ID]
 				break
 			}

@@ -13,11 +13,15 @@ func init() {
 	initRouterFunc = append(initRouterFunc, func(group *gin.RouterGroup) {
 		routerGroup := group.Group("asset-info")
 		{
+			//6-8	【实战】资源、特权从帐号管理接口实战（GORM-Belongs To、Joins预加载，GO-使用反射+泛型+断言将切片中对象的某一列转为slice）
 			routerGroup.POST("/page", _assetBasic.Page)
 			routerGroup.POST("/save", _assetBasic.Save)
-			routerGroup.POST("/collectors/:collType", _assetBasic.Collectors)
-			routerGroup.POST("/dial/:dialType", _assetBasic.Dial)
 			routerGroup.POST("/delete", _assetBasic.Delete)
+
+			// 6-15	【实战】采集资源从账号-掌握defer注意事项
+			routerGroup.POST("/collectors/:collType", _assetBasic.Collectors)
+			// 6-14	【实战】拨测资源从帐号-掌握策略模式；掌握GORM Has one、Preload预加载
+			routerGroup.POST("/dial/:dialType", _assetBasic.Dial)
 			routerGroup.POST("/auth/page", _assetBasic.Page)
 		}
 	})

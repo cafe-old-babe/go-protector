@@ -27,6 +27,7 @@ func (_self AssetBasic) TableName() string {
 }
 
 // AssetInfo belongs to
+// 6-8	【实战】资源管理接口-掌握Belongs To、Joins预加载；掌握使用反射+泛型+断言提取切片中的某一列）
 type AssetInfo struct {
 	AssetBasic //`gorm:"embedded"`
 	//RootAcc      string       `json:"rootAcc"`

@@ -90,7 +90,7 @@ func (_self *AssetInfo) Page(req *dto.AssetInfoPageReq) (res *base.Result) {
 
 		},
 	)
-
+	//6-8	【实战】资源、特权从帐号管理接口实战（GORM-Belongs To、Joins预加载，GO-使用反射+泛型+断言将切片中对象的某一列转为slice）
 	err = tx.Joins("AssetGateway").
 		Joins("ManagerUser").
 		Joins("AssetGroup").
@@ -377,6 +377,7 @@ func (_self *AssetInfo) DoDail(elem entity.AssetAccountInfo) {
 }
 
 // DoCollectors 采集
+// 6-15	【实战】采集资源从账号-掌握defer注意事项
 func (_self *AssetInfo) DoCollectors(assetInfo entity.AssetInfoAccount) {
 
 	var err error
@@ -441,6 +442,7 @@ saveLabel:
 }
 
 // collectorsAccount 采集从帐号
+// 6-16	【实战】采集资源从账号-掌握连接SSH主机远程执行命令
 func collectorsAccount(account entity.AssetAccount, cli *ssh.Client) (collectorsDTO dto.AccountAnalysisExtendDTO) {
 	collectorsDTO.ID = account.ID
 	collectorsDTO.In = fmt.Sprintf(consts.CollFmt, account.Account, account.Account)

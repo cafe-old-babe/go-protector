@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// 6-18	【实战】采集/拨测资源从账号-使用协程异步采集-掌握利用通道实现CSP模型、协程间通信
 var CommonWork *Work
 
 func init() {

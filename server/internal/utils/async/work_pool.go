@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 )
 
+// 6-19	【实战】采集/拨测资源从账号-并行异步采集-掌握如何提高CSP模型吞吐量；掌握闭包基础概念
 var CommonWorkPool *WorkPool
 
 var num atomic.Int32

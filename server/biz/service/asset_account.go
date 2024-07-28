@@ -116,12 +116,14 @@ func (_self *AssetAccount) FindRootAccMapByAssetIdSlice(asseIdSlice []uint64) (r
 // assetInfoSlice *[]entity.AssetInfo	elem 不能修改	(*assetInfoSlice)[i] 可以修改
 // assetInfoSlice []entity.AssetInfo	elem 不能修改	assetInfoSlice[i] 可以修改
 // assetInfoSlice []*entity.AssetInfo	elem 可以修改	assetInfoSlice[i] 可以修改
+// 6-8	【实战】资源管理接口-掌握Belongs To、Joins预加载；掌握使用反射+泛型+断言提取切片中的某一列）
 func (_self *AssetAccount) FillAssetInfoRootAcc(assetInfoSlice []*entity.AssetInfo) (err error) {
 	if assetInfoSlice == nil || len(assetInfoSlice) <= 0 {
 		return
 	}
 	var rootAccMap map[uint64]entity.AssetAccount
 	asseIdSlice := utils.SliceToFieldSlice[uint64]("ID", assetInfoSlice)
+	//
 	if rootAccMap, err = _self.FindRootAccMapByAssetIdSlice(asseIdSlice); err != nil {
 		return
 	}

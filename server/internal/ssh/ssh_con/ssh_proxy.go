@@ -17,6 +17,7 @@ import (
 
 var sshProxyCache sync.Map
 
+// 6-20	【实战】通过SSH网关连接资产，创建SSH网关连接-掌握sync.Map与并发控制；掌握DCL单例模式）
 func GetSSHProxyById(id uint64) (sshProxy *SSHProxy, err error) {
 	if id <= 0 {
 		err = c_error.ErrParamInvalid
@@ -110,7 +111,7 @@ func (_self *SSHProxy) Close(channelKey string) (err error) {
 	defer _self.proxyMutex.Unlock()
 	_self.channelMutex.Lock()
 	defer _self.channelMutex.Unlock()
-
+	// 6-20	【实战】通过SSH网关连接资产，创建SSH网关连接-掌握sync.Map与并发控制；掌握DCL单例模式）
 	if len(channelKey) > 0 {
 		channel, ok := _self.channelMap[channelKey]
 		if !ok {
@@ -223,6 +224,7 @@ func (_self *SSHProxy) createChannel(conn net.Conn, addr string) (channel *SSHCh
 }
 
 // getSSHChannel 获取channel 读锁
+// 6-21	【实战】创建本地监听与SSH网关通信-掌握GO语言读写锁
 func (_self *SSHProxy) getSSHChannel(key string) (channel *SSHChannel, ok bool) {
 	if len(key) <= 0 {
 		return
