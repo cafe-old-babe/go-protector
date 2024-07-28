@@ -41,6 +41,7 @@ func (_self assetBasic) Page(c *gin.Context) {
 	}
 	var assetService service.AssetInfo
 	_self.MakeService(c, &assetService)
+	// 8-2	【实战】我的资源-复用资源分页查询接口，查询已授权的资源
 	pageReq.Auth = strings.HasSuffix(c.Request.RequestURI, "/auth/page")
 	result := assetService.Page(&pageReq)
 	c_result.Result(c, result)
