@@ -35,6 +35,7 @@ type Handler[T Row] interface {
 }
 
 // ReadExcelFirstSheet 读取文件  https://blog.csdn.net/qq_39272466/article/details/131631964
+// 7-10	【实战】封装Excel导入功能-掌握模板方法设计模式；掌握Go语言反射给字段赋值
 func ReadExcelFirstSheet[T Row](readCloser io.ReadCloser, h Handler[T]) (err error) {
 	defer readCloser.Close()
 
@@ -259,6 +260,7 @@ func analysisRowStruct(rowStruct interface{}) (colInfos []ColInfo) {
 }
 
 // GenerateExcel 生成excel文件
+// // 7-9	【实战】封装Excel导出功能-掌握反射创建对象、解析自定义tag、获取内嵌结构体的字段信息
 func GenerateExcel(sliceOrStruct interface{}, hideTitle ...string) (file *excelize.File, err error) {
 	defer func() {
 		if err != nil && file != nil {

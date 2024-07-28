@@ -37,6 +37,7 @@ func (_self *Service) Make(c context.Context) {
 	}
 	_self.ctx = c
 	// 死锁
+	// 7-6	【实战】解决通过钩子函数更新授权冗余数据造成死锁的问题-掌握排查死锁的思路
 	// _self.db = database.GetDB(c)
 	// 使用已有的db
 	if db, ok := _self.ctx.Value(consts.CtxKeyDB).(*gorm.DB); ok {

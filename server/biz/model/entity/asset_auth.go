@@ -33,6 +33,7 @@ func (*AssetAuth) TableName() string {
 }
 
 // UpdateRedundancy 更新冗余数据
+// 7-4	【实战】使用钩子函数更新反范式的冗余数据-掌握通过反射获取interface的数据类型与值
 func (_self *AssetAuth) UpdateRedundancy(db *gorm.DB, data interface{}) (err error) {
 	if err = db.Error; err != nil {
 		return
@@ -113,6 +114,7 @@ func (_self *AssetAuth) UpdateRedundancy(db *gorm.DB, data interface{}) (err err
 }
 
 // DeleteRedundancy 删除冗余数据
+// 7-5	【实战】删除反范式的冗余数据-掌握如何解决在in与not in数量过多的场景下导致失败的问题
 func (_self *AssetAuth) DeleteRedundancy(db *gorm.DB, ids []uint64, dateType reflect.Type) (err error) {
 	if db == nil || ids == nil || len(ids) <= 0 || dateType == nil {
 		return

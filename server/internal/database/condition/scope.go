@@ -115,6 +115,7 @@ func NEq(column string, arg interface{}) func(db *gorm.DB) *gorm.DB {
 }
 
 // In 生成in条件
+// 7-5	【实战】删除反范式的冗余数据-掌握如何解决在in与not in数量过多的场景下导致失败的问题
 func In[T any](column string, slice []T) func(*gorm.DB) *gorm.DB {
 	return generateSliceFunc(column, slice, consts.SliceIn)
 }

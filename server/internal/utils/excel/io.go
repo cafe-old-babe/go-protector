@@ -46,6 +46,7 @@ func Write(file *excelize.File, dst ...string) (fp string, err error) {
 }
 
 // Export 导出至页面
+// 7-12	后端-完成授权导入导出功能（Gin-接收文件、下载文件）
 func Export(c *gin.Context, file *excelize.File, fileName string) (err error) {
 	var filePath string
 	if filePath, err = Write(file); err != nil {

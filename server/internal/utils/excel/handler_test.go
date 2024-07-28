@@ -8,6 +8,7 @@ import (
 	"testing"
 )
 
+// 7-11	【实战】编写导入导出测试用例（使用Gin提供的tag完成校验；隐藏Excel中的指定列）
 type TestRowStruct struct {
 	//LineNum int
 	//ErrMsg  string `excel:"title:错误消息;width:50"`

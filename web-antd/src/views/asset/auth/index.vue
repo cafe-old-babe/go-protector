@@ -32,6 +32,7 @@
           type="primary"
           @click="() => {this.record = {}; this.editVisible = true}">新建</a-button>
         <a-button type="danger" :disabled="disabledDeleteBatch" @click="deleteBatch">批量删除</a-button>
+        <!--        7-8	【实战】授权模块引入Excel导入导出使用场景，页面添加导入导出功能-掌握前端上传文件、下载文件-->
         <a-dropdown>
           <a-menu slot="overlay" @click="handleMenuClick">
             <a-menu-item key="template"> <a-icon type="download" />导出模板 </a-menu-item>
@@ -88,7 +89,7 @@ import { Columns } from './column'
 import request from '@/utils/request'
 import Edit from './Edit'
 // import Permission from './Permission.vue'
-
+// 7-7	【实战】主帐号+资源+从帐号授权页面实现
 export default {
   name: 'Account',
   components: { Edit, STable },
