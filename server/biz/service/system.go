@@ -46,6 +46,10 @@ func (_self *System) Bus() (err error) {
 			approveService.GetLogger().Error("FindCountUnprocessed err: %v", err)
 			return
 		}
+		if count <= 0 {
+			return
+		}
+
 		groupId := strconv.FormatUint(currentUser.ID, 10)
 
 		msg := base.NewWsMsg(consts.MsgApprove,
