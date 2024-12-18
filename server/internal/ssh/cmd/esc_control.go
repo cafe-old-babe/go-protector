@@ -296,6 +296,21 @@ func init() {
 		}
 		ctl.reset()
 	}
+
+	doCSIFuncMap['P'] = func(ctl *EscCtl, handler *ParserSSHCharHandler, r rune) {
+		p := "1" //default
+		if len(ctl.param) > 0 {
+			if ctl.param[0] == '?' && len(ctl.param) > 1 {
+				ctl.param = ctl.param[1:]
+			}
+			p = string(ctl.param)
+		}
+		i, _ := strconv.ParseInt(p, 10, 64)
+		x := handler.GetX()
+		currentCmd := handler.cmd[handler.GetY()]
+		handler.cmd[handler.GetY()] = append(currentCmd[:x], currentCmd[x+int(i):]...)
+		ctl.reset()
+	}
 }
 
 // \x1b[6n 服务端发送 要客户端发送光标位置
@@ -335,10 +350,6 @@ func (_self *EscCtl) reset() {
 }
 
 func (_self *EscCtl) doEsc(handler *ParserSSHCharHandler, r rune) {
-	if r == 0x33 {
-		_self.isEsc = true
-		return
-	}
 
 	if _self.ctlCode <= 0 {
 		// 补全 ctlCode
